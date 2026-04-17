@@ -105,7 +105,6 @@ export const phrases: Phrase[] = [
   {
     title: "フレーズ1",
     notes: [
-      makeNote("休符", 2), 
       makeNote("ファ"),
       makeNote("ソ"),
       makeNote("ラ"),

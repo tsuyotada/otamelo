@@ -154,12 +154,27 @@ function Spinner() {
 
 function PixelInventorFace() {
   return (
-    <div className="relative h-[34px] w-[34px] shrink-0 rounded-md border-2 border-slate-700 bg-[#ffe8b3] shadow-sm">
-      <div className="absolute inset-x-0 top-0 h-[8px] rounded-t-[4px] bg-[#8c5a34]" />
-      <div className="absolute left-[7px] top-[13px] h-[4px] w-[4px] bg-slate-700" />
-      <div className="absolute right-[7px] top-[13px] h-[4px] w-[4px] bg-slate-700" />
-      <div className="absolute left-1/2 top-[19px] h-[2px] w-[14px] -translate-x-1/2 bg-slate-700" />
-      <div className="absolute left-1/2 top-[23px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-700" />
+    <div className="relative h-[36px] w-[36px] shrink-0 overflow-hidden rounded-[4px] border-2 border-slate-800 bg-[#ffd7b3] shadow-sm">
+      {/* 金髪マッシュ */}
+      <div className="absolute inset-x-0 top-0 h-[10px] bg-[#f2c94c]" />
+      <div className="absolute left-[4px] top-[8px] h-[4px] w-[28px] bg-[#e0b63f]" />
+      <div className="absolute left-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
+      <div className="absolute right-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
+
+      {/* 丸眼鏡 */}
+      <div className="absolute left-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
+      <div className="absolute right-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
+      <div className="absolute left-1/2 top-[18px] h-[2px] w-[6px] -translate-x-1/2 bg-slate-800" />
+
+      {/* 目 */}
+      <div className="absolute left-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
+      <div className="absolute right-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
+
+      {/* 鼻 */}
+      <div className="absolute left-1/2 top-[22px] h-[3px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
+
+      {/* 口 */}
+      <div className="absolute left-1/2 top-[27px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-800" />
     </div>
   )
 }
@@ -745,13 +760,19 @@ export default function Page() {
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.25fr_0.85fr] gap-3">
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <PixelInventorFace />
-              <p className="text-base font-bold text-slate-700">
-                オタマトーンでエイトメロディーズをひけるんだ
-              </p>
-            </div>
-
+<div className="flex items-center gap-3 rounded-xl border-2 border-slate-300 bg-[#fffdf8] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+  <PixelInventorFace />
+  <div className="leading-tight">
+    <p className="text-[11px] font-black uppercase tracking-widest text-[#6b7280]">
+     
+    </p>
+    <p className="text-base font-bold text-slate-700">
+      ◆ オタマトーンで
+      <span className="text-[#1d4f91]">エイトメロディーズ</span>を
+      ひけるんだ。
+    </p>
+  </div>
+</div>
             <button
               onClick={() => void playCurrentNote()}
               disabled={isMicEnabled}
