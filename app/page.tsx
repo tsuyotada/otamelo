@@ -44,6 +44,96 @@ const noteToFreq: Record<string, number> = {
 
 type Screen = "home" | "practice"
 type PlayMode = "phrase" | "full"
+type JudgeState = "idle" | "ok" | "miss"
+
+const noteNamesSharp = ["ド", "ド#", "レ", "レ#", "ミ", "ファ", "ファ#", "ソ", "ソ#", "ラ", "ラ#", "シ"]
+
+function frequencyToMidi(freq: number): number {
+  return Math.round(69 + 12 * Math.log2(freq / 440))
+}
+
+function midiToJapaneseNote(midi: number): string {
+  const octave = Math.floor(midi / 12) - 1
+  const noteName = noteNamesSharp[midi % 12]
+
+  if (octave <= 3) {
+    return `低い${noteName}`
+  }
+  if (octave === 4) {
+    return noteName
+  }
+  return `高い${noteName}`
+}
+
+function closestNoteFromFrequency(freq: number): string {
+  if (!Number.isFinite(freq) || freq <= 0) return ""
+  const midi = frequencyToMidi(freq)
+  return midiToJapaneseNote(midi)
+}
+
+function getAutocorrelatedPitch(buffer: Float32Array, sampleRate: number): number {
+  let rms = 0
+  for (let i = 0; i < buffer.length; i += 1) {
+    rms += buffer[i] * buffer[i]
+  }
+  rms = Math.sqrt(rms / buffer.length)
+  if (rms < 0.01) return 0
+
+  let r1 = 0
+  let r2 = buffer.length - 1
+  const threshold = 0.2
+
+  for (let i = 0; i < buffer.length / 2; i += 1) {
+    if (Math.abs(buffer[i]) < threshold) {
+      r1 = i
+      break
+    }
+  }
+
+  for (let i = 1; i < buffer.length / 2; i += 1) {
+    if (Math.abs(buffer[buffer.length - i]) < threshold) {
+      r2 = buffer.length - i
+      break
+    }
+  }
+
+  const trimmed = buffer.slice(r1, r2)
+  const correlations = new Array(trimmed.length).fill(0)
+
+  for (let lag = 0; lag < trimmed.length; lag += 1) {
+    for (let i = 0; i < trimmed.length - lag; i += 1) {
+      correlations[lag] += trimmed[i] * trimmed[i + lag]
+    }
+  }
+
+  let d = 0
+  while (d + 1 < correlations.length && correlations[d] > correlations[d + 1]) {
+    d += 1
+  }
+
+  let maxValue = -1
+  let maxIndex = -1
+  for (let i = d; i < correlations.length; i += 1) {
+    if (correlations[i] > maxValue) {
+      maxValue = correlations[i]
+      maxIndex = i
+    }
+  }
+
+  if (maxIndex <= 0) return 0
+
+  const x1 = correlations[maxIndex - 1] ?? correlations[maxIndex]
+  const x2 = correlations[maxIndex]
+  const x3 = correlations[maxIndex + 1] ?? correlations[maxIndex]
+  const a = (x1 + x3 - 2 * x2) / 2
+  const b = (x3 - x1) / 2
+
+  const shift = a ? -b / (2 * a) : 0
+  const period = maxIndex + shift
+  if (!period || period <= 0) return 0
+
+  return sampleRate / period
+}
 
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
@@ -54,8 +144,24 @@ export default function Page() {
   const [playMode, setPlayMode] = useState<PlayMode>("full")
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
 
+  const [isMicEnabled, setIsMicEnabled] = useState(false)
+  const [isMicPreparing, setIsMicPreparing] = useState(false)
+  const [detectedFreq, setDetectedFreq] = useState(0)
+  const [detectedNote, setDetectedNote] = useState("")
+  const [judgeState, setJudgeState] = useState<JudgeState>("idle")
+  const [successCount, setSuccessCount] = useState(0)
+
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
+
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const micAudioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const micAnimationRef = useRef<number | null>(null)
+
+  const judgeCooldownRef = useRef(false)
+  const stableHitCountRef = useRef(0)
 
   const safePhrases = useMemo(
     () =>
@@ -193,36 +299,7 @@ export default function Page() {
     await playNote(current.note, getStepMs(current.length))
   }
 
-  const handleStart = async () => {
-    clearPlaybackTimer()
-    setIsPlaying(false)
-    setPlayMode("full")
-    setPhraseIndex(0)
-    setNoteIndex(0)
-    await ensureAudioReady()
-    setScreen("practice")
-  }
-
-  const handlePrevPhrase = () => {
-    clearPlaybackTimer()
-    setIsPlaying(false)
-    setPlayMode("phrase")
-    setPhraseIndex((prev) => Math.max(0, prev - 1))
-    setNoteIndex(0)
-  }
-
-  const handleNextPhrase = () => {
-    clearPlaybackTimer()
-    setIsPlaying(false)
-    setPlayMode("phrase")
-    setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
-    setNoteIndex(0)
-  }
-
-  const handleNext = () => {
-    clearPlaybackTimer()
-    setIsPlaying(false)
-
+  const moveToNextNote = () => {
     if (playMode === "full") {
       if (noteIndex < safeNotes.length - 1) {
         setNoteIndex((prev) => prev + 1)
@@ -244,12 +321,50 @@ export default function Page() {
     }
   }
 
+  const handleStart = async () => {
+    clearPlaybackTimer()
+    setIsPlaying(false)
+    setPlayMode("full")
+    setPhraseIndex(0)
+    setNoteIndex(0)
+    setSuccessCount(0)
+    setJudgeState("idle")
+    await ensureAudioReady()
+    setScreen("practice")
+  }
+
+  const handlePrevPhrase = () => {
+    clearPlaybackTimer()
+    setIsPlaying(false)
+    setPlayMode("phrase")
+    setPhraseIndex((prev) => Math.max(0, prev - 1))
+    setNoteIndex(0)
+    setJudgeState("idle")
+  }
+
+  const handleNextPhrase = () => {
+    clearPlaybackTimer()
+    setIsPlaying(false)
+    setPlayMode("phrase")
+    setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
+    setNoteIndex(0)
+    setJudgeState("idle")
+  }
+
+  const handleNext = () => {
+    clearPlaybackTimer()
+    setIsPlaying(false)
+    moveToNextNote()
+    setJudgeState("idle")
+  }
+
   const handleBack = () => {
     clearPlaybackTimer()
     setIsPlaying(false)
 
     if (noteIndex > 0) {
       setNoteIndex((prev) => prev - 1)
+      setJudgeState("idle")
       return
     }
 
@@ -258,15 +373,89 @@ export default function Page() {
       const prevPhrase = safePhrases[prevPhraseIndex]
       setPhraseIndex(prevPhraseIndex)
       setNoteIndex(prevPhrase.notes.length - 1)
+      setJudgeState("idle")
       return
     }
 
     setNoteIndex(0)
+    setJudgeState("idle")
+  }
+
+  const startMic = async () => {
+    if (isMicEnabled) return
+
+    try {
+      setIsMicPreparing(true)
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      })
+
+      const AudioCtx =
+        window.AudioContext ||
+        (window as typeof window & {
+          webkitAudioContext?: typeof AudioContext
+        }).webkitAudioContext
+
+      if (!AudioCtx) {
+        setIsMicPreparing(false)
+        return
+      }
+
+      const ctx = new AudioCtx()
+      const source = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+
+      analyser.fftSize = 2048
+      analyser.smoothingTimeConstant = 0.1
+
+      source.connect(analyser)
+
+      micStreamRef.current = stream
+      micAudioContextRef.current = ctx
+      micSourceRef.current = source
+      analyserRef.current = analyser
+
+      setIsMicEnabled(true)
+    } catch {
+      setIsMicEnabled(false)
+    } finally {
+      setIsMicPreparing(false)
+    }
+  }
+
+  const stopMic = () => {
+    if (micAnimationRef.current !== null) {
+      cancelAnimationFrame(micAnimationRef.current)
+      micAnimationRef.current = null
+    }
+
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => track.stop())
+      micStreamRef.current = null
+    }
+
+    if (micAudioContextRef.current) {
+      void micAudioContextRef.current.close()
+      micAudioContextRef.current = null
+    }
+
+    analyserRef.current = null
+    micSourceRef.current = null
+    setIsMicEnabled(false)
+    setDetectedFreq(0)
+    setDetectedNote("")
+    setJudgeState("idle")
   }
 
   useEffect(() => {
     clearPlaybackTimer()
     setNoteIndex(0)
+    setJudgeState("idle")
   }, [phraseIndex])
 
   useEffect(() => {
@@ -317,6 +506,59 @@ export default function Page() {
   }, [isPlaying, screen, playMode, phraseIndex, noteIndex, tempo, safePhrases])
 
   useEffect(() => {
+    if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) return
+
+    const analyser = analyserRef.current
+    const sampleRate = micAudioContextRef.current.sampleRate
+    const buffer = new Float32Array(analyser.fftSize)
+
+    const tick = () => {
+      analyser.getFloatTimeDomainData(buffer)
+      const freq = getAutocorrelatedPitch(buffer, sampleRate)
+      setDetectedFreq(freq)
+
+      const note = freq > 0 ? closestNoteFromFrequency(freq) : ""
+      setDetectedNote(note)
+
+      if (current.note !== "休符" && note) {
+        if (note === current.note) {
+          stableHitCountRef.current += 1
+        } else {
+          stableHitCountRef.current = 0
+        }
+
+        if (!judgeCooldownRef.current && stableHitCountRef.current >= 4) {
+          judgeCooldownRef.current = true
+          setJudgeState("ok")
+          setSuccessCount((prev) => prev + 1)
+
+          window.setTimeout(() => {
+            moveToNextNote()
+            setJudgeState("idle")
+            stableHitCountRef.current = 0
+            judgeCooldownRef.current = false
+          }, 250)
+        } else if (!judgeCooldownRef.current && note && note !== current.note) {
+          setJudgeState("miss")
+        }
+      } else {
+        setJudgeState("idle")
+      }
+
+      micAnimationRef.current = requestAnimationFrame(tick)
+    }
+
+    micAnimationRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      if (micAnimationRef.current !== null) {
+        cancelAnimationFrame(micAnimationRef.current)
+        micAnimationRef.current = null
+      }
+    }
+  }, [isMicEnabled, current.note, noteIndex, phraseIndex, playMode])
+
+  useEffect(() => {
     if (screen !== "practice") return
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -342,26 +584,37 @@ export default function Page() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [screen, playMode, noteIndex, phraseIndex, safeNotes.length])
 
-if (screen === "home") {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
-      <div className="w-full max-w-[600px] rounded-[28px] bg-[#f8f4ea] px-10 py-10 text-center text-slate-900 shadow-2xl">
-        
-        <p className="mb-8 text-base text-slate-600">
-          オタマトーンの準備はできましたか？
-        </p>
+  useEffect(() => {
+    return () => {
+      stopMic()
+    }
+  }, [])
 
-        <button
-          onClick={() => void handleStart()}
-          className="rounded-full bg-[#3aa7f2] px-10 py-4 text-xl font-bold text-white shadow-lg"
-        >
-          OK !
-        </button>
+  if (screen === "home") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
+        <div className="w-full max-w-[900px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+          <p className="mb-3 text-lg font-bold text-slate-700">
+            オタマトーンの準備はできましたか？
+          </p>
 
-      </div>
-    </main>
-  )
-}
+          {isPreparingAudio && (
+            <div className="mb-5 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
+              音を準備しています…
+            </div>
+          )}
+
+          <button
+            onClick={() => void handleStart()}
+            className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
+            disabled={isPreparingAudio}
+          >
+            {isPreparingAudio ? "準備中…" : "OK !"}
+          </button>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="h-screen overflow-hidden bg-[#0d1b3d] px-4 py-4 text-white">
@@ -370,9 +623,8 @@ if (screen === "home") {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-base font-bold text-slate-700">
-  "Eight Melodies" on the Otamatone
-</p>
-
+                Trying to play "Eight Melodies" on the Otamatone
+              </p>
             </div>
 
             <button
@@ -464,6 +716,28 @@ if (screen === "home") {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-3 gap-2">
+                  <div
+                    className={`rounded-lg px-3 py-3 text-center text-sm font-black ${
+                      judgeState === "ok"
+                        ? "bg-[#dff7df] text-[#1b6b2c]"
+                        : judgeState === "miss"
+                        ? "bg-[#ffe2e2] text-[#b33737]"
+                        : "bg-white text-slate-500"
+                    }`}
+                  >
+                    {judgeState === "ok" ? "OK!" : judgeState === "miss" ? "MISS" : "..."}
+                  </div>
+
+                  <div className="rounded-lg bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700">
+                    入力: {detectedNote || "-"}
+                  </div>
+
+                  <div className="rounded-lg bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700">
+                    成功: {successCount}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-center gap-2 pt-1 text-slate-500">
                   <button
                     onClick={handleBack}
@@ -507,6 +781,27 @@ if (screen === "home") {
 
         <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="rounded-[20px] bg-slate-100 p-4">
+            <p className="mb-3 text-base font-bold text-slate-700">マイク判定</p>
+
+            {!isMicEnabled ? (
+              <button
+                onClick={() => void startMic()}
+                className="w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
+                disabled={isMicPreparing}
+              >
+                {isMicPreparing ? "マイク準備中…" : "マイクをONにする"}
+              </button>
+            ) : (
+              <button
+                onClick={stopMic}
+                className="w-full rounded-2xl bg-white px-4 py-3 text-base font-bold text-slate-800"
+              >
+                マイクをOFFにする
+              </button>
+            )}
+          </div>
+
+          <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">テンポ</p>
             <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
               <span className="w-14 rounded-full bg-[#ffd54a] px-3 py-1 text-center text-lg font-black">
@@ -524,63 +819,63 @@ if (screen === "home") {
             </div>
           </div>
 
-         <div className="rounded-[20px] bg-slate-100 p-4">
-  <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
+          <div className="rounded-[20px] bg-slate-100 p-4">
+            <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
 
-  <div className="flex flex-col gap-3">
-    <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-      <input
-        type="radio"
-        name="playMode"
-        checked={playMode === "full"}
-        onChange={() => {
-          clearPlaybackTimer()
-          setIsPlaying(false)
-          setPlayMode("full")
-          setPhraseIndex(0)
-          setNoteIndex(0)
-        }}
-        className="h-4 w-4"
-      />
-      <span className="text-sm font-bold text-slate-800">全体通し再生</span>
-    </label>
+            <div className="flex flex-col gap-3">
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+                <input
+                  type="radio"
+                  name="playMode"
+                  checked={playMode === "full"}
+                  onChange={() => {
+                    clearPlaybackTimer()
+                    setIsPlaying(false)
+                    setPlayMode("full")
+                    setPhraseIndex(0)
+                    setNoteIndex(0)
+                  }}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm font-bold text-slate-800">全体通し再生</span>
+              </label>
 
-    <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-      <input
-        type="radio"
-        name="playMode"
-        checked={playMode === "phrase"}
-        onChange={() => {
-          clearPlaybackTimer()
-          setIsPlaying(false)
-          setPlayMode("phrase")
-        }}
-        className="h-4 w-4"
-      />
-      <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
-    </label>
-  </div>
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+                <input
+                  type="radio"
+                  name="playMode"
+                  checked={playMode === "phrase"}
+                  onChange={() => {
+                    clearPlaybackTimer()
+                    setIsPlaying(false)
+                    setPlayMode("phrase")
+                  }}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
+              </label>
+            </div>
 
-  {playMode === "phrase" && (
-    <div className="mt-3 flex items-center gap-2">
-      <button
-        onClick={handlePrevPhrase}
-        className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-      >
-        前のメロディー
-      </button>
-      <button
-        onClick={handleNextPhrase}
-        className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-      >
-        次のメロディー
-      </button>
-    </div>
-  )}
-</div>
+            {playMode === "phrase" && (
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={handlePrevPhrase}
+                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                >
+                  前のメロディー
+                </button>
+                <button
+                  onClick={handleNextPhrase}
+                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                >
+                  次のメロディー
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">コントロール</p>
+            <p className="mb-3 text-base font-bold text-slate-700">再生コントロール</p>
             <div className="grid grid-cols-1 gap-3">
               <button
                 onClick={() => {
