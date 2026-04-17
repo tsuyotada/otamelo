@@ -318,14 +318,14 @@ export default function Page() {
     oscillator.frequency.value = 1100
 
     gainNode.gain.setValueAtTime(0.0001, now)
-gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.04)
+    gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.025)
 
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
 
     oscillator.start(now)
-    oscillator.stop(now + 0.05)
+    oscillator.stop(now + 0.03)
   }
 
   const playCurrentNote = async () => {
@@ -340,11 +340,12 @@ gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
         return
       }
 
-if (noteIndex < safeNotes.length - 1) {
-  setNoteIndex((prev) => prev + 1)
-} else {
-  setNoteIndex(0)
-}
+      if (phraseIndex < safePhrases.length - 1) {
+        setPhraseIndex((prev) => prev + 1)
+        setNoteIndex(0)
+      } else {
+        setIsPlaying(false)
+      }
 
       return
     }
@@ -353,7 +354,6 @@ if (noteIndex < safeNotes.length - 1) {
       setNoteIndex((prev) => prev + 1)
     } else {
       setNoteIndex(0)
-      setIsPlaying(false)
     }
   }
 
@@ -631,7 +631,7 @@ if (noteIndex < safeNotes.length - 1) {
             className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
             disabled={isPreparingAudio}
           >
-            {isPreparingAudio ? "準備中…" : "OK !"}
+            {isPreparingAudio ? "準備中…" : "OK！"}
           </button>
         </div>
       </main>
@@ -645,7 +645,7 @@ if (noteIndex < safeNotes.length - 1) {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-base font-bold text-slate-700">
-                Trying to play "Eight Melodies" on the Otamatone
+                オタマトーンでエイトメロディーズをひいてみよう
               </p>
             </div>
 
@@ -660,9 +660,7 @@ if (noteIndex < safeNotes.length - 1) {
 
           <div className="mb-4 rounded-[20px] bg-white p-4">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-base font-bold text-slate-700">
-                エイトメロディーズ進行
-              </p>
+              <p className="text-base font-bold text-slate-700">進行</p>
               <p className="text-base font-black text-slate-900">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
@@ -717,11 +715,11 @@ if (noteIndex < safeNotes.length - 1) {
                   )}
                 </div>
 
-<div className="absolute bottom-0 left-1/2 h-[76px] w-[88px] -translate-x-1/2 translate-y-7 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
-  <div className="absolute left-[24px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-  <div className="absolute right-[24px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-  <div className="absolute left-1/2 top-[40px] h-[2px] w-[42px] -translate-x-1/2 bg-slate-700" />
-</div>
+                <div className="absolute bottom-0 left-1/2 h-[76px] w-[88px] -translate-x-1/2 translate-y-7 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[24px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[24px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-0 top-[40px] h-[2px] w-full bg-slate-700" />
+                </div>
               </div>
 
               <div className="flex w-[330px] shrink-0 flex-col gap-4">
