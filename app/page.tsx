@@ -506,7 +506,16 @@ export default function Page() {
     } else {
       void playNote(current.note, getStepMs(current.length))
     }
-  }, [screen, isPlaying, isMicEnabled, phraseIndex, noteIndex, tempo, current.note, current.length])
+  }, [
+    screen,
+    isPlaying,
+    isMicEnabled,
+    phraseIndex,
+    noteIndex,
+    tempo,
+    current.note,
+    current.length,
+  ])
 
   useEffect(() => {
     clearPlaybackTimer()
@@ -704,15 +713,19 @@ export default function Page() {
                   {current.note !== "休符" && (
                     <div
                       className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
-                      style={{ bottom: `calc(${current.pos}% - 6px)` }}
+                      style={{ top: `calc(${current.pos}% - 6px)` }}
                     />
                   )}
                 </div>
 
-                <div className="absolute bottom-0 left-1/2 h-18 w-18 -translate-x-1/2 translate-y-7 rounded-full border-4 border-slate-700 bg-[#fffaf0]" />
+                <div className="absolute bottom-0 left-1/2 h-[82px] w-[82px] -translate-x-1/2 translate-y-7 rounded-full border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[22px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[22px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-1/2 top-[46px] h-[14px] w-[32px] -translate-x-1/2 rounded-b-full border-b-4 border-slate-700" />
+                </div>
               </div>
 
-              <div className="flex min-w-[290px] flex-col gap-4">
+              <div className="flex w-[330px] shrink-0 flex-col gap-4">
                 <div className="rounded-[20px] bg-[#10234d] px-5 py-4 text-center text-white">
                   <p className="text-base font-bold text-white/80">いま押さえる音</p>
                   <p className="mt-2 min-h-[56px] text-5xl font-black leading-none tracking-tight">
@@ -735,7 +748,7 @@ export default function Page() {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div
-                    className={`rounded-lg px-3 py-3 text-center text-sm font-black ${
+                    className={`flex h-[52px] items-center justify-center rounded-lg px-3 text-center text-sm font-black ${
                       judgeState === "ok"
                         ? "bg-[#dff7df] text-[#1b6b2c]"
                         : judgeState === "miss"
@@ -743,19 +756,25 @@ export default function Page() {
                         : "bg-white text-slate-500"
                     }`}
                   >
-                    {judgeState === "ok"
-                      ? "OK!"
-                      : judgeState === "miss"
-                      ? "MISS"
-                      : "..."}
+                    <span className="inline-block w-full truncate">
+                      {judgeState === "ok"
+                        ? "OK!"
+                        : judgeState === "miss"
+                        ? "MISS"
+                        : "..."}
+                    </span>
                   </div>
 
-                  <div className="rounded-lg bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700">
-                    入力: {detectedNote || "-"}
+                  <div className="flex h-[52px] items-center justify-center rounded-lg bg-white px-3 text-center text-xs font-semibold text-slate-700">
+                    <span className="inline-block w-full truncate">
+                      入力: {detectedNote || "-"}
+                    </span>
                   </div>
 
-                  <div className="rounded-lg bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700">
-                    成功: {successCount}
+                  <div className="flex h-[52px] items-center justify-center rounded-lg bg-white px-3 text-center text-xs font-semibold text-slate-700">
+                    <span className="inline-block w-full truncate">
+                      成功: {successCount}
+                    </span>
                   </div>
                 </div>
 
@@ -918,7 +937,11 @@ export default function Page() {
                 className="rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
                 disabled={isPreparingAudio}
               >
-                {isPreparingAudio ? "準備中…" : isMicEnabled ? "クリックで再生" : "再生"}
+                {isPreparingAudio
+                  ? "準備中…"
+                  : isMicEnabled
+                  ? "クリックで再生"
+                  : "再生"}
               </button>
 
               <button
