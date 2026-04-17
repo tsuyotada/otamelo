@@ -743,38 +743,6 @@ export default function Page() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div
-                    className={`flex h-[52px] items-center justify-center rounded-lg px-3 text-center text-sm font-black ${
-                      judgeState === "ok"
-                        ? "bg-[#dff7df] text-[#1b6b2c]"
-                        : judgeState === "miss"
-                        ? "bg-[#ffe2e2] text-[#b33737]"
-                        : "bg-white text-slate-500"
-                    }`}
-                  >
-                    <span className="inline-block w-full truncate">
-                      {judgeState === "ok"
-                        ? "OK!"
-                        : judgeState === "miss"
-                        ? "MISS"
-                        : "..."}
-                    </span>
-                  </div>
-
-                  <div className="flex h-[52px] items-center justify-center rounded-lg bg-white px-3 text-center text-xs font-semibold text-slate-700">
-                    <span className="inline-block w-full truncate">
-                      入力: {detectedNote || "-"}
-                    </span>
-                  </div>
-
-                  <div className="flex h-[52px] items-center justify-center rounded-lg bg-white px-3 text-center text-xs font-semibold text-slate-700">
-                    <span className="inline-block w-full truncate">
-                      成功: {successCount}
-                    </span>
-                  </div>
-                </div>
-
                 <div className="flex items-center justify-center gap-2 pt-1 text-slate-500">
                   <button
                     onClick={handleBack}
@@ -794,50 +762,74 @@ export default function Page() {
 
             <div className="flex flex-col gap-3">
               <div className="rounded-[20px] bg-white p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-base font-bold text-slate-700">進行状況</p>
-                  <p className="text-base font-black text-slate-900">
-                    {passedNotes} / {totalNotes}
+                <p className="mb-3 text-base font-bold text-slate-700">マイク判定</p>
+
+                {!isMicEnabled ? (
+                  <button
+                    onClick={() => void startMic()}
+                    className="w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
+                    disabled={isMicPreparing}
+                  >
+                    {isMicPreparing ? "マイク準備中…" : "マイクをONにする"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopMic}
+                    className="w-full rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-800"
+                  >
+                    マイクをOFFにする
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                <div className="rounded-[20px] bg-white p-4">
+                  <p className="mb-2 text-sm font-bold text-slate-500">いま押さえる音</p>
+                  <p className="text-3xl font-black text-slate-900">
+                    {visibleCurrentLabel || "-"}
                   </p>
                 </div>
 
-                <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-[#3aa7f2] transition-all"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+                <div className="rounded-[20px] bg-white p-4">
+                  <p className="mb-2 text-sm font-bold text-slate-500">入力された音</p>
+                  <p className="text-3xl font-black text-slate-900">
+                    {detectedNote || "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div
+                  className={`rounded-[20px] p-4 text-center ${
+                    judgeState === "ok"
+                      ? "bg-[#dff7df] text-[#1b6b2c]"
+                      : judgeState === "miss"
+                      ? "bg-[#ffe2e2] text-[#b33737]"
+                      : "bg-white text-slate-500"
+                  }`}
+                >
+                  <p className="mb-2 text-sm font-bold">判定</p>
+                  <p className="text-3xl font-black">
+                    {judgeState === "ok"
+                      ? "OK!"
+                      : judgeState === "miss"
+                      ? "MISS"
+                      : "..."}
+                  </p>
                 </div>
 
-                <p className="mt-3 text-sm font-semibold text-slate-600">
-                  曲全体進行率: {Math.round(progressPercent)}%
-                </p>
+                <div className="rounded-[20px] bg-white p-4 text-center">
+                  <p className="mb-2 text-sm font-bold text-slate-500">成功数</p>
+                  <p className="text-3xl font-black text-slate-900">
+                    {successCount}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">マイク判定</p>
-
-            {!isMicEnabled ? (
-              <button
-                onClick={() => void startMic()}
-                className="w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
-                disabled={isMicPreparing}
-              >
-                {isMicPreparing ? "マイク準備中…" : "マイクをONにする"}
-              </button>
-            ) : (
-              <button
-                onClick={stopMic}
-                className="w-full rounded-2xl bg-white px-4 py-3 text-base font-bold text-slate-800"
-              >
-                マイクをOFFにする
-              </button>
-            )}
-          </div>
-
           <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">テンポ</p>
             <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
