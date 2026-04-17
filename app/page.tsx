@@ -16,18 +16,18 @@ const noteToFreq: Record<string, number> = {
   "低いラ": 220.0,
   "低いラ#": 233.08,
   "低いシ": 246.94,
-  "ド": 261.63,
+  ド: 261.63,
   "ド#": 277.18,
-  "レ": 293.66,
+  レ: 293.66,
   "レ#": 311.13,
-  "ミ": 329.63,
-  "ファ": 349.23,
+  ミ: 329.63,
+  ファ: 349.23,
   "ファ#": 369.99,
-  "ソ": 392.0,
+  ソ: 392.0,
   "ソ#": 415.3,
-  "ラ": 440.0,
+  ラ: 440.0,
   "ラ#": 466.16,
-  "シ": 493.88,
+  シ: 493.88,
   "高いド": 523.25,
   "高いド#": 554.37,
   "高いレ": 587.33,
@@ -46,7 +46,20 @@ type Screen = "home" | "practice"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "miss"
 
-const noteNamesSharp = ["ド", "ド#", "レ", "レ#", "ミ", "ファ", "ファ#", "ソ", "ソ#", "ラ", "ラ#", "シ"]
+const noteNamesSharp = [
+  "ド",
+  "ド#",
+  "レ",
+  "レ#",
+  "ミ",
+  "ファ",
+  "ファ#",
+  "ソ",
+  "ソ#",
+  "ラ",
+  "ラ#",
+  "シ",
+]
 
 function frequencyToMidi(freq: number): number {
   return Math.round(69 + 12 * Math.log2(freq / 440))
@@ -67,7 +80,10 @@ function closestNoteFromFrequency(freq: number): string {
   return midiToJapaneseNote(midi)
 }
 
-function getAutocorrelatedPitch(buffer: Float32Array, sampleRate: number): number {
+function getAutocorrelatedPitch(
+  buffer: Float32Array,
+  sampleRate: number
+): number {
   let rms = 0
   for (let i = 0; i < buffer.length; i += 1) {
     rms += buffer[i] * buffer[i]
@@ -154,8 +170,8 @@ export default function Page() {
   const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const micAnimationRef = useRef<number | null>(null)
 
-  const judgeCooldownRef = useRef(false)
   const stableHitCountRef = useRef(0)
+  const noteSolvedRef = useRef(false)
 
   const safePhrases = useMemo(
     () =>
@@ -192,7 +208,8 @@ export default function Page() {
   }, [noteIndex, safeNotes, playMode, phraseIndex, safePhrases])
 
   const visibleCurrentLabel = current.note === "休符" ? "" : current.note
-  const visibleNextLabel = nextVisibleNote?.note === "休符" ? "" : nextVisibleNote?.note ?? ""
+  const visibleNextLabel =
+    nextVisibleNote?.note === "休符" ? "" : nextVisibleNote?.note ?? ""
 
   const totalNotes = useMemo(
     () => safePhrases.reduce((sum, p) => sum + p.notes.length, 0),
@@ -229,9 +246,8 @@ export default function Page() {
     try {
       const AudioCtx =
         window.AudioContext ||
-        (window as typeof window & {
-          webkitAudioContext?: typeof AudioContext
-        }).webkitAudioContext
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext
 
       if (!AudioCtx) {
         setIsPreparingAudio(false)
@@ -258,7 +274,6 @@ export default function Page() {
 
   const playNote = async (note: string, durationMs: number) => {
     if (note === "休符") return
-    if (isMicEnabled) return
 
     const freq = noteToFreq[note]
     if (!freq) return
@@ -290,6 +305,29 @@ export default function Page() {
     oscillator.stop(now + durationSec)
   }
 
+  const playClick = async () => {
+    const ctx = await ensureAudioReady()
+    if (!ctx) return
+
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    const now = ctx.currentTime
+
+    oscillator.type = "square"
+    oscillator.frequency.value = 1100
+
+    gainNode.gain.setValueAtTime(0.0001, now)
+    gainNode.gain.exponentialRampToValueAtTime(0.12, now + 0.005)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.04)
+
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    oscillator.start(now)
+    oscillator.stop(now + 0.05)
+  }
+
   const playCurrentNote = async () => {
     if (isMicEnabled) return
     await playNote(current.note, getStepMs(current.length))
@@ -305,6 +343,8 @@ export default function Page() {
       if (phraseIndex < safePhrases.length - 1) {
         setPhraseIndex((prev) => prev + 1)
         setNoteIndex(0)
+      } else {
+        setIsPlaying(false)
       }
 
       return
@@ -314,6 +354,7 @@ export default function Page() {
       setNoteIndex((prev) => prev + 1)
     } else {
       setNoteIndex(0)
+      setIsPlaying(false)
     }
   }
 
@@ -351,7 +392,6 @@ export default function Page() {
     clearPlaybackTimer()
     setIsPlaying(false)
     moveToNextNote()
-    setJudgeState("idle")
   }
 
   const handleBack = () => {
@@ -360,7 +400,6 @@ export default function Page() {
 
     if (noteIndex > 0) {
       setNoteIndex((prev) => prev - 1)
-      setJudgeState("idle")
       return
     }
 
@@ -369,12 +408,10 @@ export default function Page() {
       const prevPhrase = safePhrases[prevPhraseIndex]
       setPhraseIndex(prevPhraseIndex)
       setNoteIndex(prevPhrase.notes.length - 1)
-      setJudgeState("idle")
       return
     }
 
     setNoteIndex(0)
-    setJudgeState("idle")
   }
 
   const startMic = async () => {
@@ -395,9 +432,8 @@ export default function Page() {
 
       const AudioCtx =
         window.AudioContext ||
-        (window as typeof window & {
-          webkitAudioContext?: typeof AudioContext
-        }).webkitAudioContext
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext
 
       if (!AudioCtx) {
         setIsMicPreparing(false)
@@ -420,8 +456,9 @@ export default function Page() {
 
       setIsMicEnabled(true)
       setJudgeState("idle")
+      setDetectedNote("")
       stableHitCountRef.current = 0
-      judgeCooldownRef.current = false
+      noteSolvedRef.current = false
     } catch {
       setIsMicEnabled(false)
     } finally {
@@ -451,62 +488,41 @@ export default function Page() {
     setDetectedNote("")
     setJudgeState("idle")
     stableHitCountRef.current = 0
-    judgeCooldownRef.current = false
+    noteSolvedRef.current = false
   }
 
   useEffect(() => {
-    clearPlaybackTimer()
-    setNoteIndex(0)
+    stableHitCountRef.current = 0
+    noteSolvedRef.current = false
     setJudgeState("idle")
-  }, [phraseIndex])
+  }, [phraseIndex, noteIndex])
 
   useEffect(() => {
     if (screen !== "practice") return
-    if (isMicEnabled) return
+    if (!isPlaying) return
 
-    const activePhrase = safePhrases[phraseIndex]
-    const activeNote = activePhrase.notes[noteIndex] ?? activePhrase.notes[0]
-
-    void playNote(activeNote.note, getStepMs(activeNote.length))
-  }, [screen, phraseIndex, noteIndex, tempo, safePhrases, isMicEnabled])
+    if (isMicEnabled) {
+      void playClick()
+    } else {
+      void playNote(current.note, getStepMs(current.length))
+    }
+  }, [screen, isPlaying, isMicEnabled, phraseIndex, noteIndex, tempo, current.note, current.length])
 
   useEffect(() => {
     clearPlaybackTimer()
 
     if (screen !== "practice" || !isPlaying) return
 
-    const activePhrase = safePhrases[phraseIndex]
-    const activeNote = activePhrase.notes[noteIndex] ?? activePhrase.notes[0]
-    const stepMs = getStepMs(activeNote.length)
+    const stepMs = getStepMs(current.length)
 
     timerRef.current = window.setTimeout(() => {
-      if (playMode === "full") {
-        if (noteIndex < activePhrase.notes.length - 1) {
-          setNoteIndex((prev) => prev + 1)
-          return
-        }
-
-        if (phraseIndex < safePhrases.length - 1) {
-          setPhraseIndex((prev) => prev + 1)
-          setNoteIndex(0)
-          return
-        }
-
-        setIsPlaying(false)
-        return
-      }
-
-      if (noteIndex < activePhrase.notes.length - 1) {
-        setNoteIndex((prev) => prev + 1)
-      } else {
-        setNoteIndex(0)
-      }
+      moveToNextNote()
     }, stepMs)
 
     return () => {
       clearPlaybackTimer()
     }
-  }, [isPlaying, screen, playMode, phraseIndex, noteIndex, tempo, safePhrases])
+  }, [screen, isPlaying, playMode, phraseIndex, noteIndex, tempo, current.length])
 
   useEffect(() => {
     if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) return
@@ -521,29 +537,26 @@ export default function Page() {
       const note = freq > 0 ? closestNoteFromFrequency(freq) : ""
       setDetectedNote(note)
 
-      if (current.note !== "休符" && note) {
-        if (note === current.note) {
+      if (!isPlaying || current.note === "休符") {
+        setJudgeState("idle")
+      } else if (!noteSolvedRef.current) {
+        if (note && note === current.note) {
           stableHitCountRef.current += 1
-        } else {
-          stableHitCountRef.current = 0
-        }
-
-        if (!judgeCooldownRef.current && stableHitCountRef.current >= 4) {
-          judgeCooldownRef.current = true
-          setJudgeState("ok")
-          setSuccessCount((prev) => prev + 1)
-
-          window.setTimeout(() => {
-            moveToNextNote()
+          if (stableHitCountRef.current >= 4) {
+            noteSolvedRef.current = true
+            setJudgeState("ok")
+            setSuccessCount((prev) => prev + 1)
+          } else {
             setJudgeState("idle")
-            stableHitCountRef.current = 0
-            judgeCooldownRef.current = false
-          }, 250)
-        } else if (!judgeCooldownRef.current && note && note !== current.note) {
+          }
+        } else if (note && note !== current.note) {
+          stableHitCountRef.current = 0
           setJudgeState("miss")
+        } else {
+          setJudgeState("idle")
         }
       } else {
-        setJudgeState("idle")
+        setJudgeState("ok")
       }
 
       micAnimationRef.current = requestAnimationFrame(tick)
@@ -557,7 +570,7 @@ export default function Page() {
         micAnimationRef.current = null
       }
     }
-  }, [isMicEnabled, current.note, noteIndex, phraseIndex, playMode])
+  }, [isMicEnabled, isPlaying, current.note])
 
   useEffect(() => {
     if (screen !== "practice") return
@@ -583,7 +596,7 @@ export default function Page() {
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [screen, playMode, noteIndex, phraseIndex, safeNotes.length])
+  }, [screen, playMode, noteIndex, phraseIndex])
 
   useEffect(() => {
     return () => {
@@ -639,7 +652,9 @@ export default function Page() {
 
           <div className="mb-4 rounded-[20px] bg-white p-4">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-base font-bold text-slate-700">エイトメロディーズ進行</p>
+              <p className="text-base font-bold text-slate-700">
+                エイトメロディーズ進行
+              </p>
               <p className="text-base font-black text-slate-900">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
@@ -728,7 +743,11 @@ export default function Page() {
                         : "bg-white text-slate-500"
                     }`}
                   >
-                    {judgeState === "ok" ? "OK!" : judgeState === "miss" ? "MISS" : "..."}
+                    {judgeState === "ok"
+                      ? "OK!"
+                      : judgeState === "miss"
+                      ? "MISS"
+                      : "..."}
                   </div>
 
                   <div className="rounded-lg bg-white px-3 py-3 text-center text-xs font-semibold text-slate-700">
@@ -839,7 +858,9 @@ export default function Page() {
                   }}
                   className="h-4 w-4"
                 />
-                <span className="text-sm font-bold text-slate-800">全体通し再生</span>
+                <span className="text-sm font-bold text-slate-800">
+                  全体通し再生
+                </span>
               </label>
 
               <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
@@ -854,7 +875,9 @@ export default function Page() {
                   }}
                   className="h-4 w-4"
                 />
-                <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
+                <span className="text-sm font-bold text-slate-800">
+                  メロディーごと再生
+                </span>
               </label>
             </div>
 
@@ -877,7 +900,9 @@ export default function Page() {
           </div>
 
           <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">再生コントロール</p>
+            <p className="mb-3 text-base font-bold text-slate-700">
+              再生コントロール
+            </p>
             <div className="grid grid-cols-1 gap-3">
               <button
                 onClick={() => {
@@ -886,18 +911,14 @@ export default function Page() {
                     setPhraseIndex(0)
                     setNoteIndex(0)
                   }
-                  if (isMicEnabled) {
-                    setIsPlaying(false)
-                    return
-                  }
                   void ensureAudioReady().then(() => {
                     setIsPlaying(true)
                   })
                 }}
                 className="rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
-                disabled={isPreparingAudio || isMicEnabled}
+                disabled={isPreparingAudio}
               >
-                {isMicEnabled ? "マイク判定中" : isPreparingAudio ? "準備中…" : "再生"}
+                {isPreparingAudio ? "準備中…" : isMicEnabled ? "クリックで再生" : "再生"}
               </button>
 
               <button
