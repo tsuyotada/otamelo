@@ -61,7 +61,7 @@ export default function Page() {
     () =>
       phrases.map((phrase, index) => ({
         ...phrase,
-        title: phrase.title || `フレーズ${index + 1}`,
+        title: phrase.title || `メロディー${index + 1}`,
         notes: phrase.notes.length > 0 ? phrase.notes : [makeNote("ド")],
       })),
     []
@@ -344,19 +344,21 @@ export default function Page() {
 
   if (screen === "home") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] text-white">
-        <div className="rounded-[32px] border border-white/10 bg-[#f8f4ea] px-12 py-10 text-center text-slate-900 shadow-2xl">
-          <p className="mb-4 text-xl font-bold text-slate-700">オタマトーンの準備はできましたか？</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
+        <div className="w-full max-w-[900px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+         
+          <p className="mb-3 text-lg font-bold text-slate-700">オタマトーンの準備はできましたか？</p>
           
+
           {isPreparingAudio && (
-            <div className="mb-6 rounded-2xl bg-[#fff7df] px-6 py-4 text-center text-base font-bold text-slate-700">
+            <div className="mb-5 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
               音を準備しています…
             </div>
           )}
 
           <button
             onClick={() => void handleStart()}
-            className="rounded-full bg-[#3aa7f2] px-10 py-5 text-2xl font-bold text-white shadow-lg disabled:opacity-70"
+            className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
             disabled={isPreparingAudio}
           >
             {isPreparingAudio ? "準備中…" : "開始"}
@@ -367,28 +369,28 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#0d1b3d] px-6 py-5 text-white">
-      <div className="mx-auto flex h-[calc(100vh-40px)] max-w-[1850px] flex-col gap-4">
-        <header className="flex items-center justify-between rounded-[28px] border border-white/10 bg-[#f8f4ea] px-8 py-5 text-slate-900 shadow-2xl">
-          <div className="flex items-center gap-6">
+    <main className="h-screen overflow-hidden bg-[#0d1b3d] px-4 py-4 text-white">
+      <div className="mx-auto flex h-[calc(100vh-32px)] max-w-[1600px] flex-col gap-3">
+        <header className="flex items-center justify-between rounded-[24px] border border-white/10 bg-[#f8f4ea] px-6 py-4 text-slate-900 shadow-2xl">
+          <div className="flex items-center gap-5">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-[#1d4f91]">
+              <h1 className="text-3xl font-black tracking-tight text-[#1d4f91]">
                 オタマトーンメロディーズ
               </h1>
-              <p className="text-lg font-bold">エイトメロディーズ練習アプリ</p>
+              <p className="text-base font-bold">エイトメロディーズ練習アプリ</p>
             </div>
 
-            <div className="rounded-full bg-[#10234d] px-5 py-3 text-white">
-              <p className="text-sm text-white/70">現在</p>
-              <p className="text-lg font-bold">
+            <div className="rounded-full bg-[#10234d] px-4 py-2 text-white">
+              <p className="text-xs text-white/70">現在</p>
+              <p className="text-base font-bold">
                 メロディー {phraseIndex + 1} / {safePhrases.length}
               </p>
             </div>
           </div>
 
-          <div className="flex min-w-[420px] items-center gap-4 rounded-full bg-slate-100 px-5 py-3">
-            <span className="text-lg font-bold">テンポ</span>
-            <span className="w-16 rounded-full bg-[#ffd54a] px-3 py-1 text-center text-xl font-black">
+          <div className="flex min-w-[360px] items-center gap-3 rounded-full bg-slate-100 px-4 py-3">
+            <span className="text-base font-bold">テンポ</span>
+            <span className="w-14 rounded-full bg-[#ffd54a] px-3 py-1 text-center text-lg font-black">
               {tempo}
             </span>
             <input
@@ -403,30 +405,31 @@ export default function Page() {
           </div>
         </header>
 
-        <section className="grid flex-1 grid-cols-[2.55fr_1fr] gap-4">
-          <div className="flex flex-col rounded-[28px] border border-white/10 bg-[#f8f4ea] p-6 text-slate-900 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between">
+        <section className="grid flex-1 grid-cols-[2.25fr_0.85fr] gap-3">
+          <div className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-lg font-bold text-slate-700">オタマトーンの押さえる位置</p>
+                <p className="text-base font-bold text-slate-700">オタマトーンの押さえる位置</p>
+
               </div>
 
               <button
                 onClick={() => void playCurrentNote()}
-                className="rounded-full bg-[#10234d] px-5 py-3 text-lg font-bold text-white"
+                className="rounded-full bg-[#10234d] px-4 py-2 text-base font-bold text-white"
               >
-                お手本を鳴らす
+                お手本
               </button>
             </div>
 
-            <div className="mb-5 rounded-[24px] bg-white p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-lg font-bold text-slate-700">エイトメロディーズ進行</p>
-                <p className="text-lg font-black text-slate-900">
+            <div className="mb-4 rounded-[20px] bg-white p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-base font-bold text-slate-700">エイトメロディーズ進行</p>
+                <p className="text-base font-black text-slate-900">
                   {phraseIndex + 1} / {safePhrases.length}
                 </p>
               </div>
 
-              <div className="grid grid-cols-8 gap-3">
+              <div className="grid grid-cols-8 gap-2">
                 {safePhrases.map((_, index) => {
                   const isCurrent = index === phraseIndex
                   const isDone = index < phraseIndex
@@ -434,22 +437,22 @@ export default function Page() {
                   return (
                     <div
                       key={index}
-                      className={`rounded-2xl px-3 py-4 text-center transition ${
+                      className={`rounded-xl px-2 py-3 text-center transition ${
                         isCurrent
-                          ? "bg-[#ffd54a] text-slate-900 shadow-sm ring-2 ring-[#f3c842]"
+                          ? "bg-[#ffd54a] text-slate-900 ring-2 ring-[#f3c842]"
                           : isDone
                           ? "bg-[#bfe3ff] text-slate-900"
                           : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      <p className="text-xs font-bold">MELODY</p>
-                      <p className="mt-1 text-2xl font-black">{index + 1}</p>
+                      <p className="text-[10px] font-bold">MELODY</p>
+                      <p className="mt-1 text-xl font-black">{index + 1}</p>
                     </div>
                   )
                 })}
               </div>
 
-              <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+              <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
                 <div
                   className="h-full rounded-full bg-[#3aa7f2] transition-all"
                   style={{ width: `${progressPercent}%` }}
@@ -457,58 +460,58 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="grid flex-1 grid-cols-[1.5fr_1.05fr] gap-6">
-              <div className="flex items-center justify-center gap-8 rounded-[24px] bg-[#fff7df] p-6">
-                <div className="relative flex h-full min-h-[560px] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-6 py-8">
-                  <div className="relative h-full w-12 rounded-full bg-[#18253f] shadow-inner">
-                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between py-5">
-                      {Array.from({ length: 10 }).map((_, i) => (
+            <div className="grid flex-1 grid-cols-[1.35fr_0.9fr] gap-4">
+              <div className="flex items-center justify-center gap-6 rounded-[20px] bg-[#fff7df] p-4">
+                <div className="relative flex h-full min-h-[420px] w-[120px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-6">
+                  <div className="relative h-full w-10 rounded-full bg-[#18253f] shadow-inner">
+                    <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between py-4">
+                      {Array.from({ length: 9 }).map((_, i) => (
                         <div key={i} className="h-px w-full bg-white/10" />
                       ))}
                     </div>
 
                     {current.note !== "休符" && (
                       <div
-                        className="absolute left-1/2 h-4 w-20 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_8px_rgba(255,213,74,0.18)]"
-                        style={{ bottom: `calc(${current.pos}% - 8px)` }}
+                        className="absolute left-1/2 h-3 w-16 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
+                        style={{ bottom: `calc(${current.pos}% - 6px)` }}
                       />
                     )}
                   </div>
 
-                  <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 translate-y-10 rounded-full border-4 border-slate-700 bg-[#fffaf0]" />
+                  <div className="absolute bottom-0 left-1/2 h-20 w-20 -translate-x-1/2 translate-y-8 rounded-full border-4 border-slate-700 bg-[#fffaf0]" />
                 </div>
 
-                <div className="flex min-w-[430px] flex-col gap-5">
-                  <div className="rounded-[24px] bg-[#10234d] px-8 py-6 text-center text-white">
-                    <p className="text-xl font-bold text-white/80">いま押さえる音</p>
-                    <p className="mt-2 min-h-[92px] text-7xl font-black leading-none tracking-tight">
+                <div className="flex min-w-[320px] flex-col gap-4">
+                  <div className="rounded-[20px] bg-[#10234d] px-6 py-5 text-center text-white">
+                    <p className="text-lg font-bold text-white/80">いま押さえる音</p>
+                    <p className="mt-2 min-h-[68px] text-6xl font-black leading-none tracking-tight">
                       {visibleCurrentLabel}
                     </p>
-                    <p className="mt-4 text-xl font-bold text-white/80">
+                    <p className="mt-3 text-lg font-bold text-white/80">
                       長さ: {current.length}
                     </p>
                   </div>
 
-                  <div className="rounded-[24px] border-4 border-[#b7ddfa] bg-[#eaf6ff] px-8 py-6 text-center">
-                    <p className="text-xl font-bold text-slate-700">つぎの音</p>
-                    <p className="mt-2 min-h-[84px] text-6xl font-black leading-none tracking-tight text-slate-900">
+                  <div className="rounded-[20px] border-4 border-[#b7ddfa] bg-[#eaf6ff] px-6 py-5 text-center">
+                    <p className="text-lg font-bold text-slate-700">つぎの音</p>
+                    <p className="mt-2 min-h-[60px] text-5xl font-black leading-none tracking-tight text-slate-900">
                       {visibleNextLabel}
                     </p>
-                    <p className="mt-4 text-xl font-bold text-slate-600">
+                    <p className="mt-3 text-lg font-bold text-slate-600">
                       長さ: {nextVisibleNote?.length ?? 0}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-center gap-3 pt-1 text-slate-500">
+                  <div className="flex items-center justify-center gap-2 pt-1 text-slate-500">
                     <button
                       onClick={handleBack}
-                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
                     >
                       1音戻る（←）
                     </button>
                     <button
                       onClick={handleNext}
-                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
                     >
                       1音進む（→）
                     </button>
@@ -516,23 +519,23 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="rounded-[24px] bg-white p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-lg font-bold text-slate-700">進行状況</p>
-                    <p className="text-lg font-black text-slate-900">
+              <div className="flex flex-col gap-3">
+                <div className="rounded-[20px] bg-white p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-base font-bold text-slate-700">進行状況</p>
+                    <p className="text-base font-black text-slate-900">
                       {passedNotes} / {totalNotes}
                     </p>
                   </div>
 
-                  <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
                     <div
                       className="h-full rounded-full bg-[#3aa7f2] transition-all"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
 
-                  <p className="mt-3 text-base font-semibold text-slate-600">
+                  <p className="mt-3 text-sm font-semibold text-slate-600">
                     曲全体進行率: {Math.round(progressPercent)}%
                   </p>
                 </div>
@@ -540,11 +543,11 @@ export default function Page() {
             </div>
           </div>
 
-          <aside className="flex flex-col gap-4 rounded-[28px] border border-white/10 bg-[#f8f4ea] p-5 text-slate-900 shadow-2xl">
-            <div className="rounded-[24px] bg-slate-100 p-4">
-              <p className="mb-3 text-lg font-bold text-slate-700">再生モード</p>
+          <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
+            <div className="rounded-[20px] bg-slate-100 p-4">
+              <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
 
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-4">
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
                 <input
                   type="radio"
                   name="playMode"
@@ -554,29 +557,29 @@ export default function Page() {
                     setIsPlaying(false)
                     setPlayMode("phrase")
                   }}
-                  className="h-5 w-5"
+                  className="h-4 w-4"
                 />
-                <span className="text-lg font-bold text-slate-800">メロディーごと再生</span>
+                <span className="text-base font-bold text-slate-800">メロディーごと再生</span>
               </label>
 
               {playMode === "phrase" && (
                 <div className="mt-3 flex items-center gap-2">
                   <button
                     onClick={handlePrevPhrase}
-                    className="flex-1 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                    className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
                   >
                     前のメロディー
                   </button>
                   <button
                     onClick={handleNextPhrase}
-                    className="flex-1 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                    className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
                   >
                     次のメロディー
                   </button>
                 </div>
               )}
 
-              <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-4">
+              <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
                 <input
                   type="radio"
                   name="playMode"
@@ -588,14 +591,14 @@ export default function Page() {
                     setPhraseIndex(0)
                     setNoteIndex(0)
                   }}
-                  className="h-5 w-5"
+                  className="h-4 w-4"
                 />
-                <span className="text-lg font-bold text-slate-800">全体通し再生</span>
+                <span className="text-base font-bold text-slate-800">全体通し再生</span>
               </label>
             </div>
 
-            <div className="rounded-[24px] bg-slate-100 p-4">
-              <p className="mb-3 text-lg font-bold text-slate-700">再生コントロール</p>
+            <div className="rounded-[20px] bg-slate-100 p-4">
+              <p className="mb-3 text-base font-bold text-slate-700">再生コントロール</p>
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => {
@@ -608,7 +611,7 @@ export default function Page() {
                       setIsPlaying(true)
                     })
                   }}
-                  className="rounded-2xl bg-[#58c96b] px-4 py-5 text-xl font-bold text-white shadow-sm disabled:opacity-70"
+                  className="rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
                   disabled={isPreparingAudio}
                 >
                   {isPreparingAudio ? "準備中…" : "再生"}
@@ -619,7 +622,7 @@ export default function Page() {
                     clearPlaybackTimer()
                     setIsPlaying(false)
                   }}
-                  className="rounded-2xl bg-[#e25b4e] px-4 py-5 text-xl font-bold text-white shadow-sm"
+                  className="rounded-2xl bg-[#e25b4e] px-4 py-3 text-lg font-bold text-white shadow-sm"
                 >
                   停止
                 </button>
