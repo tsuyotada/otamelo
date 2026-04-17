@@ -56,12 +56,8 @@ function midiToJapaneseNote(midi: number): string {
   const octave = Math.floor(midi / 12) - 1
   const noteName = noteNamesSharp[midi % 12]
 
-  if (octave <= 3) {
-    return `低い${noteName}`
-  }
-  if (octave === 4) {
-    return noteName
-  }
+  if (octave <= 3) return `低い${noteName}`
+  if (octave === 4) return noteName
   return `高い${noteName}`
 }
 
@@ -127,11 +123,10 @@ function getAutocorrelatedPitch(buffer: Float32Array, sampleRate: number): numbe
   const x3 = correlations[maxIndex + 1] ?? correlations[maxIndex]
   const a = (x1 + x3 - 2 * x2) / 2
   const b = (x3 - x1) / 2
-
   const shift = a ? -b / (2 * a) : 0
   const period = maxIndex + shift
-  if (!period || period <= 0) return 0
 
+  if (!period || period <= 0) return 0
   return sampleRate / period
 }
 
@@ -146,7 +141,6 @@ export default function Page() {
 
   const [isMicEnabled, setIsMicEnabled] = useState(false)
   const [isMicPreparing, setIsMicPreparing] = useState(false)
-  const [detectedFreq, setDetectedFreq] = useState(0)
   const [detectedNote, setDetectedNote] = useState("")
   const [judgeState, setJudgeState] = useState<JudgeState>("idle")
   const [successCount, setSuccessCount] = useState(0)
@@ -264,6 +258,7 @@ export default function Page() {
 
   const playNote = async (note: string, durationMs: number) => {
     if (note === "休符") return
+    if (isMicEnabled) return
 
     const freq = noteToFreq[note]
     if (!freq) return
@@ -296,6 +291,7 @@ export default function Page() {
   }
 
   const playCurrentNote = async () => {
+    if (isMicEnabled) return
     await playNote(current.note, getStepMs(current.length))
   }
 
@@ -386,12 +382,14 @@ export default function Page() {
 
     try {
       setIsMicPreparing(true)
+      clearPlaybackTimer()
+      setIsPlaying(false)
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
         },
       })
 
@@ -421,6 +419,9 @@ export default function Page() {
       analyserRef.current = analyser
 
       setIsMicEnabled(true)
+      setJudgeState("idle")
+      stableHitCountRef.current = 0
+      judgeCooldownRef.current = false
     } catch {
       setIsMicEnabled(false)
     } finally {
@@ -447,9 +448,10 @@ export default function Page() {
     analyserRef.current = null
     micSourceRef.current = null
     setIsMicEnabled(false)
-    setDetectedFreq(0)
     setDetectedNote("")
     setJudgeState("idle")
+    stableHitCountRef.current = 0
+    judgeCooldownRef.current = false
   }
 
   useEffect(() => {
@@ -460,12 +462,13 @@ export default function Page() {
 
   useEffect(() => {
     if (screen !== "practice") return
+    if (isMicEnabled) return
 
     const activePhrase = safePhrases[phraseIndex]
     const activeNote = activePhrase.notes[noteIndex] ?? activePhrase.notes[0]
 
     void playNote(activeNote.note, getStepMs(activeNote.length))
-  }, [screen, phraseIndex, noteIndex, tempo, safePhrases])
+  }, [screen, phraseIndex, noteIndex, tempo, safePhrases, isMicEnabled])
 
   useEffect(() => {
     clearPlaybackTimer()
@@ -515,8 +518,6 @@ export default function Page() {
     const tick = () => {
       analyser.getFloatTimeDomainData(buffer)
       const freq = getAutocorrelatedPitch(buffer, sampleRate)
-      setDetectedFreq(freq)
-
       const note = freq > 0 ? closestNoteFromFrequency(freq) : ""
       setDetectedNote(note)
 
@@ -629,9 +630,10 @@ export default function Page() {
 
             <button
               onClick={() => void playCurrentNote()}
-              className="rounded-full bg-[#10234d] px-4 py-2 text-sm font-bold text-white"
+              disabled={isMicEnabled}
+              className="rounded-full bg-[#10234d] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              お手本
+              {isMicEnabled ? "マイク判定中" : "お手本"}
             </button>
           </div>
 
@@ -884,14 +886,18 @@ export default function Page() {
                     setPhraseIndex(0)
                     setNoteIndex(0)
                   }
+                  if (isMicEnabled) {
+                    setIsPlaying(false)
+                    return
+                  }
                   void ensureAudioReady().then(() => {
                     setIsPlaying(true)
                   })
                 }}
                 className="rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
-                disabled={isPreparingAudio}
+                disabled={isPreparingAudio || isMicEnabled}
               >
-                {isPreparingAudio ? "準備中…" : "再生"}
+                {isMicEnabled ? "マイク判定中" : isPreparingAudio ? "準備中…" : "再生"}
               </button>
 
               <button
