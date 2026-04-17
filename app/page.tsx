@@ -369,8 +369,9 @@ if (screen === "home") {
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-base font-bold text-slate-700">オタマトーンでエイトメロディーズをひいてみよう
-              </p>
+              <p className="text-base font-bold text-slate-700">
+  Trying to play "Eight Melodies" on the Otamatone
+</p>
 
             </div>
 
@@ -384,7 +385,7 @@ if (screen === "home") {
 
           <div className="mb-4 rounded-[20px] bg-white p-4">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-base font-bold text-slate-700">進行</p>
+              <p className="text-base font-bold text-slate-700">エイトメロディーズ進行</p>
               <p className="text-base font-black text-slate-900">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
@@ -523,57 +524,60 @@ if (screen === "home") {
             </div>
           </div>
 
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
- <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              <input
-                type="radio"
-                name="playMode"
-                checked={playMode === "full"}
-                onChange={() => {
-                  clearPlaybackTimer()
-                  setIsPlaying(false)
-                  setPlayMode("full")
-                  setPhraseIndex(0)
-                  setNoteIndex(0)
-                }}
-                className="h-4 w-4"
-              />
-              <span className="text-sm font-bold text-slate-800">全体通し再生</span>
-            </label>
-<label className="mb-2 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">              <input
-                type="radio"
-                name="playMode"
-                checked={playMode === "phrase"}
-                onChange={() => {
-                  clearPlaybackTimer()
-                  setIsPlaying(false)
-                  setPlayMode("phrase")
-                }}
-                className="h-4 w-4"
-              />
-              <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
-            </label>
+         <div className="rounded-[20px] bg-slate-100 p-4">
+  <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
 
-            {playMode === "phrase" && (
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  onClick={handlePrevPhrase}
-                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                >
-                  前のメロディー
-                </button>
-                <button
-                  onClick={handleNextPhrase}
-                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                >
-                  次のメロディー
-                </button>
-              </div>
-            )}
+  <div className="flex flex-col gap-3">
+    <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+      <input
+        type="radio"
+        name="playMode"
+        checked={playMode === "full"}
+        onChange={() => {
+          clearPlaybackTimer()
+          setIsPlaying(false)
+          setPlayMode("full")
+          setPhraseIndex(0)
+          setNoteIndex(0)
+        }}
+        className="h-4 w-4"
+      />
+      <span className="text-sm font-bold text-slate-800">全体通し再生</span>
+    </label>
 
-           
-          </div>
+    <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+      <input
+        type="radio"
+        name="playMode"
+        checked={playMode === "phrase"}
+        onChange={() => {
+          clearPlaybackTimer()
+          setIsPlaying(false)
+          setPlayMode("phrase")
+        }}
+        className="h-4 w-4"
+      />
+      <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
+    </label>
+  </div>
+
+  {playMode === "phrase" && (
+    <div className="mt-3 flex items-center gap-2">
+      <button
+        onClick={handlePrevPhrase}
+        className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+      >
+        前のメロディー
+      </button>
+      <button
+        onClick={handleNextPhrase}
+        className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+      >
+        次のメロディー
+      </button>
+    </div>
+  )}
+</div>
 
           <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">コントロール</p>
