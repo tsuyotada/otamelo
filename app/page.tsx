@@ -360,7 +360,7 @@ export default function Page() {
             className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
             disabled={isPreparingAudio}
           >
-            {isPreparingAudio ? "準備中…" : "開始"}
+            {isPreparingAudio ? "準備中…" : "OK！"}
           </button>
         </div>
       </main>
