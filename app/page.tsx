@@ -373,7 +373,7 @@ export default function Page() {
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-base font-bold text-slate-700">オタマトーンの押さえる位置</p>
+              <p className="text-base font-bold text-slate-700">オタマトーンでエイトメロディーズ</p>
 
             </div>
 
@@ -528,7 +528,22 @@ export default function Page() {
 
           <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
-
+ <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+              <input
+                type="radio"
+                name="playMode"
+                checked={playMode === "full"}
+                onChange={() => {
+                  clearPlaybackTimer()
+                  setIsPlaying(false)
+                  setPlayMode("full")
+                  setPhraseIndex(0)
+                  setNoteIndex(0)
+                }}
+                className="h-4 w-4"
+              />
+              <span className="text-sm font-bold text-slate-800">全体通し再生</span>
+            </label>
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
               <input
                 type="radio"
@@ -561,26 +576,11 @@ export default function Page() {
               </div>
             )}
 
-            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              <input
-                type="radio"
-                name="playMode"
-                checked={playMode === "full"}
-                onChange={() => {
-                  clearPlaybackTimer()
-                  setIsPlaying(false)
-                  setPlayMode("full")
-                  setPhraseIndex(0)
-                  setNoteIndex(0)
-                }}
-                className="h-4 w-4"
-              />
-              <span className="text-sm font-bold text-slate-800">全体通し再生</span>
-            </label>
+           
           </div>
 
           <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">再生コントロール</p>
+            <p className="mb-3 text-base font-bold text-slate-700">コントロール</p>
             <div className="grid grid-cols-1 gap-3">
               <button
                 onClick={() => {
