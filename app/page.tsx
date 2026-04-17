@@ -370,7 +370,7 @@ if (screen === "home") {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-base font-bold text-slate-700">
-  Trying to play "Eight Melodies" on the Otamatone
+  "Eight Melodies" on the Otamatone
 </p>
 
             </div>
