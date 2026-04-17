@@ -373,7 +373,8 @@ export default function Page() {
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-base font-bold text-slate-700">オタマトーンでエイトメロディーズ</p>
+              <p className="text-base font-bold text-slate-700">オタマトーンでエイトメロディーズをひいてみよう
+              </p>
 
             </div>
 
@@ -387,7 +388,7 @@ export default function Page() {
 
           <div className="mb-4 rounded-[20px] bg-white p-4">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-base font-bold text-slate-700">エイトメロディーズ進行</p>
+              <p className="text-base font-bold text-slate-700">進行</p>
               <p className="text-base font-black text-slate-900">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
@@ -556,6 +557,7 @@ export default function Page() {
                 }}
                 className="h-4 w-4"
               />
+              <br></>
               <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
             </label>
 
