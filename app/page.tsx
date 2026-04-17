@@ -146,6 +146,37 @@ function getAutocorrelatedPitch(
   return sampleRate / period
 }
 
+function Spinner() {
+  return (
+    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+  )
+}
+
+function PixelInventorFace() {
+  return (
+    <div className="relative h-[34px] w-[34px] shrink-0 rounded-md border-2 border-slate-700 bg-[#ffe8b3] shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-[8px] rounded-t-[4px] bg-[#8c5a34]" />
+      <div className="absolute left-[7px] top-[13px] h-[4px] w-[4px] bg-slate-700" />
+      <div className="absolute right-[7px] top-[13px] h-[4px] w-[4px] bg-slate-700" />
+      <div className="absolute left-1/2 top-[19px] h-[2px] w-[14px] -translate-x-1/2 bg-slate-700" />
+      <div className="absolute left-1/2 top-[23px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-700" />
+    </div>
+  )
+}
+
+function HomeOtamatoneFace() {
+  return (
+    <div className="mx-auto mb-6 h-[110px] w-[110px] rounded-[46%] border-4 border-slate-700 bg-[#fffaf0] shadow-md">
+      <div className="absolute" />
+      <div className="relative h-full w-full">
+        <div className="absolute left-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
+        <div className="absolute right-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
+        <div className="absolute left-0 top-[56px] h-[3px] w-full bg-slate-700" />
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [phraseIndex, setPhraseIndex] = useState(0)
@@ -154,6 +185,7 @@ export default function Page() {
   const [tempo, setTempo] = useState(80)
   const [playMode, setPlayMode] = useState<PlayMode>("full")
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
 
   const [isMicEnabled, setIsMicEnabled] = useState(false)
   const [isMicPreparing, setIsMicPreparing] = useState(false)
@@ -163,6 +195,7 @@ export default function Page() {
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
+  const countdownTimerRef = useRef<number | null>(null)
 
   const micStreamRef = useRef<MediaStream | null>(null)
   const micAudioContextRef = useRef<AudioContext | null>(null)
@@ -233,6 +266,13 @@ export default function Page() {
     }
   }
 
+  const clearCountdownTimer = () => {
+    if (countdownTimerRef.current !== null) {
+      window.clearTimeout(countdownTimerRef.current)
+      countdownTimerRef.current = null
+    }
+  }
+
   const getStepMs = (length = 1) => {
     const base = Math.round(60000 / tempo)
     return Math.max(120, base * length)
@@ -246,8 +286,9 @@ export default function Page() {
     try {
       const AudioCtx =
         window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext
+        (window as typeof window & {
+          webkitAudioContext?: typeof AudioContext
+        }).webkitAudioContext
 
       if (!AudioCtx) {
         setIsPreparingAudio(false)
@@ -359,6 +400,8 @@ export default function Page() {
 
   const handleStart = async () => {
     clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
     setIsPlaying(false)
     setPlayMode("full")
     setPhraseIndex(0)
@@ -371,6 +414,8 @@ export default function Page() {
 
   const handlePrevPhrase = () => {
     clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
     setIsPlaying(false)
     setPlayMode("phrase")
     setPhraseIndex((prev) => Math.max(0, prev - 1))
@@ -380,6 +425,8 @@ export default function Page() {
 
   const handleNextPhrase = () => {
     clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
     setIsPlaying(false)
     setPlayMode("phrase")
     setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
@@ -389,12 +436,16 @@ export default function Page() {
 
   const handleNext = () => {
     clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
     setIsPlaying(false)
     moveToNextNote()
   }
 
   const handleBack = () => {
     clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
     setIsPlaying(false)
 
     if (noteIndex > 0) {
@@ -413,12 +464,19 @@ export default function Page() {
     setNoteIndex(0)
   }
 
+  const handleResetSuccess = () => {
+    setSuccessCount(0)
+    setJudgeState("idle")
+  }
+
   const startMic = async () => {
     if (isMicEnabled) return
 
     try {
       setIsMicPreparing(true)
       clearPlaybackTimer()
+      clearCountdownTimer()
+      setCountdown(null)
       setIsPlaying(false)
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -431,8 +489,9 @@ export default function Page() {
 
       const AudioCtx =
         window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext
+        (window as typeof window & {
+          webkitAudioContext?: typeof AudioContext
+        }).webkitAudioContext
 
       if (!AudioCtx) {
         setIsMicPreparing(false)
@@ -488,6 +547,44 @@ export default function Page() {
     setJudgeState("idle")
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
+    clearCountdownTimer()
+    setCountdown(null)
+  }
+
+  const startPlaybackWithCountdown = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setIsPlaying(false)
+
+    if (playMode === "full") {
+      setPhraseIndex(0)
+      setNoteIndex(0)
+    }
+
+    await ensureAudioReady()
+
+    if (!isMicEnabled) {
+      setIsPlaying(true)
+      return
+    }
+
+    setCountdown(3)
+
+    const run = (value: number) => {
+      setCountdown(value)
+
+      if (value === 0) {
+        setCountdown(null)
+        setIsPlaying(true)
+        return
+      }
+
+      countdownTimerRef.current = window.setTimeout(() => {
+        run(value - 1)
+      }, 700)
+    }
+
+    run(3)
   }
 
   useEffect(() => {
@@ -598,17 +695,19 @@ export default function Page() {
 
       if (e.key === " " || e.key === "Spacebar") {
         e.preventDefault()
-        setIsPlaying((prev) => !prev)
+        void startPlaybackWithCountdown()
       }
     }
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [screen, playMode, noteIndex, phraseIndex])
+  }, [screen, playMode, noteIndex, phraseIndex, isMicEnabled])
 
   useEffect(() => {
     return () => {
       stopMic()
+      clearPlaybackTimer()
+      clearCountdownTimer()
     }
   }, [])
 
@@ -616,19 +715,22 @@ export default function Page() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
         <div className="w-full max-w-[900px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+          <HomeOtamatoneFace />
+
           <p className="mb-3 text-lg font-bold text-slate-700">
             オタマトーンの準備はできましたか？
           </p>
 
           {isPreparingAudio && (
-            <div className="mb-5 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
+            <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
               音を準備しています…
             </div>
           )}
 
           <button
             onClick={() => void handleStart()}
-            className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
+            className="cursor-pointer rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
             disabled={isPreparingAudio}
           >
             {isPreparingAudio ? "準備中…" : "OK！"}
@@ -643,16 +745,17 @@ export default function Page() {
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.25fr_0.85fr] gap-3">
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
               <p className="text-base font-bold text-slate-700">
-                オタマトーンでエイトメロディーズをひいてみよう
+                オタマトーンでエイトメロディーズをひけるんだ
               </p>
             </div>
 
             <button
               onClick={() => void playCurrentNote()}
               disabled={isMicEnabled}
-              className="rounded-full bg-[#10234d] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-full bg-[#10234d] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isMicEnabled ? "マイク判定中" : "お手本"}
             </button>
@@ -746,13 +849,13 @@ export default function Page() {
                 <div className="flex items-center justify-center gap-2 pt-1 text-slate-500">
                   <button
                     onClick={handleBack}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                    className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
                   >
                     1音戻る（←）
                   </button>
                   <button
                     onClick={handleNext}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                    className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
                   >
                     1音進む（→）
                   </button>
@@ -767,7 +870,7 @@ export default function Page() {
                 {!isMicEnabled ? (
                   <button
                     onClick={() => void startMic()}
-                    className="w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
+                    className="cursor-pointer w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
                     disabled={isMicPreparing}
                   >
                     {isMicPreparing ? "マイク準備中…" : "マイクをONにする"}
@@ -775,27 +878,18 @@ export default function Page() {
                 ) : (
                   <button
                     onClick={stopMic}
-                    className="w-full rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-800"
+                    className="cursor-pointer w-full rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-800"
                   >
                     マイクをOFFにする
                   </button>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                <div className="rounded-[20px] bg-white p-4">
-                  <p className="mb-2 text-sm font-bold text-slate-500">いま押さえる音</p>
-                  <p className="text-3xl font-black text-slate-900">
-                    {visibleCurrentLabel || "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] bg-white p-4">
-                  <p className="mb-2 text-sm font-bold text-slate-500">入力された音</p>
-                  <p className="text-3xl font-black text-slate-900">
-                    {detectedNote || "-"}
-                  </p>
-                </div>
+              <div className="rounded-[20px] bg-white p-4">
+                <p className="mb-2 text-sm font-bold text-slate-500">入力された音</p>
+                <p className="text-4xl font-black text-slate-900">
+                  {detectedNote || "-"}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -825,6 +919,13 @@ export default function Page() {
                   </p>
                 </div>
               </div>
+
+              <button
+                onClick={handleResetSuccess}
+                className="cursor-pointer rounded-[20px] bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700"
+              >
+                成功数をリセット
+              </button>
             </div>
           </div>
         </section>
@@ -843,7 +944,7 @@ export default function Page() {
                 step={5}
                 value={tempo}
                 onChange={(e) => setTempo(Number(e.target.value))}
-                className="flex-1"
+                className="cursor-pointer flex-1"
               />
             </div>
           </div>
@@ -859,6 +960,8 @@ export default function Page() {
                   checked={playMode === "full"}
                   onChange={() => {
                     clearPlaybackTimer()
+                    clearCountdownTimer()
+                    setCountdown(null)
                     setIsPlaying(false)
                     setPlayMode("full")
                     setPhraseIndex(0)
@@ -878,6 +981,8 @@ export default function Page() {
                   checked={playMode === "phrase"}
                   onChange={() => {
                     clearPlaybackTimer()
+                    clearCountdownTimer()
+                    setCountdown(null)
                     setIsPlaying(false)
                     setPlayMode("phrase")
                   }}
@@ -893,13 +998,13 @@ export default function Page() {
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={handlePrevPhrase}
-                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="cursor-pointer flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
                 >
                   前のメロディー
                 </button>
                 <button
                   onClick={handleNextPhrase}
-                  className="flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="cursor-pointer flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
                 >
                   次のメロディー
                 </button>
@@ -913,40 +1018,45 @@ export default function Page() {
             </p>
             <div className="grid grid-cols-1 gap-3">
               <button
-                onClick={() => {
-                  clearPlaybackTimer()
-                  if (playMode === "full") {
-                    setPhraseIndex(0)
-                    setNoteIndex(0)
-                  }
-                  void ensureAudioReady().then(() => {
-                    setIsPlaying(true)
-                  })
-                }}
-                className="rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
-                disabled={isPreparingAudio}
+                onClick={() => void startPlaybackWithCountdown()}
+                className="cursor-pointer rounded-2xl bg-[#58c96b] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
+                disabled={isPreparingAudio || isMicPreparing || countdown !== null}
               >
-                {isPreparingAudio
-                  ? "準備中…"
-                  : isMicEnabled
-                  ? "クリックで再生"
-                  : "再生"}
+                <span className="flex items-center justify-center gap-2">
+                  {(isPreparingAudio || isMicPreparing) && <Spinner />}
+                  {countdown !== null
+                    ? `${countdown}`
+                    : isPreparingAudio
+                    ? "準備中…"
+                    : isMicEnabled
+                    ? "クリックで再生"
+                    : "再生"}
+                </span>
               </button>
 
               <button
                 onClick={() => {
                   clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
                   setIsPlaying(false)
                 }}
-                className="rounded-2xl bg-[#e25b4e] px-4 py-3 text-lg font-bold text-white shadow-sm"
+                className="cursor-pointer rounded-2xl bg-[#e25b4e] px-4 py-3 text-lg font-bold text-white shadow-sm"
               >
                 停止
               </button>
             </div>
 
-            {isPreparingAudio && (
-              <div className="mt-3 rounded-2xl bg-[#fff7df] px-4 py-3 text-center text-sm font-bold text-slate-700">
+            {(isPreparingAudio || isMicPreparing) && (
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-4 py-3 text-center text-sm font-bold text-slate-700">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
                 音を準備しています…
+              </div>
+            )}
+
+            {countdown !== null && (
+              <div className="mt-3 rounded-2xl bg-[#10234d] px-4 py-4 text-center text-3xl font-black text-white">
+                {countdown}
               </div>
             )}
           </div>
