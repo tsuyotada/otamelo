@@ -342,30 +342,26 @@ export default function Page() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [screen, playMode, noteIndex, phraseIndex, safeNotes.length])
 
-  if (screen === "home") {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
-        <div className="w-full max-w-[900px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
-          <p className="mb-3 text-lg font-bold text-slate-700">オタマトーンの準備はできましたか？</p>
-          
+if (screen === "home") {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
+      <div className="w-full max-w-[600px] rounded-[28px] bg-[#f8f4ea] px-10 py-10 text-center text-slate-900 shadow-2xl">
+        
+        <p className="mb-8 text-base text-slate-600">
+          オタマトーンの準備はできましたか？
+        </p>
 
-          {isPreparingAudio && (
-            <div className="mb-5 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
-              音を準備しています…
-            </div>
-          )}
+        <button
+          onClick={() => void handleStart()}
+          className="rounded-full bg-[#3aa7f2] px-10 py-4 text-xl font-bold text-white shadow-lg"
+        >
+          OK !
+        </button>
 
-          <button
-            onClick={() => void handleStart()}
-            className="rounded-full bg-[#3aa7f2] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
-            disabled={isPreparingAudio}
-          >
-            {isPreparingAudio ? "準備中…" : "OK！"}
-          </button>
-        </div>
-      </main>
-    )
-  }
+      </div>
+    </main>
+  )
+}
 
   return (
     <main className="h-screen overflow-hidden bg-[#0d1b3d] px-4 py-4 text-white">
@@ -545,8 +541,7 @@ export default function Page() {
               />
               <span className="text-sm font-bold text-slate-800">全体通し再生</span>
             </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              <input
+<label className="mb-2 flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">              <input
                 type="radio"
                 name="playMode"
                 checked={playMode === "phrase"}
@@ -557,7 +552,6 @@ export default function Page() {
                 }}
                 className="h-4 w-4"
               />
-              <br></>
               <span className="text-sm font-bold text-slate-800">メロディーごと再生</span>
             </label>
 
