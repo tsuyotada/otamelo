@@ -1,21 +1,15 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { makeNote, phrases } from "@/src/data/eightMelodies"
+import { phrases } from "@/src/data/eightMelodies"
 
 const noteToFreq: Record<string, number> = {
-  "低いド": 130.81,
-  "低いド#": 138.59,
-  "低いレ": 146.83,
-  "低いレ#": 155.56,
-  "低いミ": 164.81,
-  "低いファ": 174.61,
-  "低いファ#": 185.0,
   "低いソ": 196.0,
   "低いソ#": 207.65,
   "低いラ": 220.0,
   "低いラ#": 233.08,
   "低いシ": 246.94,
+
   ド: 261.63,
   "ド#": 277.18,
   レ: 293.66,
@@ -28,6 +22,7 @@ const noteToFreq: Record<string, number> = {
   ラ: 440.0,
   "ラ#": 466.16,
   シ: 493.88,
+
   "高いド": 523.25,
   "高いド#": 554.37,
   "高いレ": 587.33,
@@ -40,6 +35,8 @@ const noteToFreq: Record<string, number> = {
   "高いラ": 880.0,
   "高いラ#": 932.33,
   "高いシ": 987.77,
+
+  "超高いド": 1046.5,
 }
 
 type Screen = "home" | "practice"
@@ -71,7 +68,8 @@ function midiToJapaneseNote(midi: number): string {
 
   if (octave <= 3) return `低い${noteName}`
   if (octave === 4) return noteName
-  return `高い${noteName}`
+  if (octave === 5) return `高い${noteName}`
+  return `超高い${noteName}`
 }
 
 function closestNoteFromFrequency(freq: number): string {
@@ -155,25 +153,19 @@ function Spinner() {
 function PixelInventorFace() {
   return (
     <div className="relative h-[36px] w-[36px] shrink-0 overflow-hidden rounded-[4px] border-2 border-slate-800 bg-[#ffd7b3] shadow-sm">
-      {/* 金髪マッシュ */}
       <div className="absolute inset-x-0 top-0 h-[10px] bg-[#f2c94c]" />
       <div className="absolute left-[4px] top-[8px] h-[4px] w-[28px] bg-[#e0b63f]" />
       <div className="absolute left-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
       <div className="absolute right-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
 
-      {/* 丸眼鏡 */}
       <div className="absolute left-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
       <div className="absolute right-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
       <div className="absolute left-1/2 top-[18px] h-[2px] w-[6px] -translate-x-1/2 bg-slate-800" />
 
-      {/* 目 */}
       <div className="absolute left-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
       <div className="absolute right-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
 
-      {/* 鼻 */}
       <div className="absolute left-1/2 top-[22px] h-[3px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
-
-      {/* 口 */}
       <div className="absolute left-1/2 top-[27px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-800" />
     </div>
   )
@@ -182,7 +174,6 @@ function PixelInventorFace() {
 function HomeOtamatoneFace() {
   return (
     <div className="mx-auto mb-6 h-[110px] w-[110px] rounded-[46%] border-4 border-slate-700 bg-[#fffaf0] shadow-md">
-      <div className="absolute" />
       <div className="relative h-full w-full">
         <div className="absolute left-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
         <div className="absolute right-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
@@ -226,7 +217,7 @@ export default function Page() {
       phrases.map((phrase, index) => ({
         ...phrase,
         title: phrase.title || `メロディー${index + 1}`,
-        notes: phrase.notes.length > 0 ? phrase.notes : [makeNote("ド")],
+        notes: phrase.notes.length > 0 ? phrase.notes : [phrases[0].notes[0]],
       })),
     []
   )
@@ -583,8 +574,6 @@ export default function Page() {
       return
     }
 
-    setCountdown(3)
-
     const run = (value: number) => {
       setCountdown(value)
 
@@ -760,19 +749,13 @@ export default function Page() {
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.25fr_0.85fr] gap-3">
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="mb-4 flex items-center justify-between">
-<div className="flex items-center gap-3 rounded-xl border-2 border-slate-300 bg-[#fffdf8] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-  <PixelInventorFace />
-  <div className="leading-tight">
-    <p className="text-[11px] font-black uppercase tracking-widest text-[#6b7280]">
-     
-    </p>
-    <p className="text-base font-bold text-slate-700">
-      ◆ オタマトーンで
-      <span className="text-[#1d4f91]">エイトメロディーズ</span>を
-      ひけるんだ。
-    </p>
-  </div>
-</div>
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <p className="text-base font-bold text-slate-700">
+                ◆ オタマトーンでエイトメロディーズを ひけるんだ。
+              </p>
+            </div>
+
             <button
               onClick={() => void playCurrentNote()}
               disabled={isMicEnabled}
