@@ -161,13 +161,13 @@ function getOtamatoneNormalizedPosition(note: string): number | null {
 }
 
 /**
- * CSS top 用
- * 0% = 上、100% = 下
+ * 0 = 上側（顔から遠い）
+ * 1 = 下側（顔に近い）
  */
 function getOtamatoneTopPercent(note: string): number | null {
   const normalized = getOtamatoneNormalizedPosition(note)
   if (normalized === null) return null
-  return (1 - normalized) * 100
+  return normalized * 100
 }
 
 function getAutocorrelatedPitch(
