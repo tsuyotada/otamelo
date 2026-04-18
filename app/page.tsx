@@ -1286,7 +1286,7 @@ export default function Page() {
     setIsPlaying(false)
     clearScoreEligibility()
   }}
-  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm opacity-85"
+  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm"
 >                停止
               </button>
             </div>
