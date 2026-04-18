@@ -1261,11 +1261,11 @@ export default function Page() {
               再生コントロール
             </p>
             <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={() => void startPlaybackWithCountdown()}
-                className="cursor-pointer rounded-2xl bg-[#3f8cff] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
-                disabled={isPreparingAudio || isMicPreparing || countdown !== null}
-              >
+
+<button
+  onClick={() => void startPlaybackWithCountdown()}
+  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
+>
                 <span className="flex items-center justify-center gap-2">
                   {(isPreparingAudio || isMicPreparing) && <Spinner />}
                   {countdown !== null
@@ -1278,17 +1278,16 @@ export default function Page() {
                 </span>
               </button>
 
-              <button
-                onClick={() => {
-                  clearPlaybackTimer()
-                  clearCountdownTimer()
-                  setCountdown(null)
-                  setIsPlaying(false)
-                  clearScoreEligibility()
-                }}
-                className="cursor-pointer rounded-2xl bg-[#3f8cff] px-4 py-3 text-lg font-bold text-white shadow-sm opacity-85"
-              >
-                停止
+<button
+  onClick={() => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    clearScoreEligibility()
+  }}
+  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm opacity-85"
+>                停止
               </button>
             </div>
 
