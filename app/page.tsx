@@ -52,7 +52,7 @@ type StageItem = {
 
 const stages: StageItem[] = [
   { id: 1, title: "まずは　オタマトーンをならしてみようか" },
-  { id: 2, title: "エイトメロディーズをきいてみる" },
+  { id: 2, title: "エイトメロディーズをきいてみて" },
   { id: 3, title: "ひとつめのメロディーをひいてみる" },
   { id: 4, title: "ふたつめからさきのメロディーをひいてみる" },
   { id: 5, title: "マイク判定をつかってみる" },
@@ -515,11 +515,30 @@ const moveToNextNote = () => {
 
   setIsPlaying(false)
 
-  if (selectedStage === 2) {
-    setTimeout(() => {
-      setScreen("stageSelect")
-    }, 400)
+  const moveToNextNote = () => {
+  if (playMode === "phrase") {
+    if (noteIndex < safeNotes.length - 1) {
+      setNoteIndex((prev) => prev + 1)
+    } else {
+      setNoteIndex(0)
+    }
+    return
   }
+
+  if (noteIndex < safeNotes.length - 1) {
+    setNoteIndex((prev) => prev + 1)
+    return
+  }
+
+  if (phraseIndex < safePhrases.length - 1) {
+    setPhraseIndex((prev) => prev + 1)
+    setNoteIndex(0)
+    return
+  }
+
+  // 最後まで来たら停止だけ
+  setIsPlaying(false)
+}
 }
 
   const handleOpenStage = async () => {
@@ -1099,15 +1118,6 @@ if (selectedStage === 2) {
             </div>
           </div>
 
-          <div className="mother-display-navy mb-4 px-5 py-5 text-center">
-            <p className="text-sm font-bold text-white/75">
-              エイトメロディーズをきいてみて
-            </p>
-            <p className="mt-2 text-xs font-bold text-white/60">
-              さいごまできいたら　ステージ選択にもどるよ
-            </p>
-          </div>
-
           <div className="mother-white-panel mb-4 p-4">
             <div className="mb-3 flex items-center justify-center gap-4">
               <p className="mother-text-soft text-base font-bold">いまのメロディー</p>
@@ -1226,7 +1236,7 @@ if (selectedStage === 2) {
             <div className="flex items-center gap-3">
               <PixelInventorFace />
               <p className="mother-text-main text-sm font-bold">
-                ひととおりきいたら　ステージ選択にもどるよ
+                ひいてみたくなったでしょ。ひととおりきいたら　ステージ選択にもどってよ
               </p>
             </div>
 
