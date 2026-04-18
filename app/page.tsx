@@ -40,7 +40,7 @@ const noteToFreq: Record<string, number> = {
 }
 
 type Screen = "home" | "practice"
-type PlayMode = "phrase" | "full"
+type PlayMode = "phrase" | "full" | "score_challenge"
 type JudgeState = "idle" | "ok" | "miss"
 
 const noteNamesSharp = [
@@ -211,6 +211,7 @@ export default function Page() {
 
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
+  const challengeModeRef = useRef(false)
 
   const safePhrases = useMemo(
     () =>
@@ -231,7 +232,7 @@ export default function Page() {
       if (safeNotes[i].note !== "休符") return safeNotes[i]
     }
 
-    if (playMode === "full") {
+    if (playMode !== "phrase") {
       for (let p = phraseIndex + 1; p < safePhrases.length; p += 1) {
         for (const note of safePhrases[p].notes) {
           if (note.note !== "休符") return note
@@ -380,28 +381,39 @@ export default function Page() {
     await playNote(current.note, getStepMs(current.length))
   }
 
+  const finishChallengeIfNeeded = () => {
+    if (challengeModeRef.current) {
+      challengeModeRef.current = false
+      setIsPlaying(false)
+      window.setTimeout(() => {
+        alert(`スコアは ${successCount} でした。`)
+      }, 50)
+    }
+  }
+
   const moveToNextNote = () => {
-    if (playMode === "full") {
+    if (playMode === "phrase") {
       if (noteIndex < safeNotes.length - 1) {
         setNoteIndex((prev) => prev + 1)
-        return
-      }
-
-      if (phraseIndex < safePhrases.length - 1) {
-        setPhraseIndex((prev) => prev + 1)
-        setNoteIndex(0)
       } else {
-        setIsPlaying(false)
+        setNoteIndex(0)
       }
-
       return
     }
 
     if (noteIndex < safeNotes.length - 1) {
       setNoteIndex((prev) => prev + 1)
-    } else {
-      setNoteIndex(0)
+      return
     }
+
+    if (phraseIndex < safePhrases.length - 1) {
+      setPhraseIndex((prev) => prev + 1)
+      setNoteIndex(0)
+      return
+    }
+
+    finishChallengeIfNeeded()
+    setIsPlaying(false)
   }
 
   const handleStart = async () => {
@@ -424,6 +436,7 @@ export default function Page() {
     setCountdown(null)
     setIsPlaying(false)
     setPlayMode("phrase")
+    challengeModeRef.current = false
     setPhraseIndex((prev) => Math.max(0, prev - 1))
     setNoteIndex(0)
     setJudgeState("idle")
@@ -435,6 +448,7 @@ export default function Page() {
     setCountdown(null)
     setIsPlaying(false)
     setPlayMode("phrase")
+    challengeModeRef.current = false
     setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
     setNoteIndex(0)
     setJudgeState("idle")
@@ -459,7 +473,7 @@ export default function Page() {
       return
     }
 
-    if (playMode === "full" && phraseIndex > 0) {
+    if (playMode !== "phrase" && phraseIndex > 0) {
       const prevPhraseIndex = phraseIndex - 1
       const prevPhrase = safePhrases[prevPhraseIndex]
       setPhraseIndex(prevPhraseIndex)
@@ -562,9 +576,16 @@ export default function Page() {
     clearCountdownTimer()
     setIsPlaying(false)
 
-    if (playMode === "full") {
+    if (playMode !== "phrase") {
       setPhraseIndex(0)
       setNoteIndex(0)
+    }
+
+    if (playMode === "score_challenge") {
+      setSuccessCount(0)
+      challengeModeRef.current = true
+    } else {
+      challengeModeRef.current = false
     }
 
     await ensureAudioReady()
@@ -631,7 +652,7 @@ export default function Page() {
     return () => {
       clearPlaybackTimer()
     }
-  }, [screen, isPlaying, playMode, phraseIndex, noteIndex, tempo, current.length])
+  }, [screen, isPlaying, playMode, phraseIndex, noteIndex, tempo, current.length, successCount])
 
   useEffect(() => {
     if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) return
@@ -829,15 +850,27 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex w-[330px] shrink-0 flex-col gap-4">
-                <div className="rounded-[20px] bg-[#10234d] px-5 py-4 text-center text-white">
-                  <p className="text-base font-bold text-white/80">いま押さえる音</p>
-                  <p className="mt-2 min-h-[56px] text-5xl font-black leading-none tracking-tight">
-                    {visibleCurrentLabel}
-                  </p>
-                  <p className="mt-2 text-base font-bold text-white/80">
-                    長さ: {current.length}
-                  </p>
+              <div className="flex w-[380px] shrink-0 flex-col gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-[20px] bg-[#10234d] px-5 py-4 text-center text-white">
+                    <p className="text-base font-bold text-white/80">いま押さえる音</p>
+                    <p className="mt-2 min-h-[56px] text-4xl font-black leading-none tracking-tight">
+                      {visibleCurrentLabel || "-"}
+                    </p>
+                    <p className="mt-2 text-base font-bold text-white/80">
+                      長さ: {current.length}
+                    </p>
+                  </div>
+
+                  <div className="rounded-[20px] border-4 border-[#b7ddfa] bg-[#eaf6ff] px-5 py-4 text-center">
+                    <p className="text-base font-bold text-slate-700">入力された音</p>
+                    <p className="mt-2 min-h-[56px] text-4xl font-black leading-none tracking-tight text-slate-900">
+                      {detectedNote || "-"}
+                    </p>
+                    <p className="mt-2 text-base font-bold text-slate-600">
+                      判定の実音
+                    </p>
+                  </div>
                 </div>
 
                 <div className="rounded-[20px] border-4 border-[#b7ddfa] bg-[#eaf6ff] px-5 py-4 text-center">
@@ -868,60 +901,30 @@ export default function Page() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="rounded-[20px] bg-white p-4">
-                <p className="mb-3 text-base font-bold text-slate-700">マイク判定</p>
-
-                {!isMicEnabled ? (
-                  <button
-                    onClick={() => void startMic()}
-                    className="cursor-pointer w-full rounded-2xl bg-[#3aa7f2] px-4 py-3 text-base font-bold text-white"
-                    disabled={isMicPreparing}
-                  >
-                    {isMicPreparing ? "マイク準備中…" : "マイクをONにする"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={stopMic}
-                    className="cursor-pointer w-full rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-800"
-                  >
-                    マイクをOFFにする
-                  </button>
-                )}
-              </div>
-
-              <div className="rounded-[20px] bg-white p-4">
-                <p className="mb-2 text-sm font-bold text-slate-500">入力された音</p>
-                <p className="text-4xl font-black text-slate-900">
-                  {detectedNote || "-"}
+              <div
+                className={`rounded-[20px] p-4 text-center ${
+                  judgeState === "ok"
+                    ? "bg-[#dff7df] text-[#1b6b2c]"
+                    : judgeState === "miss"
+                    ? "bg-[#ffe2e2] text-[#b33737]"
+                    : "bg-white text-slate-500"
+                }`}
+              >
+                <p className="mb-2 text-sm font-bold">判定</p>
+                <p className="text-4xl font-black">
+                  {judgeState === "ok"
+                    ? "OK!"
+                    : judgeState === "miss"
+                    ? "MISS"
+                    : "..."}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div
-                  className={`rounded-[20px] p-4 text-center ${
-                    judgeState === "ok"
-                      ? "bg-[#dff7df] text-[#1b6b2c]"
-                      : judgeState === "miss"
-                      ? "bg-[#ffe2e2] text-[#b33737]"
-                      : "bg-white text-slate-500"
-                  }`}
-                >
-                  <p className="mb-2 text-sm font-bold">判定</p>
-                  <p className="text-3xl font-black">
-                    {judgeState === "ok"
-                      ? "OK!"
-                      : judgeState === "miss"
-                      ? "MISS"
-                      : "..."}
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] bg-white p-4 text-center">
-                  <p className="mb-2 text-sm font-bold text-slate-500">成功数</p>
-                  <p className="text-3xl font-black text-slate-900">
-                    {successCount}
-                  </p>
-                </div>
+              <div className="rounded-[20px] bg-white p-4 text-center">
+                <p className="mb-2 text-sm font-bold text-slate-500">成功数</p>
+                <p className="text-4xl font-black text-slate-900">
+                  {successCount}
+                </p>
               </div>
 
               <button
@@ -935,6 +938,26 @@ export default function Page() {
         </section>
 
         <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
+          <div className="rounded-[20px] bg-slate-100 p-4">
+            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+              <input
+                type="checkbox"
+                checked={isMicEnabled}
+                onChange={() => {
+                  if (isMicEnabled) {
+                    stopMic()
+                  } else {
+                    void startMic()
+                  }
+                }}
+                className="h-4 w-4"
+              />
+              <span className="text-sm font-bold text-slate-800">
+                マイク判定を使う
+              </span>
+            </label>
+          </div>
+
           <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">テンポ</p>
             <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
@@ -967,6 +990,7 @@ export default function Page() {
                     clearCountdownTimer()
                     setCountdown(null)
                     setIsPlaying(false)
+                    challengeModeRef.current = false
                     setPlayMode("full")
                     setPhraseIndex(0)
                     setNoteIndex(0)
@@ -988,12 +1012,35 @@ export default function Page() {
                     clearCountdownTimer()
                     setCountdown(null)
                     setIsPlaying(false)
+                    challengeModeRef.current = false
                     setPlayMode("phrase")
                   }}
                   className="h-4 w-4"
                 />
                 <span className="text-sm font-bold text-slate-800">
                   メロディーごと再生
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+                <input
+                  type="radio"
+                  name="playMode"
+                  checked={playMode === "score_challenge"}
+                  onChange={() => {
+                    clearPlaybackTimer()
+                    clearCountdownTimer()
+                    setCountdown(null)
+                    setIsPlaying(false)
+                    challengeModeRef.current = false
+                    setPlayMode("score_challenge")
+                    setPhraseIndex(0)
+                    setNoteIndex(0)
+                  }}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm font-bold text-slate-800">
+                  全体通してハイスコアに挑戦
                 </span>
               </label>
             </div>
@@ -1044,6 +1091,7 @@ export default function Page() {
                   clearCountdownTimer()
                   setCountdown(null)
                   setIsPlaying(false)
+                  challengeModeRef.current = false
                 }}
                 className="cursor-pointer rounded-2xl bg-[#e25b4e] px-4 py-3 text-lg font-bold text-white shadow-sm"
               >
@@ -1055,12 +1103,6 @@ export default function Page() {
               <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-4 py-3 text-center text-sm font-bold text-slate-700">
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
                 音を準備しています…
-              </div>
-            )}
-
-            {countdown !== null && (
-              <div className="mt-3 rounded-2xl bg-[#10234d] px-4 py-4 text-center text-3xl font-black text-white">
-                {countdown}
               </div>
             )}
           </div>
