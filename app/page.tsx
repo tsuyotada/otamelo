@@ -51,7 +51,7 @@ type StageItem = {
 }
 
 const stages: StageItem[] = [
-  { id: 1, title: "オタマトーンをならしてみる" },
+  { id: 1, title: "まずは　オタマトーンをならしてみようか" },
   { id: 2, title: "エイトメロディーズをきいてみる" },
   { id: 3, title: "ひとつめのメロディーをひいてみる" },
   { id: 4, title: "ふたつめからさきのメロディーをひいてみる" },
@@ -1022,7 +1022,7 @@ onClick={() => {
           <aside className="mother-panel flex flex-col gap-3 p-4 text-slate-900">
             <div className="mother-display-navy px-5 py-5 text-center">
   <p className="text-sm font-bold text-white/75">
-    まずはオタマトーンをならしてみようか。
+    オタマトーンを自由にならしてみてください。
   </p>
   <p className="mt-2 text-xs font-bold text-white/60">
     鳴った音はここに出ます。
@@ -1036,38 +1036,7 @@ onClick={() => {
               </p>
             </div>
 
-            <div className="mother-settings-card p-4">
-              <p className="mother-text-main mb-3 text-base font-bold">ひょうじ</p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (isMicEnabled) {
-                    stopMic()
-                  } else {
-                    void startMic()
-                  }
-                }}
-                className="mother-button-blue w-full px-4 py-3 text-base font-bold"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {isMicPreparing && <Spinner />}
-                  {isMicPreparing
-                    ? "準備中…"
-                    : isMicEnabled
-                    ? "マイクをとめる"
-                    : "マイクをつかう"}
-                </span>
-              </button>
-
-              <div className="mt-3 rounded-[18px] bg-white/70 px-4 py-3 text-center">
-                <p className="text-xs font-bold text-slate-500">
-                  {isMicEnabled
-                    ? "音が鳴ると、音名と位置が見えます。"
-                    : "マイクをONにすると、音名が見えます。"}
-                </p>
-              </div>
-            </div>
+            
           </aside>
         </div>
       </main>
