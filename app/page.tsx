@@ -309,6 +309,7 @@ export default function Page() {
 
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
+  const stage1AutoMicTriedRef = useRef(false)
 
   const safePhrases = useMemo(
     () =>
@@ -758,6 +759,16 @@ export default function Page() {
     current.length,
   ])
 
+useEffect(() => {
+  if (screen !== "practice" || selectedStage !== 1) return
+
+  if (isMicEnabled || isMicPreparing) return
+  if (stage1AutoMicTriedRef.current) return
+
+  stage1AutoMicTriedRef.current = true
+  void startMic()
+}, [screen, selectedStage, isMicEnabled, isMicPreparing])
+
   useEffect(() => {
     clearPlaybackTimer()
 
@@ -964,13 +975,14 @@ export default function Page() {
 
               <button
                 type="button"
-                onClick={() => {
-                  clearPlaybackTimer()
-                  clearCountdownTimer()
-                  setCountdown(null)
-                  setIsPlaying(false)
-                  setScreen("stageSelect")
-                }}
+onClick={() => {
+  clearPlaybackTimer()
+  clearCountdownTimer()
+  setCountdown(null)
+  setIsPlaying(false)
+  stage1AutoMicTriedRef.current = false
+  setScreen("stageSelect")
+}}
                 className="mother-button-light px-4 py-2 text-xs font-bold"
               >
                 ステージ選択へ
@@ -1009,13 +1021,13 @@ export default function Page() {
 
           <aside className="mother-panel flex flex-col gap-3 p-4 text-slate-900">
             <div className="mother-display-navy px-5 py-5 text-center">
-              <p className="text-sm font-bold text-white/75">
-                まずは自由に音をならしてみましょう。
-              </p>
-              <p className="mt-2 text-xs font-bold text-white/60">
-                鳴った音はここに出ます。
-              </p>
-            </div>
+  <p className="text-sm font-bold text-white/75">
+    まずはオタマトーンをならしてみようか。
+  </p>
+  <p className="mt-2 text-xs font-bold text-white/60">
+    鳴った音はここに出ます。
+  </p>
+</div>
 
             <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
               <p className="text-sm font-bold text-slate-600">いまの音</p>
