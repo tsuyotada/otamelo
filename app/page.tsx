@@ -493,7 +493,10 @@ export default function Page() {
   }
 
 const moveToNextNote = () => {
-  if (playMode === "phrase") {
+  const isPhraseMode = playMode === "phrase"
+  const isStage2ListenMode = selectedStage === 2 && playMode === "full"
+
+  if (isPhraseMode && !isStage2ListenMode) {
     if (noteIndex < safeNotes.length - 1) {
       setNoteIndex((prev) => prev + 1)
     } else {
@@ -514,32 +517,8 @@ const moveToNextNote = () => {
   }
 
   setIsPlaying(false)
-
-  const moveToNextNote = () => {
-  if (playMode === "phrase") {
-    if (noteIndex < safeNotes.length - 1) {
-      setNoteIndex((prev) => prev + 1)
-    } else {
-      setNoteIndex(0)
-    }
-    return
-  }
-
-  if (noteIndex < safeNotes.length - 1) {
-    setNoteIndex((prev) => prev + 1)
-    return
-  }
-
-  if (phraseIndex < safePhrases.length - 1) {
-    setPhraseIndex((prev) => prev + 1)
-    setNoteIndex(0)
-    return
-  }
-
-  // 最後まで来たら停止だけ
-  setIsPlaying(false)
 }
-}
+
 
   const handleOpenStage = async () => {
     clearPlaybackTimer()
