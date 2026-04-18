@@ -492,29 +492,35 @@ export default function Page() {
     await playNote(current.note, getStepMs(current.length))
   }
 
-  const moveToNextNote = () => {
-    if (playMode === "phrase") {
-      if (noteIndex < safeNotes.length - 1) {
-        setNoteIndex((prev) => prev + 1)
-      } else {
-        setNoteIndex(0)
-      }
-      return
-    }
-
+const moveToNextNote = () => {
+  if (playMode === "phrase") {
     if (noteIndex < safeNotes.length - 1) {
       setNoteIndex((prev) => prev + 1)
-      return
-    }
-
-    if (phraseIndex < safePhrases.length - 1) {
-      setPhraseIndex((prev) => prev + 1)
+    } else {
       setNoteIndex(0)
-      return
     }
-
-    setIsPlaying(false)
+    return
   }
+
+  if (noteIndex < safeNotes.length - 1) {
+    setNoteIndex((prev) => prev + 1)
+    return
+  }
+
+  if (phraseIndex < safePhrases.length - 1) {
+    setPhraseIndex((prev) => prev + 1)
+    setNoteIndex(0)
+    return
+  }
+
+  setIsPlaying(false)
+
+  if (selectedStage === 2) {
+    setTimeout(() => {
+      setScreen("stageSelect")
+    }, 400)
+  }
+}
 
   const handleOpenStage = async () => {
     clearPlaybackTimer()
@@ -1063,6 +1069,174 @@ useEffect(() => {
                 setCountdown(null)
                 setIsPlaying(false)
                 stage1AutoMicTriedRef.current = false
+                setScreen("stageSelect")
+              }}
+              className="mother-button-light px-5 py-3 text-sm font-bold"
+            >
+              ステージ選択へ
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}
+
+if (selectedStage === 2) {
+  return (
+    <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
+      <div className="mx-auto flex max-w-[980px] flex-col gap-3">
+        <section className="mother-panel flex flex-col p-4 text-slate-900">
+          <div className="mb-3 flex items-center gap-3">
+            <PixelInventorFace />
+            <div>
+              <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                STAGE {selectedStage}
+              </p>
+              <p className="mother-text-main text-base font-bold">
+                {stageLabel}
+              </p>
+            </div>
+          </div>
+
+          <div className="mother-display-navy mb-4 px-5 py-5 text-center">
+            <p className="text-sm font-bold text-white/75">
+              エイトメロディーズをきいてみて
+            </p>
+            <p className="mt-2 text-xs font-bold text-white/60">
+              さいごまできいたら　ステージ選択にもどるよ
+            </p>
+          </div>
+
+          <div className="mother-white-panel mb-4 p-4">
+            <div className="mb-3 flex items-center justify-center gap-4">
+              <p className="mother-text-soft text-base font-bold">いまのメロディー</p>
+              <p className="mother-text-main text-base font-black">
+                {phraseIndex + 1} / {safePhrases.length}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-8 gap-2">
+              {safePhrases.map((item, index) => {
+                const isCurrent = index === phraseIndex
+                const isDone = index < phraseIndex
+
+                return (
+                  <div
+                    key={index}
+                    className={`mother-step-card px-2 py-2 text-center ${
+                      isCurrent
+                        ? "is-active"
+                        : isDone
+                        ? "bg-[#eaf4ff] text-slate-900"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    <p className="text-[9px] font-bold">MELODY</p>
+                    <p className="mt-1 text-xl font-black">{index + 1}</p>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mother-progress-track mt-4 h-3 w-full overflow-hidden">
+              <div
+                className="mother-progress-fill h-full transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
+            <div className="mother-subpanel flex items-center justify-center p-4">
+              <div className="relative flex h-[min(54vh,460px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
+                <div className="mother-neck relative h-full w-10 rounded-full">
+                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div key={i} className="h-px w-full bg-white/10" />
+                    ))}
+                  </div>
+
+                  {current.note !== "休符" && currentIndicatorTop !== null && (
+                    <div
+                      className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
+                      style={{
+                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
+                <p className="text-sm font-bold text-slate-600">いまきいている音</p>
+                <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
+                  {visibleCurrentLabel || "-"}
+                </p>
+                <p className="mt-3 text-sm font-bold text-slate-600">
+                  {safePhrases[phraseIndex]?.title ?? ""}
+                </p>
+              </div>
+
+              <div className="mother-settings-card p-4">
+                <p className="mother-text-main mb-3 text-base font-bold">
+                  さいせい
+                </p>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={() => void startPlaybackWithCountdown()}
+                    className="mother-button-blue px-4 py-3 text-lg font-bold disabled:opacity-70"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      {isPreparingAudio && <Spinner />}
+                      {isPreparingAudio
+                        ? "準備中…"
+                        : isPlaying
+                        ? "再生中…"
+                        : "きいてみる"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      clearPlaybackTimer()
+                      clearCountdownTimer()
+                      setCountdown(null)
+                      setIsPlaying(false)
+                    }}
+                    className="mother-button-light px-4 py-3 text-base font-bold"
+                  >
+                    とめる
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <p className="mother-text-main text-sm font-bold">
+                ひととおりきいたら　ステージ選択にもどるよ
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                clearPlaybackTimer()
+                clearCountdownTimer()
+                setCountdown(null)
+                setIsPlaying(false)
                 setScreen("stageSelect")
               }}
               className="mother-button-light px-5 py-3 text-sm font-bold"
