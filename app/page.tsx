@@ -999,9 +999,21 @@ export default function Page() {
                 const isDone = index < phraseIndex
 
                 return (
-                  <div
+                  <button
                     key={index}
-                    className={`mother-step-card px-2 py-2 text-center transition ${
+                    type="button"
+                    onClick={() => {
+                      clearPlaybackTimer()
+                      clearCountdownTimer()
+                      setCountdown(null)
+                      setIsPlaying(false)
+                      clearScoreEligibility()
+                      setPlayMode("phrase")
+                      setPhraseIndex(index)
+                      setNoteIndex(0)
+                      setJudgeState("idle")
+                    }}
+                    className={`mother-step-card cursor-pointer px-2 py-2 text-center transition ${
                       isCurrent
                         ? "is-active"
                         : isDone
@@ -1011,7 +1023,7 @@ export default function Page() {
                   >
                     <p className="text-[9px] font-bold">MELODY</p>
                     <p className="mt-1 text-xl font-black">{index + 1}</p>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -1028,7 +1040,7 @@ export default function Page() {
             <div className="mother-subpanel flex items-center justify-center p-2">
               <div className="relative flex h-[min(58vh,460px)] w-[145px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
                 <div className="mother-neck relative h-full w-10 rounded-full">
-                  <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between py-4">
+                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
                     {Array.from({ length: 9 }).map((_, i) => (
                       <div key={i} className="h-px w-full bg-white/10" />
                     ))}
@@ -1091,6 +1103,12 @@ export default function Page() {
                   <p className="min-h-[36px] text-2xl font-black text-slate-900">
                     {detectedNote || "-"}
                   </p>
+
+                  {isMicEnabled && (
+                    <p className="mt-2 text-xs font-bold text-[#2E6EDC]">
+                      マイク判定中
+                    </p>
+                  )}
                 </div>
 
                 <div
@@ -1133,13 +1151,16 @@ export default function Page() {
                 >
                   1音進む（→）
                 </button>
-                <button
-                  onClick={() => void playCurrentNote()}
-                  disabled={isMicEnabled}
-                  className="rounded-lg bg-[#10234d] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {isMicEnabled ? "マイク判定中" : "お手本"}
-                </button>
+
+                {!isMicEnabled && (
+                  <button
+                    onClick={() => void playCurrentNote()}
+                    className="mother-button-blue px-3 py-2 text-xs font-semibold"
+                  >
+                    お手本
+                  </button>
+                )}
+
                 <button
                   onClick={handleResetSuccess}
                   className="mother-button-light px-3 py-2 text-xs font-semibold"
@@ -1155,7 +1176,7 @@ export default function Page() {
           <div className="mother-settings-card p-4">
             <p className="mother-text-main mb-3 text-base font-bold">テンポ</p>
             <div className="mother-option flex items-center gap-3 px-4 py-3">
-              <span className="mother-button-yellow w-14 px-3 py-1 text-center text-lg font-black">
+              <span className="inline-flex w-14 items-center justify-center rounded-full bg-[#FFD54A] px-3 py-1 text-center text-lg font-black text-[#1F325C]">
                 {tempo}
               </span>
               <input
