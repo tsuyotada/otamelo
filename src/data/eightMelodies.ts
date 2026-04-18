@@ -31,6 +31,20 @@ export type SolfegeNote =
   | "超高いド"
   | "休符"
 
+type BaseNote =
+  | "ド"
+  | "ド#"
+  | "レ"
+  | "レ#"
+  | "ミ"
+  | "ファ"
+  | "ファ#"
+  | "ソ"
+  | "ソ#"
+  | "ラ"
+  | "ラ#"
+  | "シ"
+
 export type NoteItem = {
   note: SolfegeNote
   pos: number
@@ -42,7 +56,7 @@ export type Phrase = {
   notes: NoteItem[]
 }
 
-const noteNamesSharp = [
+const noteNamesSharp: BaseNote[] = [
   "ド",
   "ド#",
   "レ",
@@ -60,18 +74,103 @@ const noteNamesSharp = [
 function japaneseNoteToMidi(note: SolfegeNote): number | null {
   if (note === "休符") return null
 
-  let octave = 4
-  let base = note
+  let octave: number
+  let base: BaseNote
 
-  if (note.startsWith("低い")) {
-    octave = 3
-    base = note.replace("低い", "")
-  } else if (note.startsWith("高い")) {
-    octave = 5
-    base = note.replace("高い", "")
-  } else if (note.startsWith("超高い")) {
-    octave = 6
-    base = note.replace("超高い", "")
+  switch (note) {
+    case "低いソ":
+      octave = 3
+      base = "ソ"
+      break
+    case "低いソ#":
+      octave = 3
+      base = "ソ#"
+      break
+    case "低いラ":
+      octave = 3
+      base = "ラ"
+      break
+    case "低いラ#":
+      octave = 3
+      base = "ラ#"
+      break
+    case "低いシ":
+      octave = 3
+      base = "シ"
+      break
+
+    case "ド":
+    case "ド#":
+    case "レ":
+    case "レ#":
+    case "ミ":
+    case "ファ":
+    case "ファ#":
+    case "ソ":
+    case "ソ#":
+    case "ラ":
+    case "ラ#":
+    case "シ":
+      octave = 4
+      base = note
+      break
+
+    case "高いド":
+      octave = 5
+      base = "ド"
+      break
+    case "高いド#":
+      octave = 5
+      base = "ド#"
+      break
+    case "高いレ":
+      octave = 5
+      base = "レ"
+      break
+    case "高いレ#":
+      octave = 5
+      base = "レ#"
+      break
+    case "高いミ":
+      octave = 5
+      base = "ミ"
+      break
+    case "高いファ":
+      octave = 5
+      base = "ファ"
+      break
+    case "高いファ#":
+      octave = 5
+      base = "ファ#"
+      break
+    case "高いソ":
+      octave = 5
+      base = "ソ"
+      break
+    case "高いソ#":
+      octave = 5
+      base = "ソ#"
+      break
+    case "高いラ":
+      octave = 5
+      base = "ラ"
+      break
+    case "高いラ#":
+      octave = 5
+      base = "ラ#"
+      break
+    case "高いシ":
+      octave = 5
+      base = "シ"
+      break
+
+    case "超高いド":
+      octave = 6
+      base = "ド"
+      break
+
+    default:
+      return null
   }
 
   const semitone = noteNamesSharp.indexOf(base)
