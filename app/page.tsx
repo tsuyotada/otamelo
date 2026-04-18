@@ -955,43 +955,36 @@ useEffect(() => {
     )
   }
 
-  if (selectedStage === 1) {
-    return (
-      <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
-        <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1320px] grid-cols-[1.25fr_0.95fr] gap-3">
-          <section className="mother-panel flex flex-col p-4 text-slate-900">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <PixelInventorFace />
-                <div>
-                  <p className="mother-text-soft text-[11px] font-black tracking-wide">
-                    STAGE {selectedStage}
-                  </p>
-                  <p className="mother-text-main text-base font-bold">
-                    {stageLabel}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-onClick={() => {
-  clearPlaybackTimer()
-  clearCountdownTimer()
-  setCountdown(null)
-  setIsPlaying(false)
-  stage1AutoMicTriedRef.current = false
-  setScreen("stageSelect")
-}}
-                className="mother-button-light px-4 py-2 text-xs font-bold"
-              >
-                ステージ選択へ
-              </button>
+ if (selectedStage === 1) {
+  return (
+    <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
+      <div className="mx-auto flex max-w-[980px] flex-col gap-3">
+        <section className="mother-panel flex flex-col p-4 text-slate-900">
+          <div className="mb-3 flex items-center gap-3">
+            <PixelInventorFace />
+            <div>
+              <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                STAGE {selectedStage}
+              </p>
+              <p className="mother-text-main text-base font-bold">
+                {stageLabel}
+              </p>
             </div>
+          </div>
 
-            <div className="mother-subpanel flex flex-1 items-center justify-center p-4">
+          <div className="mother-display-navy mb-4 px-5 py-5 text-center">
+            <p className="text-sm font-bold text-white/75">
+              まずはオタマトーンをならしてみようか。
+            </p>
+            <p className="mt-2 text-xs font-bold text-white/60">
+              鳴った音はここに出ます。
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="mother-subpanel flex items-center justify-center p-4">
               <div className="flex h-full w-full items-center justify-center">
-                <div className="relative flex h-[min(70vh,620px)] w-[200px] items-end justify-center rounded-full bg-[#f3ead1] px-5 py-6">
+                <div className="relative flex h-[min(62vh,620px)] w-[200px] items-end justify-center rounded-full bg-[#f3ead1] px-5 py-6">
                   <div className="mother-neck relative h-full w-12 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
                       {Array.from({ length: 11 }).map((_, i) => (
@@ -1017,31 +1010,80 @@ onClick={() => {
                 </div>
               </div>
             </div>
-          </section>
 
-          <aside className="mother-panel flex flex-col gap-3 p-4 text-slate-900">
-            <div className="mother-display-navy px-5 py-5 text-center">
-  <p className="text-sm font-bold text-white/75">
-    オタマトーンを自由にならしてみてください。
-  </p>
-  <p className="mt-2 text-xs font-bold text-white/60">
-    鳴った音はここに出ます。
-  </p>
-</div>
+            <div className="flex flex-col gap-4">
+              <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
+                <p className="text-sm font-bold text-slate-600">いまの音</p>
+                <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
+                  {detectedNote || "-"}
+                </p>
+              </div>
 
-            <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
-              <p className="text-sm font-bold text-slate-600">いまの音</p>
-              <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
-                {detectedNote || "-"}
+              <div className="mother-settings-card p-4">
+                <p className="mother-text-main mb-3 text-base font-bold">
+                  ひょうじ
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMicEnabled) {
+                      stopMic()
+                    } else {
+                      void startMic()
+                    }
+                  }}
+                  className="mother-button-blue w-full px-4 py-3 text-base font-bold"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {isMicPreparing && <Spinner />}
+                    {isMicPreparing
+                      ? "準備中…"
+                      : isMicEnabled
+                      ? "マイクをとめる"
+                      : "マイクをつかう"}
+                  </span>
+                </button>
+
+                <div className="mt-3 rounded-[18px] bg-white/70 px-4 py-3 text-center">
+                  <p className="text-xs font-bold text-slate-500">
+                    {isMicEnabled
+                      ? "音が鳴ると、音名と位置が見えます。"
+                      : "マイクをONにすると、音名が見えます。"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <p className="mother-text-main text-sm font-bold">
+                ひととおりならしたら　ステージ選択にもどってよ
               </p>
             </div>
 
-            
-          </aside>
-        </div>
-      </main>
-    )
-  }
+            <button
+              type="button"
+              onClick={() => {
+                clearPlaybackTimer()
+                clearCountdownTimer()
+                setCountdown(null)
+                setIsPlaying(false)
+                stage1AutoMicTriedRef.current = false
+                setScreen("stageSelect")
+              }}
+              className="mother-button-light px-5 py-3 text-sm font-bold"
+            >
+              ステージ選択へ
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}
 
   return (
     <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
