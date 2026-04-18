@@ -29,3 +29,289 @@ input[type="range"] {
   accent-color: #3F8CFF;
   cursor: pointer;
 }
+
+:root {
+  --mother-bg: #f5f1e6;
+  --mother-panel: #e9e2cf;
+  --mother-panel-2: #f8f4ea;
+  --mother-blue: #3f8cff;
+  --mother-blue-soft: #6fa8ff;
+  --mother-blue-deep: #2e6edc;
+  --mother-navy: #142c63;
+  --mother-yellow: #ffd54a;
+  --mother-yellow-soft: #ffe27a;
+  --mother-text: #223a68;
+  --mother-text-soft: #64748b;
+  --mother-line: #cfd8e3;
+  --mother-white: #fffdf8;
+}
+
+html,
+body {
+  background: var(--mother-navy);
+  color: var(--mother-text);
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+input[type="range"] {
+  accent-color: var(--mother-blue);
+  cursor: pointer;
+}
+
+/* 全体のカード感を少しMOTHER寄りに */
+.mother-panel {
+  background: var(--mother-panel-2);
+  border: 1px solid rgba(34, 58, 104, 0.06);
+  border-radius: 28px;
+  box-shadow:
+    0 2px 0 rgba(20, 44, 99, 0.08),
+    0 10px 24px rgba(20, 44, 99, 0.06);
+}
+
+.mother-subpanel {
+  background: #f2ecdb;
+  border: 1px solid rgba(34, 58, 104, 0.05);
+  border-radius: 24px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 2px 8px rgba(20, 44, 99, 0.04);
+}
+
+.mother-white-panel {
+  background: var(--mother-white);
+  border: 1px solid rgba(34, 58, 104, 0.06);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 10px rgba(20, 44, 99, 0.05);
+}
+
+/* MOTHERっぽい青ボタン */
+.mother-button-blue {
+  background: linear-gradient(
+    to bottom,
+    var(--mother-blue-soft),
+    var(--mother-blue)
+  );
+  color: white;
+  border: 1px solid rgba(46, 110, 220, 0.95);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 3px 0 rgba(46, 110, 220, 0.95),
+    0 8px 14px rgba(63, 140, 255, 0.18);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.12s ease;
+}
+
+.mother-button-blue:hover {
+  filter: brightness(1.03);
+}
+
+.mother-button-blue:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 1px 0 rgba(46, 110, 220, 0.95),
+    0 4px 8px rgba(63, 140, 255, 0.14);
+}
+
+/* 黄色ボタンやアクセント */
+.mother-button-yellow {
+  background: linear-gradient(
+    to bottom,
+    var(--mother-yellow-soft),
+    var(--mother-yellow)
+  );
+  color: #1f325c;
+  border: 1px solid rgba(222, 179, 35, 0.95);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 0 rgba(222, 179, 35, 0.95),
+    0 8px 14px rgba(255, 213, 74, 0.18);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.12s ease;
+}
+
+.mother-button-yellow:hover {
+  filter: brightness(1.03);
+}
+
+.mother-button-yellow:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 1px 0 rgba(222, 179, 35, 0.95),
+    0 4px 8px rgba(255, 213, 74, 0.14);
+}
+
+/* 白い小ボタン */
+.mother-button-light {
+  background: linear-gradient(to bottom, #fffefb, #f1f4f8);
+  color: var(--mother-text);
+  border: 1px solid #b9c6d8;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 0 #c8d3e0,
+    0 6px 10px rgba(20, 44, 99, 0.06);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.12s ease;
+}
+
+.mother-button-light:hover {
+  filter: brightness(1.01);
+}
+
+.mother-button-light:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 1px 0 #c8d3e0,
+    0 3px 6px rgba(20, 44, 99, 0.05);
+}
+
+/* ネイビーの情報ボックス */
+.mother-display-navy {
+  background: linear-gradient(to bottom, #183572, #132d63);
+  color: white;
+  border: 1px solid rgba(20, 44, 99, 0.95);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px rgba(20, 44, 99, 0.16);
+}
+
+/* 次の音ボックス */
+.mother-display-blue {
+  background: linear-gradient(to bottom, #dce8f8, #d3deef);
+  color: #112a59;
+  border: 2px solid var(--mother-blue);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 14px rgba(63, 140, 255, 0.08);
+}
+
+/* 薄い情報カード */
+.mother-info-card {
+  background: rgba(255, 253, 248, 0.7);
+  border: 1px solid rgba(34, 58, 104, 0.06);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 10px rgba(20, 44, 99, 0.04);
+}
+
+/* メロディータブ */
+.mother-step-card {
+  background: #dfe4ea;
+  border: 1px solid rgba(34, 58, 104, 0.04);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 4px rgba(20, 44, 99, 0.04);
+}
+
+.mother-step-card.is-active {
+  background: linear-gradient(
+    to bottom,
+    var(--mother-yellow-soft),
+    var(--mother-yellow)
+  );
+  color: #162f5d;
+  border: 1px solid rgba(222, 179, 35, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 0 rgba(222, 179, 35, 0.9),
+    0 8px 14px rgba(255, 213, 74, 0.12);
+}
+
+/* 進捗バー */
+.mother-progress-track {
+  background: #d6dde7;
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 2px rgba(20, 44, 99, 0.08);
+}
+
+.mother-progress-fill {
+  background: linear-gradient(
+    to right,
+    #5ea1ff,
+    var(--mother-blue)
+  );
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 1px 4px rgba(63, 140, 255, 0.2);
+}
+
+/* 右カラムの設定ボックス */
+.mother-settings-card {
+  background: #dde3ea;
+  border: 1px solid rgba(34, 58, 104, 0.05);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 3px 12px rgba(20, 44, 99, 0.04);
+}
+
+/* 中の白い選択肢 */
+.mother-option {
+  background: rgba(255, 253, 248, 0.78);
+  border: 1px solid rgba(34, 58, 104, 0.04);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 4px rgba(20, 44, 99, 0.04);
+}
+
+/* オタマトーンの縦ラインを少しなじませる */
+.mother-neck {
+  background: linear-gradient(to bottom, #16346f, #122b60);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* インジケータ */
+.mother-indicator-current {
+  background: linear-gradient(
+    to bottom,
+    var(--mother-yellow-soft),
+    var(--mother-yellow)
+  );
+  box-shadow:
+    0 0 0 6px rgba(255, 213, 74, 0.16),
+    0 2px 6px rgba(222, 179, 35, 0.2);
+}
+
+.mother-indicator-next {
+  background: linear-gradient(
+    to bottom,
+    rgba(129, 196, 255, 0.55),
+    rgba(63, 140, 255, 0.4)
+  );
+  border: 1px solid rgba(63, 140, 255, 0.7);
+  box-shadow: 0 1px 6px rgba(63, 140, 255, 0.12);
+}
+
+/* 文字色補助 */
+.mother-text-main {
+  color: var(--mother-text);
+}
+
+.mother-text-soft {
+  color: var(--mother-text-soft);
+}

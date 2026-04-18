@@ -919,15 +919,15 @@ export default function Page() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
         <div className="grid w-full max-w-[1080px] grid-cols-[1.35fr_0.75fr] gap-4">
-          <div className="rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+          <div className="mother-panel px-10 py-8 text-center text-slate-900">
             <HomeOtamatoneFace />
 
-            <p className="mb-3 text-lg font-bold text-slate-700">
+            <p className="mother-text-main mb-3 text-lg font-bold">
               オタマトーンの準備はできましたか？
             </p>
 
             {isPreparingAudio && (
-              <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
+              <div className="mother-subpanel mother-text-main mb-5 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
                 音を準備しています…
               </div>
@@ -935,15 +935,15 @@ export default function Page() {
 
             <button
               onClick={() => void handleStart()}
-              className="cursor-pointer rounded-full bg-[#3f8cff] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
+              className="mother-button-blue px-8 py-4 text-xl font-bold disabled:opacity-70"
               disabled={isPreparingAudio}
             >
               {isPreparingAudio ? "準備中…" : "OK！"}
             </button>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-[#f8f4ea] px-6 py-8 text-slate-900 shadow-2xl">
-            <p className="mb-4 text-center text-sm font-black tracking-wide text-slate-700">
+          <div className="mother-panel px-6 py-8 text-slate-900">
+            <p className="mother-text-soft mb-4 text-center text-sm font-black tracking-wide">
               HIGH SCORE
             </p>
 
@@ -953,7 +953,7 @@ export default function Page() {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between rounded-xl bg-white px-4 py-3"
+                    className="mother-white-panel flex items-center justify-between px-4 py-3"
                   >
                     <span className="text-sm font-black text-slate-500">
                       {index + 1}位
@@ -977,18 +977,18 @@ export default function Page() {
   return (
     <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.3fr_0.9fr] gap-3">
-        <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
+        <section className="mother-panel flex flex-col p-4 text-slate-900">
           <div className="mb-3 flex items-center justify-center gap-3">
             <PixelInventorFace />
-            <p className="text-base font-bold text-slate-700">
+            <p className="mother-text-main text-base font-bold">
               ◆ オタマトーンでエイトメロディーズを ひけるんだ。
             </p>
           </div>
 
-          <div className="mb-3 rounded-[20px] bg-white p-3">
+          <div className="mother-white-panel mb-3 p-3">
             <div className="mb-2 flex items-center justify-center gap-4">
-              <p className="text-base font-bold text-slate-700">進行</p>
-              <p className="text-base font-black text-slate-900">
+              <p className="mother-text-soft text-base font-bold">進行</p>
+              <p className="mother-text-main text-base font-black">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
             </div>
@@ -1001,12 +1001,12 @@ export default function Page() {
                 return (
                   <div
                     key={index}
-                    className={`rounded-xl px-2 py-2 text-center transition ${
+                    className={`mother-step-card px-2 py-2 text-center transition ${
                       isCurrent
-                        ? "bg-[#ffd54a] text-slate-900 ring-2 ring-[#ffd54a]"
+                        ? "is-active"
                         : isDone
                         ? "bg-[#eaf4ff] text-slate-900"
-                        : "bg-slate-100 text-slate-500"
+                        : "text-slate-500"
                     }`}
                   >
                     <p className="text-[9px] font-bold">MELODY</p>
@@ -1016,18 +1016,18 @@ export default function Page() {
               })}
             </div>
 
-            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+            <div className="mother-progress-track mt-3 h-3 w-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#3f8cff] transition-all"
+                className="mother-progress-fill h-full transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
 
           <div className="grid flex-1 grid-cols-[210px_minmax(0,1fr)] gap-4">
-            <div className="flex items-center justify-center rounded-[20px] bg-[#fff7df] p-2">
+            <div className="mother-subpanel flex items-center justify-center p-2">
               <div className="relative flex h-[min(58vh,460px)] w-[145px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
-                <div className="relative h-full w-10 rounded-full bg-[#10234d] shadow-inner">
+                <div className="mother-neck relative h-full w-10 rounded-full">
                   <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between py-4">
                     {Array.from({ length: 9 }).map((_, i) => (
                       <div key={i} className="h-px w-full bg-white/10" />
@@ -1036,7 +1036,7 @@ export default function Page() {
 
                   {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
                     <div
-                      className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full border border-sky-400/60 bg-sky-300/35"
+                      className="mother-indicator-next absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full"
                       style={{
                         top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
                         marginLeft: indicatorsAreClose ? "26px" : "0px",
@@ -1046,7 +1046,7 @@ export default function Page() {
 
                   {current.note !== "休符" && currentIndicatorTop !== null && (
                     <div
-                      className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
+                      className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
                       style={{
                         top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
                       }}
@@ -1062,9 +1062,9 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="flex flex-col rounded-[20px] bg-[#fff7df] p-4">
+            <div className="mother-subpanel flex flex-col p-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-[20px] bg-[#10234d] px-4 py-4 text-center text-white">
+                <div className="mother-display-navy px-4 py-4 text-center">
                   <p className="text-base font-bold text-white/80">いま押さえる音</p>
                   <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight">
                     {visibleCurrentLabel || "-"}
@@ -1074,7 +1074,7 @@ export default function Page() {
                   </p>
                 </div>
 
-                <div className="rounded-[20px] border-4 border-[#3f8cff] bg-[#eaf4ff] px-4 py-4 text-center">
+                <div className="mother-display-blue px-4 py-4 text-center">
                   <p className="text-base font-bold text-slate-700">つぎの音</p>
                   <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight text-slate-900">
                     {visibleNextLabel}
@@ -1086,7 +1086,7 @@ export default function Page() {
               </div>
 
               <div className="mt-3 grid grid-cols-3 gap-3">
-                <div className="rounded-[18px] bg-white px-3 py-3 text-center">
+                <div className="mother-info-card px-3 py-3 text-center">
                   <p className="mb-1 text-xs font-bold text-slate-500">入力された音</p>
                   <p className="min-h-[36px] text-2xl font-black text-slate-900">
                     {detectedNote || "-"}
@@ -1094,12 +1094,12 @@ export default function Page() {
                 </div>
 
                 <div
-                  className={`rounded-[18px] px-3 py-3 text-center ${
+                  className={`rounded-[22px] px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_2px_10px_rgba(20,44,99,0.04)] ${
                     judgeState === "ok"
                       ? "bg-[#dff7df] text-[#1b6b2c]"
                       : judgeState === "miss"
                       ? "bg-[#ffe2e2] text-[#b33737]"
-                      : "bg-white text-slate-500"
+                      : "mother-info-card text-slate-500"
                   }`}
                 >
                   <p className="mb-1 text-xs font-bold">判定</p>
@@ -1112,7 +1112,7 @@ export default function Page() {
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-white px-3 py-3 text-center">
+                <div className="mother-info-card px-3 py-3 text-center">
                   <p className="mb-1 text-xs font-bold text-slate-500">成功数</p>
                   <p className="min-h-[36px] text-2xl font-black text-slate-900">
                     {successCount}
@@ -1123,26 +1123,26 @@ export default function Page() {
               <div className="mt-3 flex items-center justify-center gap-2">
                 <button
                   onClick={handleBack}
-                  className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                  className="mother-button-light px-3 py-2 text-xs font-semibold"
                 >
                   1音戻る（←）
                 </button>
                 <button
                   onClick={handleNext}
-                  className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                  className="mother-button-light px-3 py-2 text-xs font-semibold"
                 >
                   1音進む（→）
                 </button>
                 <button
                   onClick={() => void playCurrentNote()}
                   disabled={isMicEnabled}
-                  className="cursor-pointer rounded-lg bg-[#10234d] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg bg-[#10234d] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isMicEnabled ? "マイク判定中" : "お手本"}
                 </button>
                 <button
                   onClick={handleResetSuccess}
-                  className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="mother-button-light px-3 py-2 text-xs font-semibold"
                 >
                   成功数リセット
                 </button>
@@ -1151,11 +1151,11 @@ export default function Page() {
           </div>
         </section>
 
-        <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">テンポ</p>
-            <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              <span className="w-14 rounded-full bg-[#ffd54a] px-3 py-1 text-center text-lg font-black">
+        <aside className="mother-panel flex flex-col gap-3 p-4 text-slate-900">
+          <div className="mother-settings-card p-4">
+            <p className="mother-text-main mb-3 text-base font-bold">テンポ</p>
+            <div className="mother-option flex items-center gap-3 px-4 py-3">
+              <span className="mother-button-yellow w-14 px-3 py-1 text-center text-lg font-black">
                 {tempo}
               </span>
               <input
@@ -1170,11 +1170,11 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">再生モード</p>
+          <div className="mother-settings-card p-4">
+            <p className="mother-text-main mb-3 text-base font-bold">再生モード</p>
 
             <div className="flex flex-col gap-3">
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+              <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
                 <input
                   type="radio"
                   name="playMode"
@@ -1196,7 +1196,7 @@ export default function Page() {
                 </span>
               </label>
 
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+              <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
                 <input
                   type="radio"
                   name="playMode"
@@ -1221,13 +1221,13 @@ export default function Page() {
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={handlePrevPhrase}
-                  className="cursor-pointer flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="mother-button-light flex-1 px-3 py-2 text-xs font-semibold"
                 >
                   前のメロディー
                 </button>
                 <button
                   onClick={handleNextPhrase}
-                  className="cursor-pointer flex-1 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                  className="mother-button-light flex-1 px-3 py-2 text-xs font-semibold"
                 >
                   次のメロディー
                 </button>
@@ -1235,9 +1235,9 @@ export default function Page() {
             )}
           </div>
 
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">マイク</p>
-            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+          <div className="mother-settings-card p-4">
+            <p className="mother-text-main mb-3 text-base font-bold">マイク</p>
+            <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
               <input
                 type="checkbox"
                 checked={isMicEnabled}
@@ -1256,16 +1256,15 @@ export default function Page() {
             </label>
           </div>
 
-          <div className="rounded-[20px] bg-slate-100 p-4">
-            <p className="mb-3 text-base font-bold text-slate-700">
+          <div className="mother-settings-card p-4">
+            <p className="mother-text-main mb-3 text-base font-bold">
               再生コントロール
             </p>
             <div className="grid grid-cols-1 gap-3">
-
-<button
-  onClick={() => void startPlaybackWithCountdown()}
-  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm disabled:opacity-70"
->
+              <button
+                onClick={() => void startPlaybackWithCountdown()}
+                className="mother-button-blue px-4 py-3 text-lg font-bold disabled:opacity-70"
+              >
                 <span className="flex items-center justify-center gap-2">
                   {(isPreparingAudio || isMicPreparing) && <Spinner />}
                   {countdown !== null
@@ -1278,21 +1277,22 @@ export default function Page() {
                 </span>
               </button>
 
-<button
-  onClick={() => {
-    clearPlaybackTimer()
-    clearCountdownTimer()
-    setCountdown(null)
-    setIsPlaying(false)
-    clearScoreEligibility()
-  }}
-  className="cursor-pointer rounded-2xl bg-[#3F8CFF] px-4 py-3 text-lg font-bold text-white shadow-sm"
->                停止
+              <button
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  clearScoreEligibility()
+                }}
+                className="mother-button-blue px-4 py-3 text-lg font-bold"
+              >
+                停止
               </button>
             </div>
 
             {(isPreparingAudio || isMicPreparing) && (
-              <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-4 py-3 text-center text-sm font-bold text-slate-700">
+              <div className="mother-subpanel mother-text-main mt-3 flex items-center justify-center gap-2 px-4 py-3 text-center text-sm font-bold">
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
                 音を準備しています…
               </div>
