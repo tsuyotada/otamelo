@@ -157,18 +157,18 @@ function Spinner() {
 
 function PixelInventorFace() {
   return (
-    <div className="relative h-[36px] w-[36px] shrink-0 overflow-hidden rounded-[4px] bg-[#ffd7b3] shadow-sm">
-      <div className="absolute inset-x-0 top-0 h-[10px] bg-[#f2c94c]" />
-      <div className="absolute left-[4px] top-[8px] h-[4px] w-[28px] bg-[#e0b63f]" />
-      <div className="absolute left-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
-      <div className="absolute right-[2px] top-[10px] h-[4px] w-[6px] bg-[#e0b63f]" />
-      <div className="absolute left-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
-      <div className="absolute right-[7px] top-[15px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
-      <div className="absolute left-1/2 top-[18px] h-[2px] w-[6px] -translate-x-1/2 bg-slate-800" />
-      <div className="absolute left-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
-      <div className="absolute right-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
-      <div className="absolute left-1/2 top-[22px] h-[3px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
-      <div className="absolute left-1/2 top-[27px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-800" />
+    <div className="relative h-[32px] w-[32px] shrink-0 overflow-hidden rounded-[4px] bg-[#ffd7b3] shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-[9px] bg-[#f2c94c]" />
+      <div className="absolute left-[4px] top-[7px] h-[4px] w-[24px] bg-[#e0b63f]" />
+      <div className="absolute left-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
+      <div className="absolute right-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
+      <div className="absolute left-[6px] top-[14px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
+      <div className="absolute right-[6px] top-[14px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
+      <div className="absolute left-1/2 top-[17px] h-[2px] w-[5px] -translate-x-1/2 bg-slate-800" />
+      <div className="absolute left-[9px] top-[17px] h-[2px] w-[2px] bg-slate-800" />
+      <div className="absolute right-[9px] top-[17px] h-[2px] w-[2px] bg-slate-800" />
+      <div className="absolute left-1/2 top-[21px] h-[2px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
+      <div className="absolute left-1/2 top-[25px] h-[2px] w-[9px] -translate-x-1/2 bg-slate-800" />
     </div>
   )
 }
@@ -868,14 +868,14 @@ export default function Page() {
     <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.3fr_0.9fr] gap-3">
         <section className="flex flex-col rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
-          <div className="mb-4 flex items-center justify-center gap-3">
+          <div className="mb-3 flex items-center justify-center gap-3">
             <PixelInventorFace />
             <p className="text-base font-bold text-slate-700">
               ◆ オタマトーンでエイトメロディーズを ひけるんだ。
             </p>
           </div>
 
-          <div className="mb-4 rounded-[20px] bg-white p-4">
+          <div className="mb-3 rounded-[20px] bg-white p-3">
             <div className="mb-2 flex items-center justify-center gap-4">
               <p className="text-base font-bold text-slate-700">進行</p>
               <p className="text-base font-black text-slate-900">
@@ -891,7 +891,7 @@ export default function Page() {
                 return (
                   <div
                     key={index}
-                    className={`rounded-xl px-2 py-3 text-center transition ${
+                    className={`rounded-xl px-2 py-2 text-center transition ${
                       isCurrent
                         ? "bg-[#ffd54a] text-slate-900 ring-2 ring-[#ffd54a]"
                         : isDone
@@ -899,7 +899,7 @@ export default function Page() {
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
-                    <p className="text-[10px] font-bold">MELODY</p>
+                    <p className="text-[9px] font-bold">MELODY</p>
                     <p className="mt-1 text-xl font-black">{index + 1}</p>
                   </div>
                 )
@@ -914,37 +914,37 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="grid flex-1 grid-cols-[220px_minmax(0,1fr)] gap-4">
-            <div className="flex items-center justify-center rounded-[20px] bg-[#fff7df] p-3">
-              <div className="relative flex h-full min-h-[520px] w-[160px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-6">
+          <div className="grid flex-1 grid-cols-[210px_minmax(0,1fr)] gap-4">
+            <div className="flex items-center justify-center rounded-[20px] bg-[#fff7df] p-2">
+              <div className="relative flex h-[min(58vh,460px)] w-[145px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
                 <div className="relative h-full w-10 rounded-full bg-[#10234d] shadow-inner">
                   <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between py-4">
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    {Array.from({ length: 9 }).map((_, i) => (
                       <div key={i} className="h-px w-full bg-white/10" />
                     ))}
                   </div>
 
                   {current.note !== "休符" && (
                     <div
-                      className="absolute left-1/2 h-3 w-16 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
+                      className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
                       style={{ top: `calc(${current.pos}% - 6px)` }}
                     />
                   )}
                 </div>
 
-                <div className="absolute bottom-0 left-1/2 h-[92px] w-[106px] -translate-x-1/2 translate-y-8 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
-                  <div className="absolute left-[30px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute right-[30px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute left-0 top-[46px] h-[2px] w-full bg-slate-700" />
+                <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col rounded-[20px] bg-[#fff7df] p-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-[20px] bg-[#10234d] px-5 py-4 text-center text-white">
+                <div className="rounded-[20px] bg-[#10234d] px-4 py-4 text-center text-white">
                   <p className="text-base font-bold text-white/80">いま押さえる音</p>
-                  <p className="mt-2 min-h-[56px] text-4xl font-black leading-none tracking-tight">
+                  <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight">
                     {visibleCurrentLabel || "-"}
                   </p>
                   <p className="mt-2 text-sm font-bold text-white/80">
@@ -952,9 +952,9 @@ export default function Page() {
                   </p>
                 </div>
 
-                <div className="rounded-[20px] border-4 border-[#3f8cff] bg-[#eaf4ff] px-5 py-4 text-center">
+                <div className="rounded-[20px] border-4 border-[#3f8cff] bg-[#eaf4ff] px-4 py-4 text-center">
                   <p className="text-base font-bold text-slate-700">つぎの音</p>
-                  <p className="mt-2 min-h-[56px] text-4xl font-black leading-none tracking-tight text-slate-900">
+                  <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight text-slate-900">
                     {visibleNextLabel}
                   </p>
                   <p className="mt-2 text-sm font-bold text-slate-600">
@@ -963,16 +963,16 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div className="rounded-[18px] bg-white p-3 text-center">
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                <div className="rounded-[18px] bg-white px-3 py-3 text-center">
                   <p className="mb-1 text-xs font-bold text-slate-500">入力された音</p>
-                  <p className="min-h-[40px] text-2xl font-black text-slate-900">
+                  <p className="min-h-[36px] text-2xl font-black text-slate-900">
                     {detectedNote || "-"}
                   </p>
                 </div>
 
                 <div
-                  className={`rounded-[18px] p-3 text-center ${
+                  className={`rounded-[18px] px-3 py-3 text-center ${
                     judgeState === "ok"
                       ? "bg-[#dff7df] text-[#1b6b2c]"
                       : judgeState === "miss"
@@ -981,7 +981,7 @@ export default function Page() {
                   }`}
                 >
                   <p className="mb-1 text-xs font-bold">判定</p>
-                  <p className="min-h-[40px] text-2xl font-black">
+                  <p className="min-h-[36px] text-2xl font-black">
                     {judgeState === "ok"
                       ? "OK!"
                       : judgeState === "miss"
@@ -990,15 +990,15 @@ export default function Page() {
                   </p>
                 </div>
 
-                <div className="rounded-[18px] bg-white p-3 text-center">
+                <div className="rounded-[18px] bg-white px-3 py-3 text-center">
                   <p className="mb-1 text-xs font-bold text-slate-500">成功数</p>
-                  <p className="min-h-[40px] text-2xl font-black text-slate-900">
+                  <p className="min-h-[36px] text-2xl font-black text-slate-900">
                     {successCount}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-center gap-2">
+              <div className="mt-3 flex items-center justify-center gap-2">
                 <button
                   onClick={handleBack}
                   className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold hover:bg-slate-50"
