@@ -90,7 +90,9 @@ function getAutocorrelatedPitch(
   sampleRate: number
 ): number {
   let rms = 0
-  for (let i = 0; i < buffer.length; i += 1) rms += buffer[i] * buffer[i]
+  for (let i = 0; i < buffer.length; i += 1) {
+    rms += buffer[i] * buffer[i]
+  }
   rms = Math.sqrt(rms / buffer.length)
   if (rms < 0.01) return 0
 
@@ -809,56 +811,58 @@ export default function Page() {
 
   if (screen === "home") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-[#10234d] px-6 py-8 text-white">
-        <div className="mb-4 w-full max-w-[320px] rounded-[20px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-xl">
-          <p className="mb-3 text-center text-sm font-black tracking-wide text-slate-700">
-            HIGH SCORE
-          </p>
+      <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
+        <div className="grid w-full max-w-[1080px] grid-cols-[1.35fr_0.75fr] gap-4">
+          <div className="rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+            <HomeOtamatoneFace />
 
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, index) => {
-              const item = ranking[index]
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-xl bg-white px-4 py-2"
-                >
-                  <span className="text-sm font-black text-slate-500">
-                    {index + 1}位
-                  </span>
-                  <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
-                    {item?.name ?? "---"}
-                  </span>
-                  <span className="text-sm font-black text-[#10234d]">
-                    {item?.score ?? 0}
-                  </span>
-                </div>
-              )
-            })}
+            <p className="mb-3 text-lg font-bold text-slate-700">
+              オタマトーンの準備はできましたか？
+            </p>
+
+            {isPreparingAudio && (
+              <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
+                音を準備しています…
+              </div>
+            )}
+
+            <button
+              onClick={() => void handleStart()}
+              className="cursor-pointer rounded-full bg-[#3f8cff] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
+              disabled={isPreparingAudio}
+            >
+              {isPreparingAudio ? "準備中…" : "OK！"}
+            </button>
           </div>
-        </div>
 
-        <div className="w-full max-w-[920px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
-          <HomeOtamatoneFace />
+          <div className="rounded-[28px] border border-white/10 bg-[#f8f4ea] px-6 py-8 text-slate-900 shadow-2xl">
+            <p className="mb-4 text-center text-sm font-black tracking-wide text-slate-700">
+              HIGH SCORE
+            </p>
 
-          <p className="mb-3 text-lg font-bold text-slate-700">
-            オタマトーンの準備はできましたか？
-          </p>
-
-          {isPreparingAudio && (
-            <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
-              音を準備しています…
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => {
+                const item = ranking[index]
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-xl bg-white px-4 py-3"
+                  >
+                    <span className="text-sm font-black text-slate-500">
+                      {index + 1}位
+                    </span>
+                    <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
+                      {item?.name ?? "---"}
+                    </span>
+                    <span className="text-sm font-black text-[#10234d]">
+                      {item?.score ?? 0}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
-          )}
-
-          <button
-            onClick={() => void handleStart()}
-            className="cursor-pointer rounded-full bg-[#3f8cff] px-8 py-4 text-xl font-bold text-white shadow-lg disabled:opacity-70"
-            disabled={isPreparingAudio}
-          >
-            {isPreparingAudio ? "準備中…" : "OK！"}
-          </button>
+          </div>
         </div>
       </main>
     )
@@ -928,7 +932,7 @@ export default function Page() {
                     <div
                       className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
                       style={{
-                        top: `clamp(6px, calc(${current.pos}% - 6px), calc(100% - 12px))`,
+                        top: `clamp(8px, calc(${current.pos}% - 6px), calc(100% - 20px))`,
                       }}
                     />
                   )}
