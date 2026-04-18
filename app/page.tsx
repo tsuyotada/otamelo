@@ -972,15 +972,6 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="mother-display-navy mb-4 px-5 py-5 text-center">
-            <p className="text-sm font-bold text-white/75">
-              まずはオタマトーンをならしてみようか。
-            </p>
-            <p className="mt-2 text-xs font-bold text-white/60">
-              鳴った音はここに出ます。
-            </p>
-          </div>
-
           <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
             <div className="mother-subpanel flex items-center justify-center p-4">
               <div className="flex h-full w-full items-center justify-center">
