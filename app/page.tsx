@@ -39,16 +39,24 @@ const noteToFreq: Record<string, number> = {
   "超高いド": 1046.5,
 }
 
-type Screen = "home" | "practice"
+type Screen = "home" | "stageSelect" | "practice"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "miss"
 
-type RankingEntry = {
-  name: string
-  score: number
+type StageId = 1 | 2 | 3 | 4 | 5
+
+type StageItem = {
+  id: StageId
+  title: string
 }
 
-const STORAGE_KEY = "otamelo_ranking_v1"
+const stages: StageItem[] = [
+  { id: 1, title: "オタマトーンをならしてみる" },
+  { id: 2, title: "エイトメロディーズをきいてみる" },
+  { id: 3, title: "ひとつめのメロディーをひいてみる" },
+  { id: 4, title: "ふたつめからさきのメロディーをひいてみる" },
+  { id: 5, title: "マイク判定をつかってみる" },
+]
 
 const noteNamesSharp = [
   "ド",
@@ -274,6 +282,7 @@ function HomeOtamatoneFace() {
 
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
+  const [selectedStage, setSelectedStage] = useState<StageId>(1)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [noteIndex, setNoteIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -287,7 +296,6 @@ export default function Page() {
   const [detectedNote, setDetectedNote] = useState("")
   const [judgeState, setJudgeState] = useState<JudgeState>("idle")
   const [successCount, setSuccessCount] = useState(0)
-  const [ranking, setRanking] = useState<RankingEntry[]>([])
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -301,7 +309,6 @@ export default function Page() {
 
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
-  const fullRunScoreEligibleRef = useRef(false)
 
   const safePhrases = useMemo(
     () =>
@@ -316,6 +323,7 @@ export default function Page() {
   const phrase = safePhrases[phraseIndex]
   const safeNotes = phrase.notes
   const current = safeNotes[noteIndex] ?? safeNotes[0]
+  const stageLabel = stages.find((stage) => stage.id === selectedStage)?.title ?? ""
 
   const nextVisibleNote = useMemo(() => {
     for (let i = noteIndex + 1; i < safeNotes.length; i += 1) {
@@ -366,64 +374,6 @@ export default function Page() {
 
   const progressPercent = totalNotes > 0 ? (passedNotes / totalNotes) * 100 : 0
 
-  const loadRanking = () => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (!raw) {
-        setRanking([])
-        return
-      }
-      const parsed = JSON.parse(raw) as RankingEntry[]
-      setRanking(Array.isArray(parsed) ? parsed.slice(0, 3) : [])
-    } catch {
-      setRanking([])
-    }
-  }
-
-  const saveRanking = (entries: RankingEntry[]) => {
-    const next = entries
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-
-    setRanking(next)
-
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    } catch {}
-  }
-
-  const maybeRegisterScore = (score: number) => {
-    if (score <= 0) {
-      window.setTimeout(() => {
-        alert(`スコアは ${score} でした。`)
-      }, 50)
-      return
-    }
-
-    const currentRanking = ranking.slice().sort((a, b) => b.score - a.score)
-    const qualifies =
-      currentRanking.length < 3 ||
-      score > (currentRanking[currentRanking.length - 1]?.score ?? -1)
-
-    if (!qualifies) {
-      window.setTimeout(() => {
-        alert(`スコアは ${score} でした。`)
-      }, 50)
-      return
-    }
-
-    const input = window.prompt("ハイスコア入り！ 名前を入力してください。", "AAA")
-    const name = (input || "NONAME").trim().slice(0, 10) || "NONAME"
-    const next = [...currentRanking, { name, score }]
-
-    saveRanking(next)
-
-    window.setTimeout(() => {
-      alert(`${name} のスコア ${score} を登録しました。`)
-    }, 50)
-  }
-
   const clearPlaybackTimer = () => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current)
@@ -436,10 +386,6 @@ export default function Page() {
       window.clearTimeout(countdownTimerRef.current)
       countdownTimerRef.current = null
     }
-  }
-
-  const clearScoreEligibility = () => {
-    fullRunScoreEligibleRef.current = false
   }
 
   const getStepMs = (length = 1) => {
@@ -543,14 +489,6 @@ export default function Page() {
     await playNote(current.note, getStepMs(current.length))
   }
 
-  const finishFullRunIfNeeded = () => {
-    if (fullRunScoreEligibleRef.current) {
-      const finalScore = successCount
-      fullRunScoreEligibleRef.current = false
-      maybeRegisterScore(finalScore)
-    }
-  }
-
   const moveToNextNote = () => {
     if (playMode === "phrase") {
       if (noteIndex < safeNotes.length - 1) {
@@ -573,21 +511,53 @@ export default function Page() {
     }
 
     setIsPlaying(false)
-    finishFullRunIfNeeded()
   }
 
-  const handleStart = async () => {
+  const handleOpenStage = async () => {
     clearPlaybackTimer()
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
-    clearScoreEligibility()
-    setPlayMode("full")
-    setPhraseIndex(0)
-    setNoteIndex(0)
-    setSuccessCount(0)
-    setJudgeState("idle")
     await ensureAudioReady()
+    setScreen("stageSelect")
+  }
+
+  const handleSelectStage = (stageId: StageId) => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setSelectedStage(stageId)
+    setJudgeState("idle")
+    setDetectedNote("")
+    setSuccessCount(0)
+
+    if (stageId === 1) {
+      setPlayMode("phrase")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
+    } else if (stageId === 2) {
+      setPlayMode("full")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
+    } else if (stageId === 3) {
+      setPlayMode("phrase")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
+    } else if (stageId === 4) {
+      setPlayMode("phrase")
+      setPhraseIndex(1)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
+    } else if (stageId === 5) {
+      setPlayMode("phrase")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+    }
+
     setScreen("practice")
   }
 
@@ -596,7 +566,6 @@ export default function Page() {
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
-    clearScoreEligibility()
     setPlayMode("phrase")
     setPhraseIndex((prev) => Math.max(0, prev - 1))
     setNoteIndex(0)
@@ -608,7 +577,6 @@ export default function Page() {
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
-    clearScoreEligibility()
     setPlayMode("phrase")
     setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
     setNoteIndex(0)
@@ -620,7 +588,6 @@ export default function Page() {
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
-    clearScoreEligibility()
     moveToNextNote()
   }
 
@@ -629,7 +596,6 @@ export default function Page() {
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
-    clearScoreEligibility()
 
     if (noteIndex > 0) {
       setNoteIndex((prev) => prev - 1)
@@ -661,7 +627,6 @@ export default function Page() {
       clearCountdownTimer()
       setCountdown(null)
       setIsPlaying(false)
-      clearScoreEligibility()
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -733,7 +698,6 @@ export default function Page() {
     noteSolvedRef.current = false
     clearCountdownTimer()
     setCountdown(null)
-    clearScoreEligibility()
   }
 
   const startPlaybackWithCountdown = async () => {
@@ -741,24 +705,13 @@ export default function Page() {
     clearCountdownTimer()
     setIsPlaying(false)
 
-    if (playMode !== "phrase") {
-      setPhraseIndex(0)
-      setNoteIndex(0)
-    }
-
-    if (playMode === "full" && isMicEnabled) {
-      setSuccessCount(0)
-      fullRunScoreEligibleRef.current = true
-    } else {
-      clearScoreEligibility()
-    }
-
-    await ensureAudioReady()
-
     if (!isMicEnabled) {
+      await ensureAudioReady()
       setIsPlaying(true)
       return
     }
+
+    await ensureAudioReady()
 
     const run = (value: number) => {
       setCountdown(value)
@@ -776,10 +729,6 @@ export default function Page() {
 
     run(3)
   }
-
-  useEffect(() => {
-    if (typeof window !== "undefined") loadRanking()
-  }, [])
 
   useEffect(() => {
     stableHitCountRef.current = 0
@@ -918,56 +867,71 @@ export default function Page() {
   if (screen === "home") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
-        <div className="grid w-full max-w-[1080px] grid-cols-[1.35fr_0.75fr] gap-4">
-          <div className="mother-panel px-10 py-8 text-center text-slate-900">
-            <HomeOtamatoneFace />
+        <div className="mother-panel w-full max-w-[720px] px-10 py-10 text-center text-slate-900">
+          <HomeOtamatoneFace />
 
-            <p className="mother-text-main mb-3 text-lg font-bold">
-              オタマトーンの準備はできましたか？
+          <p className="mother-text-main mb-6 text-lg font-bold">
+            オタマトーンの準備はできましたか？
+          </p>
+
+          {isPreparingAudio && (
+            <div className="mother-subpanel mother-text-main mb-5 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
+              音を準備しています…
+            </div>
+          )}
+
+          <button
+            onClick={() => void handleOpenStage()}
+            className="mother-button-blue px-8 py-4 text-xl font-bold disabled:opacity-70"
+            disabled={isPreparingAudio}
+          >
+            {isPreparingAudio ? "準備中…" : "OK！"}
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  if (screen === "stageSelect") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
+        <div className="mother-panel w-full max-w-[920px] px-8 py-8 text-slate-900">
+          <div className="mb-6 text-center">
+            <p className="mother-text-soft text-sm font-black tracking-wide">
+              STAGE SELECT
             </p>
-
-            {isPreparingAudio && (
-              <div className="mother-subpanel mother-text-main mb-5 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
-                音を準備しています…
-              </div>
-            )}
-
-            <button
-              onClick={() => void handleStart()}
-              className="mother-button-blue px-8 py-4 text-xl font-bold disabled:opacity-70"
-              disabled={isPreparingAudio}
-            >
-              {isPreparingAudio ? "準備中…" : "OK！"}
-            </button>
+            <h1 className="mother-text-main mt-2 text-2xl font-black">
+              どこからやってみる？
+            </h1>
           </div>
 
-          <div className="mother-panel px-6 py-8 text-slate-900">
-            <p className="mother-text-soft mb-4 text-center text-sm font-black tracking-wide">
-              HIGH SCORE
-            </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {stages.map((stage) => (
+              <button
+                key={stage.id}
+                type="button"
+                onClick={() => handleSelectStage(stage.id)}
+                className="mother-white-panel text-left px-5 py-5 transition hover:translate-y-[1px]"
+              >
+                <p className="text-xs font-black text-slate-500">
+                  STAGE {stage.id}
+                </p>
+                <p className="mother-text-main mt-2 text-lg font-black leading-snug">
+                  {stage.title}
+                </p>
+              </button>
+            ))}
+          </div>
 
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => {
-                const item = ranking[index]
-                return (
-                  <div
-                    key={index}
-                    className="mother-white-panel flex items-center justify-between px-4 py-3"
-                  >
-                    <span className="text-sm font-black text-slate-500">
-                      {index + 1}位
-                    </span>
-                    <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
-                      {item?.name ?? "---"}
-                    </span>
-                    <span className="text-sm font-black text-[#10234d]">
-                      {item?.score ?? 0}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setScreen("home")}
+              className="mother-button-light px-5 py-3 text-sm font-bold"
+            >
+              もどる
+            </button>
           </div>
         </div>
       </main>
@@ -978,11 +942,32 @@ export default function Page() {
     <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.3fr_0.9fr] gap-3">
         <section className="mother-panel flex flex-col p-4 text-slate-900">
-          <div className="mb-3 flex items-center justify-center gap-3">
-            <PixelInventorFace />
-            <p className="mother-text-main text-base font-bold">
-              ◆ オタマトーンでエイトメロディーズを ひけるんだ。
-            </p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <div>
+                <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                  STAGE {selectedStage}
+                </p>
+                <p className="mother-text-main text-base font-bold">
+                  {stageLabel}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                clearPlaybackTimer()
+                clearCountdownTimer()
+                setCountdown(null)
+                setIsPlaying(false)
+                setScreen("stageSelect")
+              }}
+              className="mother-button-light px-4 py-2 text-xs font-bold"
+            >
+              ステージ選択へ
+            </button>
           </div>
 
           <div className="mother-white-panel mb-3 p-3">
@@ -1007,7 +992,6 @@ export default function Page() {
                       clearCountdownTimer()
                       setCountdown(null)
                       setIsPlaying(false)
-                      clearScoreEligibility()
                       setPlayMode("phrase")
                       setPhraseIndex(index)
                       setNoteIndex(0)
@@ -1205,7 +1189,6 @@ export default function Page() {
                     clearCountdownTimer()
                     setCountdown(null)
                     setIsPlaying(false)
-                    clearScoreEligibility()
                     setPlayMode("full")
                     setPhraseIndex(0)
                     setNoteIndex(0)
@@ -1227,7 +1210,6 @@ export default function Page() {
                     clearCountdownTimer()
                     setCountdown(null)
                     setIsPlaying(false)
-                    clearScoreEligibility()
                     setPlayMode("phrase")
                   }}
                   className="h-4 w-4"
@@ -1304,7 +1286,6 @@ export default function Page() {
                   clearCountdownTimer()
                   setCountdown(null)
                   setIsPlaying(false)
-                  clearScoreEligibility()
                 }}
                 className="mother-button-blue px-4 py-3 text-lg font-bold"
               >
