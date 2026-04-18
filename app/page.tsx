@@ -162,11 +162,11 @@ function PixelInventorFace() {
       <div className="absolute left-[4px] top-[7px] h-[4px] w-[24px] bg-[#e0b63f]" />
       <div className="absolute left-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
       <div className="absolute right-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
-      <div className="absolute left-[6px] top-[14px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
-      <div className="absolute right-[6px] top-[14px] h-[8px] w-[8px] rounded-full border-2 border-slate-800 bg-white/70" />
-      <div className="absolute left-1/2 top-[17px] h-[2px] w-[5px] -translate-x-1/2 bg-slate-800" />
-      <div className="absolute left-[9px] top-[17px] h-[2px] w-[2px] bg-slate-800" />
-      <div className="absolute right-[9px] top-[17px] h-[2px] w-[2px] bg-slate-800" />
+
+      <div className="absolute left-[5px] top-[14px] h-[7px] w-[9px] rounded-[2px] border-2 border-slate-800 bg-white/70" />
+      <div className="absolute right-[5px] top-[14px] h-[7px] w-[9px] rounded-[2px] border-2 border-slate-800 bg-white/70" />
+      <div className="absolute left-1/2 top-[17px] h-[2px] w-[4px] -translate-x-1/2 bg-slate-800" />
+
       <div className="absolute left-1/2 top-[21px] h-[2px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
       <div className="absolute left-1/2 top-[25px] h-[2px] w-[9px] -translate-x-1/2 bg-slate-800" />
     </div>
@@ -809,41 +809,41 @@ export default function Page() {
 
   if (screen === "home") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#10234d] px-6 py-8 text-white">
+        <div className="mb-4 w-full max-w-[320px] rounded-[20px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-xl">
+          <p className="mb-3 text-center text-sm font-black tracking-wide text-slate-700">
+            HIGH SCORE
+          </p>
+
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, index) => {
+              const item = ranking[index]
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-xl bg-white px-4 py-2"
+                >
+                  <span className="text-sm font-black text-slate-500">
+                    {index + 1}位
+                  </span>
+                  <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
+                    {item?.name ?? "---"}
+                  </span>
+                  <span className="text-sm font-black text-[#10234d]">
+                    {item?.score ?? 0}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="w-full max-w-[920px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
           <HomeOtamatoneFace />
 
           <p className="mb-3 text-lg font-bold text-slate-700">
             オタマトーンの準備はできましたか？
           </p>
-
-          <div className="mx-auto mb-6 max-w-[360px] rounded-[20px] bg-white p-4 text-left">
-            <p className="mb-3 text-center text-sm font-black tracking-wide text-slate-700">
-              HIGH SCORE
-            </p>
-
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, index) => {
-                const item = ranking[index]
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2"
-                  >
-                    <span className="text-sm font-black text-slate-500">
-                      {index + 1}位
-                    </span>
-                    <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
-                      {item?.name ?? "---"}
-                    </span>
-                    <span className="text-sm font-black text-[#10234d]">
-                      {item?.score ?? 0}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
 
           {isPreparingAudio && (
             <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
@@ -927,7 +927,9 @@ export default function Page() {
                   {current.note !== "休符" && (
                     <div
                       className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
-                      style={{ top: `calc(${current.pos}% - 6px)` }}
+                      style={{
+                        top: `clamp(6px, calc(${current.pos}% - 6px), calc(100% - 12px))`,
+                      }}
                     />
                   )}
                 </div>
