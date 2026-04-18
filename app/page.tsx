@@ -85,6 +85,91 @@ function closestNoteFromFrequency(freq: number): string {
   return midiToJapaneseNote(midi)
 }
 
+function japaneseNoteToMidi(note: string): number | null {
+  if (!note || note === "休符") return null
+
+  let octave = 4
+  let base = note
+
+  if (note.startsWith("低い")) {
+    octave = 3
+    base = note.replace("低い", "")
+  } else if (note.startsWith("高い")) {
+    octave = 5
+    base = note.replace("高い", "")
+  } else if (note.startsWith("超高い")) {
+    octave = 6
+    base = note.replace("超高い", "")
+  }
+
+  const semitone = noteNamesSharp.indexOf(base)
+  if (semitone === -1) return null
+
+  return (octave + 1) * 12 + semitone
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t
+}
+
+function invLerp(a: number, b: number, value: number) {
+  if (a === b) return 0
+  return (value - a) / (b - a)
+}
+
+/**
+ * 0 = 下端（顔から遠い）
+ * 1 = 上端（顔のすぐ上）
+ */
+function getOtamatoneNormalizedPosition(note: string): number | null {
+  const anchors = [
+    { note: "低いソ", pos: 0.0 },
+    { note: "低いラ#", pos: 0.25 },
+    { note: "レ#", pos: 0.5 },
+    { note: "ラ", pos: 0.75 },
+    { note: "超高いド", pos: 1.0 },
+  ]
+    .map((item) => {
+      const midi = japaneseNoteToMidi(item.note)
+      return midi === null ? null : { midi, pos: item.pos }
+    })
+    .filter((item): item is { midi: number; pos: number } => item !== null)
+
+  const currentMidi = japaneseNoteToMidi(note)
+  if (currentMidi === null || anchors.length === 0) return null
+
+  if (currentMidi <= anchors[0].midi) return anchors[0].pos
+  if (currentMidi >= anchors[anchors.length - 1].midi) {
+    return anchors[anchors.length - 1].pos
+  }
+
+  for (let i = 0; i < anchors.length - 1; i += 1) {
+    const a = anchors[i]
+    const b = anchors[i + 1]
+
+    if (currentMidi >= a.midi && currentMidi <= b.midi) {
+      const t = clamp(invLerp(a.midi, b.midi, currentMidi), 0, 1)
+      return lerp(a.pos, b.pos, t)
+    }
+  }
+
+  return null
+}
+
+/**
+ * CSS top 用
+ * 0% = 上、100% = 下
+ */
+function getOtamatoneTopPercent(note: string): number | null {
+  const normalized = getOtamatoneNormalizedPosition(note)
+  if (normalized === null) return null
+  return (1 - normalized) * 100
+}
+
 function getAutocorrelatedPitch(
   buffer: Float32Array,
   sampleRate: number
@@ -255,6 +340,16 @@ export default function Page() {
   const visibleCurrentLabel = current.note === "休符" ? "" : current.note
   const visibleNextLabel =
     nextVisibleNote?.note === "休符" ? "" : nextVisibleNote?.note ?? ""
+
+  const currentIndicatorTop = getOtamatoneTopPercent(current.note)
+  const nextIndicatorTop = nextVisibleNote
+    ? getOtamatoneTopPercent(nextVisibleNote.note)
+    : null
+
+  const indicatorsAreClose =
+    currentIndicatorTop !== null &&
+    nextIndicatorTop !== null &&
+    Math.abs(currentIndicatorTop - nextIndicatorTop) < 3
 
   const totalNotes = useMemo(
     () => safePhrases.reduce((sum, p) => sum + p.notes.length, 0),
@@ -725,10 +820,21 @@ export default function Page() {
     return () => {
       clearPlaybackTimer()
     }
-  }, [screen, isPlaying, playMode, phraseIndex, noteIndex, tempo, current.length, successCount])
+  }, [
+    screen,
+    isPlaying,
+    playMode,
+    phraseIndex,
+    noteIndex,
+    tempo,
+    current.length,
+    successCount,
+  ])
 
   useEffect(() => {
-    if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) return
+    if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) {
+      return
+    }
 
     const analyser = analyserRef.current
     const sampleRate = micAudioContextRef.current.sampleRate
@@ -928,11 +1034,21 @@ export default function Page() {
                     ))}
                   </div>
 
-                  {current.note !== "休符" && (
+                  {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
+                    <div
+                      className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full border border-sky-400/60 bg-sky-300/35"
+                      style={{
+                        top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                        marginLeft: indicatorsAreClose ? "26px" : "0px",
+                      }}
+                    />
+                  )}
+
+                  {current.note !== "休符" && currentIndicatorTop !== null && (
                     <div
                       className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#ffd54a] shadow-[0_0_0_6px_rgba(255,213,74,0.18)]"
                       style={{
-                        top: `clamp(8px, calc(${current.pos}% - 6px), calc(100% - 20px))`,
+                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
                       }}
                     />
                   )}
