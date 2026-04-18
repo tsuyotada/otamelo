@@ -43,6 +43,13 @@ type Screen = "home" | "practice"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "miss"
 
+type RankingEntry = {
+  name: string
+  score: number
+}
+
+const STORAGE_KEY = "otamelo_ranking_v1"
+
 const noteNamesSharp = [
   "ド",
   "ド#",
@@ -164,7 +171,6 @@ function PixelInventorFace() {
 
       <div className="absolute left-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
       <div className="absolute right-[10px] top-[18px] h-[2px] w-[2px] bg-slate-800" />
-
       <div className="absolute left-1/2 top-[22px] h-[3px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
       <div className="absolute left-1/2 top-[27px] h-[2px] w-[10px] -translate-x-1/2 bg-slate-800" />
     </div>
@@ -173,7 +179,7 @@ function PixelInventorFace() {
 
 function HomeOtamatoneFace() {
   return (
-    <div className="mx-auto mb-6 h-[110px] w-[110px] rounded-[46%] border-4 border-slate-700 bg-[#fffaf0] shadow-md">
+    <div className="mx-auto mb-5 h-[110px] w-[110px] rounded-[46%] border-4 border-slate-700 bg-[#fffaf0] shadow-md">
       <div className="relative h-full w-full">
         <div className="absolute left-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
         <div className="absolute right-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
@@ -198,6 +204,7 @@ export default function Page() {
   const [detectedNote, setDetectedNote] = useState("")
   const [judgeState, setJudgeState] = useState<JudgeState>("idle")
   const [successCount, setSuccessCount] = useState(0)
+  const [ranking, setRanking] = useState<RankingEntry[]>([])
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -265,6 +272,64 @@ export default function Page() {
   )
 
   const progressPercent = totalNotes > 0 ? (passedNotes / totalNotes) * 100 : 0
+
+  const loadRanking = () => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      if (!raw) {
+        setRanking([])
+        return
+      }
+      const parsed = JSON.parse(raw) as RankingEntry[]
+      setRanking(Array.isArray(parsed) ? parsed.slice(0, 3) : [])
+    } catch {
+      setRanking([])
+    }
+  }
+
+  const saveRanking = (entries: RankingEntry[]) => {
+    const next = entries
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+
+    setRanking(next)
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    } catch {}
+  }
+
+  const maybeRegisterScore = (score: number) => {
+    if (score <= 0) {
+      window.setTimeout(() => {
+        alert(`スコアは ${score} でした。`)
+      }, 50)
+      return
+    }
+
+    const currentRanking = ranking.slice().sort((a, b) => b.score - a.score)
+    const qualifies =
+      currentRanking.length < 3 ||
+      score > (currentRanking[currentRanking.length - 1]?.score ?? -1)
+
+    if (!qualifies) {
+      window.setTimeout(() => {
+        alert(`スコアは ${score} でした。`)
+      }, 50)
+      return
+    }
+
+    const input = window.prompt("ハイスコア入り！ 名前を入力してください。", "AAA")
+    const name = (input || "NONAME").trim().slice(0, 10) || "NONAME"
+    const next = [...currentRanking, { name, score }]
+
+    saveRanking(next)
+
+    window.setTimeout(() => {
+      alert(`${name} のスコア ${score} を登録しました。`)
+    }, 50)
+  }
 
   const clearPlaybackTimer = () => {
     if (timerRef.current !== null) {
@@ -389,9 +454,7 @@ export default function Page() {
     if (fullRunScoreEligibleRef.current) {
       const finalScore = successCount
       fullRunScoreEligibleRef.current = false
-      window.setTimeout(() => {
-        alert(`スコアは ${finalScore} でした。`)
-      }, 50)
+      maybeRegisterScore(finalScore)
     }
   }
 
@@ -622,6 +685,12 @@ export default function Page() {
   }
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      loadRanking()
+    }
+  }, [])
+
+  useEffect(() => {
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
     setJudgeState("idle")
@@ -747,13 +816,41 @@ export default function Page() {
 
   if (screen === "home") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 text-white">
-        <div className="w-full max-w-[900px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
+      <main className="flex min-h-screen items-center justify-center bg-[#0d1b3d] px-6 py-8 text-white">
+        <div className="w-full max-w-[920px] rounded-[28px] border border-white/10 bg-[#f8f4ea] px-10 py-8 text-center text-slate-900 shadow-2xl">
           <HomeOtamatoneFace />
 
           <p className="mb-3 text-lg font-bold text-slate-700">
             オタマトーンの準備はできましたか？
           </p>
+
+          <div className="mx-auto mb-6 max-w-[360px] rounded-[20px] bg-white p-4 text-left">
+            <p className="mb-3 text-center text-sm font-black tracking-wide text-slate-700">
+              HIGH SCORE
+            </p>
+
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, index) => {
+                const item = ranking[index]
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2"
+                  >
+                    <span className="text-sm font-black text-slate-500">
+                      {index + 1}位
+                    </span>
+                    <span className="min-w-[120px] text-center text-sm font-bold text-slate-800">
+                      {item?.name ?? "---"}
+                    </span>
+                    <span className="text-sm font-black text-[#1d4f91]">
+                      {item?.score ?? 0}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
           {isPreparingAudio && (
             <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-[#fff7df] px-5 py-3 text-center text-sm font-bold text-slate-700">
@@ -935,26 +1032,6 @@ export default function Page() {
 
         <aside className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#f8f4ea] p-4 text-slate-900 shadow-2xl">
           <div className="rounded-[20px] bg-slate-100 p-4">
-            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
-              <input
-                type="checkbox"
-                checked={isMicEnabled}
-                onChange={() => {
-                  if (isMicEnabled) {
-                    stopMic()
-                  } else {
-                    void startMic()
-                  }
-                }}
-                className="h-4 w-4"
-              />
-              <span className="text-sm font-bold text-slate-800">
-                マイク判定を使う
-              </span>
-            </label>
-          </div>
-
-          <div className="rounded-[20px] bg-slate-100 p-4">
             <p className="mb-3 text-base font-bold text-slate-700">テンポ</p>
             <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
               <span className="w-14 rounded-full bg-[#ffd54a] px-3 py-1 text-center text-lg font-black">
@@ -1035,6 +1112,27 @@ export default function Page() {
                 </button>
               </div>
             )}
+          </div>
+
+          <div className="rounded-[20px] bg-slate-100 p-4">
+            <p className="mb-3 text-base font-bold text-slate-700">マイク</p>
+            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white px-4 py-3">
+              <input
+                type="checkbox"
+                checked={isMicEnabled}
+                onChange={() => {
+                  if (isMicEnabled) {
+                    stopMic()
+                  } else {
+                    void startMic()
+                  }
+                }}
+                className="h-4 w-4"
+              />
+              <span className="text-sm font-bold text-slate-800">
+                マイク判定を使う
+              </span>
+            </label>
           </div>
 
           <div className="rounded-[20px] bg-slate-100 p-4">
