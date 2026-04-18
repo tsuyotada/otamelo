@@ -1239,6 +1239,143 @@ if (selectedStage === 2) {
   )
 }
 
+if (selectedStage === 3) {
+  return (
+    <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
+      <div className="mx-auto flex max-w-[980px] flex-col gap-3">
+        <section className="mother-panel flex flex-col p-4 text-slate-900">
+          <div className="mb-3 flex items-center gap-3">
+            <PixelInventorFace />
+            <div>
+              <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                STAGE {selectedStage}
+              </p>
+              <p className="mother-text-main text-base font-bold">
+                ひとつめのメロディーをひいてみて
+              </p>
+            </div>
+          </div>
+
+          <div className="mother-display-navy mb-4 px-5 py-5 text-center">
+            <p className="mt-2 text-xs font-bold text-white/60">
+              お手本をききながら　少しずつやってみよう
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
+            <div className="mother-subpanel flex items-center justify-center p-4">
+              <div className="relative flex h-[min(56vh,500px)] w-[160px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
+                <div className="mother-neck relative h-full w-10 rounded-full">
+                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div key={i} className="h-px w-full bg-white/10" />
+                    ))}
+                  </div>
+
+                  {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
+                    <div
+                      className="mother-indicator-next absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full"
+                      style={{
+                        top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                        marginLeft: indicatorsAreClose ? "26px" : "0px",
+                      }}
+                    />
+                  )}
+
+                  {current.note !== "休符" && currentIndicatorTop !== null && (
+                    <div
+                      className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
+                      style={{
+                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="mother-display-navy px-4 py-4 text-center">
+                  <p className="text-base font-bold text-white/80">いま押さえる音</p>
+                  <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight">
+                    {visibleCurrentLabel || "-"}
+                  </p>
+                </div>
+
+                <div className="mother-display-blue px-4 py-4 text-center">
+                  <p className="text-base font-bold text-slate-700">つぎの音</p>
+                  <p className="mt-2 min-h-[52px] text-4xl font-black leading-none tracking-tight text-slate-900">
+                    {visibleNextLabel}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mother-subpanel flex flex-col gap-3 px-4 py-4">
+                <p className="mother-text-soft text-center text-sm font-bold">
+                  メロディー1 をれんしゅう中
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    onClick={handleBack}
+                    className="mother-button-light px-4 py-2 text-sm font-semibold"
+                  >
+                    1音戻る
+                  </button>
+
+                  <button
+                    onClick={() => void playCurrentNote()}
+                    className="mother-button-blue px-4 py-2 text-sm font-semibold"
+                  >
+                    お手本
+                  </button>
+
+                  <button
+                    onClick={handleNext}
+                    className="mother-button-light px-4 py-2 text-sm font-semibold"
+                  >
+                    1音進む
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <p className="mother-text-main text-sm font-bold">
+                ひととおりひいたら　ステージ選択にもどってよ
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                clearPlaybackTimer()
+                clearCountdownTimer()
+                setCountdown(null)
+                setIsPlaying(false)
+                setScreen("stageSelect")
+              }}
+              className="mother-button-light px-5 py-3 text-sm font-bold"
+            >
+              ステージ選択へ
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}
+
   return (
     <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
       <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.3fr_0.9fr] gap-3">
