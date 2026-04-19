@@ -294,7 +294,7 @@ function HomeOtamatoneFace() {
 
 function PreviewLane({ items }: { items: PreviewItem[] }) {
   return (
-    <div className="mother-subpanel min-h-[246px] px-4 py-4">
+<div className="mother-subpanel min-w-0 min-h-[246px] px-4 py-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
         <p className="mother-text-soft text-xs font-bold">5音先まで</p>
@@ -1159,7 +1159,7 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
+<div className="min-w-0 flex flex-col gap-4">
                 <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                   <p className="text-sm font-bold text-slate-600">いまの音</p>
                   <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
