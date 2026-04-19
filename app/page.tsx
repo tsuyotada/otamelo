@@ -460,60 +460,6 @@ function HomeOtamatoneFace() {
   )
 }
 
-function PreviewLaneSix({ items }: { items: PreviewItem[] }) {
-  return (
-    <div className="mother-subpanel min-h-[214px] px-4 py-3">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
-      </div>
-
-      <div className="grid grid-cols-6 gap-2">
-        {items.map((item, index) => {
-          const toneClass = item.isPlaceholder
-            ? "border-transparent bg-white/10 text-transparent shadow-none"
-            : item.isCurrent
-            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_14px_rgba(255,213,74,0.18)]"
-            : item.isNext
-            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_14px_rgba(63,140,255,0.10)]"
-            : index === 2
-            ? "border-transparent bg-[#F3F8FF] text-slate-700"
-            : index === 3
-            ? "border-transparent bg-[#F8FBFF] text-slate-700"
-            : index === 4
-            ? "border-transparent bg-[#FBFDFF] text-slate-700"
-            : "border-transparent bg-white text-slate-700"
-
-          return (
-            <div
-              key={item.id}
-              className={`min-h-[132px] rounded-[20px] border-2 px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
-            >
-              <p className="h-[16px] text-[10px] font-black tracking-wide">
-                {item.isPlaceholder
-                  ? ""
-                  : item.isCurrent
-                  ? "いま"
-                  : item.isNext
-                  ? "つぎ"
-                  : ""}
-              </p>
-
-              <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black leading-tight">
-                {item.isPlaceholder ? "" : item.note}
-              </p>
-
-              <p className="mt-2 text-[10px] font-bold opacity-70">
-                {item.isPlaceholder ? "" : `長さ ${item.length}`}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
