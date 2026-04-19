@@ -296,11 +296,11 @@ function HomeOtamatoneFace() {
 function OtamatoneTitleLogo() {
   return (
     <div className="flex flex-col items-center">
-      <img
-        src="/otamatone.svg"
-        alt="オタマトーン"
-        className="h-auto w-[min(88vw,420px)] drop-shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
-      />
+<img
+  src="/otamatone-logo.svg"
+  alt="オタマトーン"
+  className="h-auto w-[min(88vw,420px)]"
+/>
     </div>
   )
 }
@@ -1269,187 +1269,129 @@ export default function Page() {
     }
   }, [])
 
-  if (screen === "home") {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#10234d] px-6 py-8 text-white">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-[8%] top-[14%] h-4 w-4 rounded-full bg-white/20" />
-          <div className="absolute left-[18%] top-[28%] h-2.5 w-2.5 rounded-full bg-white/25" />
-          <div className="absolute left-[76%] top-[18%] h-3 w-3 rounded-full bg-white/20" />
-          <div className="absolute left-[86%] top-[32%] h-2 w-2 rounded-full bg-white/25" />
-          <div className="absolute left-[22%] top-[72%] h-3 w-3 rounded-full bg-white/20" />
-          <div className="absolute left-[70%] top-[76%] h-4 w-4 rounded-full bg-white/15" />
-          <div className="absolute left-[10%] top-[10%] h-[2px] w-[2px] bg-white/60" />
-          <div className="absolute left-[28%] top-[18%] h-[2px] w-[2px] bg-white/60" />
-          <div className="absolute left-[82%] top-[12%] h-[2px] w-[2px] bg-white/60" />
-          <div className="absolute left-[14%] top-[82%] h-[2px] w-[2px] bg-white/60" />
-          <div className="absolute left-[88%] top-[70%] h-[2px] w-[2px] bg-white/60" />
-        </div>
+if (screen === "home") {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#10234d] px-6 py-8 text-white">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-[8%] top-[14%] h-4 w-4 rounded-full bg-white/20" />
+        <div className="absolute left-[18%] top-[28%] h-2.5 w-2.5 rounded-full bg-white/25" />
+        <div className="absolute left-[76%] top-[18%] h-3 w-3 rounded-full bg-white/20" />
+        <div className="absolute left-[86%] top-[32%] h-2 w-2 rounded-full bg-white/25" />
+        <div className="absolute left-[22%] top-[72%] h-3 w-3 rounded-full bg-white/20" />
+        <div className="absolute left-[70%] top-[76%] h-4 w-4 rounded-full bg-white/15" />
+      </div>
 
-        <div className="mother-panel relative w-full max-w-[860px] px-8 py-10 text-center text-slate-900">
-          <div className="mx-auto flex max-w-[560px] flex-col items-center">
-            <OtamatoneTitleLogo />
+      <div className="mother-panel relative w-full max-w-[860px] px-8 py-10 text-center text-slate-900">
+        <div className="mx-auto flex max-w-[560px] flex-col items-center">
+          <img
+            src="/otamatone-logo.svg"
+            alt="オタマトーン"
+            className="h-auto w-[min(88vw,420px)] drop-shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
+          />
 
-            <p className="mother-text-soft mt-6 text-sm font-black tracking-[0.18em]">
-              EIGHT MELODIES
-            </p>
+          <p className="mother-text-soft mt-8 text-sm font-black tracking-[0.18em]">
+            EIGHT MELODIES
+          </p>
 
-            <h1 className="mother-text-main mt-3 text-3xl font-black leading-tight md:text-4xl">
-              オタマトーンで
-              <br />
-              エイトメロディーズ
-            </h1>
+          <p className="mt-5 text-sm font-bold leading-relaxed text-slate-600 md:text-base">
+            すこしずつ　音をならして、
+            <br />
+            さいごは　とおしで　ひいてみよう
+          </p>
 
-            <p className="mt-5 text-sm font-bold leading-relaxed text-slate-600 md:text-base">
-              すこしずつ　音をならして、
-              <br />
-              さいごは　とおしで　ひいてみよう
-            </p>
-
-            {isPreparingAudio && (
-              <div className="mother-subpanel mother-text-main mt-6 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
-                音を準備しています…
-              </div>
-            )}
-
-            <div className="mt-7 flex flex-col items-center gap-3 md:flex-row">
-              <button
-                onClick={() => void handleOpenStage()}
-                className="mother-button-blue min-w-[220px] px-8 py-4 text-xl font-bold disabled:opacity-70"
-                disabled={isPreparingAudio}
-              >
-                {isPreparingAudio ? "準備中…" : "START"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setScreen("tune")}
-                className="mother-button-light min-w-[220px] px-8 py-4 text-base font-bold"
-              >
-                あなたのオタマトーンにあわせる
-              </button>
+          {isPreparingAudio && (
+            <div className="mother-subpanel mother-text-main mt-6 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
+              音を準備しています…
             </div>
+          )}
 
-            <p className="mt-4 text-xs font-bold text-slate-500">
-              ※ 調整は任意です。あとからでもできます。
-            </p>
-          </div>
-        </div>
-      </main>
-    )
-  }
-  if (screen === "stageSelect") {
-    return (
-      <main className="min-h-screen bg-[#10234d] px-4 py-6 text-white">
-        <div className="mx-auto flex max-w-[1080px] flex-col gap-4">
-          <section className="mother-panel px-6 py-6 text-slate-900">
-            <div className="flex flex-col items-center text-center">
-              <p className="mother-text-soft text-sm font-black tracking-[0.18em]">
-                STAGE SELECT
-              </p>
-              <h1 className="mother-text-main mt-2 text-2xl font-black md:text-3xl">
-                どこからやってみる？
-              </h1>
-              <p className="mt-3 text-sm font-bold text-slate-600">
-                すごろくみたいに　じゅんばんに　すすめるよ
-              </p>
-            </div>
-
-            <div className="mt-8">
-              <div className="grid gap-4 md:grid-cols-3">
-                {stages.map((stage, index) => {
-                  const isCurrent = selectedStage === stage.id
-                  const isUpperRow = index < 3
-
-                  return (
-                    <div key={stage.id} className="relative">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectStage(stage.id)}
-                        className={`mother-white-panel relative w-full px-5 py-5 text-left transition hover:-translate-y-[2px] hover:shadow-lg ${
-                          isCurrent ? "ring-4 ring-[#3F8CFF]/35" : ""
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-lg font-black text-[#3F8CFF]">
-                              STAGE {stage.id}
-                            </p>
-                            <p className="mother-text-main mt-1 text-lg font-black leading-tight">
-                              {stage.title}
-                            </p>
-                          </div>
-
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF4FF] text-sm font-black text-[#2E6EDC]">
-                            {stage.id}
-                          </div>
-                        </div>
-                      </button>
-
-                      {index < stages.length - 1 && (
-                        <>
-                          {isUpperRow && index !== 2 && (
-                            <div className="pointer-events-none absolute right-[-22px] top-1/2 hidden h-[4px] w-[40px] -translate-y-1/2 rounded-full bg-[#FFD54A] md:block" />
-                          )}
-
-                          {!isUpperRow && index !== 5 && (
-                            <div className="pointer-events-none absolute left-[-22px] top-1/2 hidden h-[4px] w-[40px] -translate-y-1/2 rounded-full bg-[#FFD54A] md:block" />
-                          )}
-                        </>
-                      )}
-
-                      {index === 2 && (
-                        <div className="pointer-events-none absolute bottom-[-22px] right-1/2 hidden h-[40px] w-[4px] translate-x-1/2 rounded-full bg-[#FFD54A] md:block" />
-                      )}
-
-                      {index === 3 && (
-                        <div className="pointer-events-none absolute top-[-22px] left-1/2 hidden h-[40px] w-[4px] -translate-x-1/2 rounded-full bg-[#FFD54A] md:block" />
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-
-          <section className="mother-panel px-6 py-5 text-slate-900">
-            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <div className="flex items-center gap-3">
-                <PixelInventorFace />
-                <div>
-                  <p className="mother-text-main text-sm font-bold">
-                    あなたのオタマトーンにあわせる
-                  </p>
-                  <p className="text-xs font-bold text-slate-500">
-                    顔の近く・遠く・中間などを確認して、表示を合わせるための機能です
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setScreen("tune")}
-                className="mother-button-light px-5 py-3 text-sm font-bold"
-              >
-                調整してみる
-              </button>
-            </div>
-          </section>
-
-          <div className="flex justify-center">
+          <div className="mt-7">
             <button
-              type="button"
-              onClick={() => setScreen("home")}
-              className="mother-button-light px-5 py-3 text-sm font-bold"
+              onClick={() => void handleOpenStage()}
+              className="mother-button-blue min-w-[220px] px-8 py-4 text-xl font-bold disabled:opacity-70"
+              disabled={isPreparingAudio}
             >
-              もどる
+              {isPreparingAudio ? "準備中…" : "START"}
             </button>
           </div>
         </div>
-      </main>
-    )
-  }
+      </div>
+    </main>
+  )
+}
+
+if (screen === "stageSelect") {
+  return (
+    <main className="min-h-screen bg-[#10234d] px-4 py-6 text-white">
+      <div className="mx-auto flex max-w-[900px] flex-col gap-4">
+        <section className="mother-panel px-6 py-6 text-slate-900">
+          <div className="flex flex-col items-center text-center">
+            <p className="mother-text-soft text-sm font-black tracking-[0.18em]">
+              STAGE SELECT
+            </p>
+            <h1 className="mother-text-main mt-2 text-2xl font-black md:text-3xl">
+              どこからやってみる？
+            </h1>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-4">
+            {stages.map((stage, index) => {
+              const isCurrent = selectedStage === stage.id
+
+              return (
+                <div key={stage.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectStage(stage.id)}
+                    className={`mother-white-panel relative w-full px-6 py-5 text-left transition hover:-translate-y-[2px] hover:shadow-lg ${
+                      isCurrent ? "ring-4 ring-[#3F8CFF]/35" : ""
+                    }`}
+                  >
+                    <p className="text-lg font-black text-[#3F8CFF]">
+                      STAGE {stage.id}
+                    </p>
+                    <p className="mother-text-main mt-1 text-lg font-black leading-tight">
+                      {stage.title}
+                    </p>
+                  </button>
+
+                  {index < stages.length - 1 && (
+                    <div className="pointer-events-none mx-auto h-6 w-1 rounded-full bg-[#FFD54A]" />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="mother-panel px-6 py-5 text-slate-900">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex items-center gap-3">
+              <PixelInventorFace />
+              <div>
+                <p className="mother-text-main text-sm font-bold">
+                  あなたのオタマトーンにあわせる
+                </p>
+                <p className="text-xs font-bold text-slate-500">
+                  音の位置を合わせたいときに使います
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setScreen("tune")}
+              className="mother-button-light px-5 py-3 text-sm font-bold"
+            >
+              調整してみる
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}
 
     if (screen === "tune") {
     return (
