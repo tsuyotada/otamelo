@@ -1462,13 +1462,11 @@ if (screen === "home") {
 if (screen === "stageSelect") {
   return (
     <main className="min-h-screen bg-[#10234d] px-4 py-6 text-white">
-      <div
-        className={`mx-auto flex max-w-[900px] flex-col gap-4 transition-all duration-500 ${
-          stageSelectVisible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-3 opacity-0"
-        }`}
-      >
+<div
+  className={`mx-auto flex max-w-[900px] flex-col gap-4 transition-opacity duration-300 ${
+    stageSelectVisible ? "opacity-100" : "opacity-0"
+  }`}
+>
         <section className="mother-panel px-6 py-6 text-slate-900">
           <div className="flex flex-col items-center text-center">
             <p className="mother-text-soft text-sm font-black tracking-[0.18em]">
