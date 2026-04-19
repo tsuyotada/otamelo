@@ -403,56 +403,74 @@ export default function Page() {
   }, [noteIndex, safeNotes, playMode, phraseIndex, safePhrases])
 
   const previewItems = useMemo<PreviewItem[]>(() => {
-    const items: PreviewItem[] = []
-    let p = phraseIndex
-    let n = noteIndex
-    let safety = 0
+  // ステージ3はメロディー1を固定表示して、色だけ移す
+  if (selectedStage === 3) {
+    const stage3Phrase = safePhrases[0]
 
-    while (items.length < 5 && safety < 200) {
-      safety += 1
+    return stage3Phrase.notes
+      .filter((item) => item.note !== "休符")
+      .slice(0, 5)
+      .map((item, index) => ({
+        id: `stage3-${index}-${item.note}`,
+        note: item.note,
+        length: item.length,
+        isCurrent: index === noteIndex,
+        isNext: index === noteIndex + 1,
+        isPhraseStart: false,
+        melodyNumber: 1,
+      }))
+  }
 
-      if (p >= safePhrases.length) break
+  const items: PreviewItem[] = []
+  let p = phraseIndex
+  let n = noteIndex
+  let safety = 0
 
-      const targetPhrase = safePhrases[p]
-      if (!targetPhrase) break
+  while (items.length < 5 && safety < 200) {
+    safety += 1
 
-      if (n >= targetPhrase.notes.length) {
-        if (selectedStage === 3 || playMode === "phrase") break
-        p += 1
-        n = 0
-        continue
-      }
+    if (p >= safePhrases.length) break
 
-      const target = targetPhrase.notes[n]
-      const isCurrent = p === phraseIndex && n === noteIndex
+    const targetPhrase = safePhrases[p]
+    if (!targetPhrase) break
 
-      if (target.note !== "休符") {
-        items.push({
-          id: `${p}-${n}-${target.note}`,
-          note: target.note,
-          length: target.length,
-          isCurrent,
-          isNext: false,
-          isPhraseStart: p !== phraseIndex && n === 0,
-          melodyNumber: p + 1,
-        })
-      }
-
-      n += 1
+    if (n >= targetPhrase.notes.length) {
+      if (playMode === "phrase") break
+      p += 1
+      n = 0
+      continue
     }
 
-    const currentIndex = items.findIndex((item) => item.isCurrent)
-    const firstPreviewIndex = items.findIndex((item) => !item.isCurrent)
+    const target = targetPhrase.notes[n]
+    const isCurrent = p === phraseIndex && n === noteIndex
 
-    if (currentIndex !== -1 && firstPreviewIndex !== -1) {
-      items[firstPreviewIndex] = {
-        ...items[firstPreviewIndex],
-        isNext: true,
-      }
+    if (target.note !== "休符") {
+      items.push({
+        id: `${p}-${n}-${target.note}`,
+        note: target.note,
+        length: target.length,
+        isCurrent,
+        isNext: false,
+        isPhraseStart: p !== phraseIndex && n === 0,
+        melodyNumber: p + 1,
+      })
     }
 
-    return items
-  }, [phraseIndex, noteIndex, safePhrases, playMode, selectedStage])
+    n += 1
+  }
+
+  const currentIndex = items.findIndex((item) => item.isCurrent)
+  const firstPreviewIndex = items.findIndex((item) => !item.isCurrent)
+
+  if (currentIndex !== -1 && firstPreviewIndex !== -1) {
+    items[firstPreviewIndex] = {
+      ...items[firstPreviewIndex],
+      isNext: true,
+    }
+  }
+
+  return items
+}, [phraseIndex, noteIndex, safePhrases, playMode, selectedStage])
 
   const visibleCurrentLabel = current.note === "休符" ? "" : current.note
 
@@ -1450,46 +1468,45 @@ export default function Page() {
                   </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-2">
-                    <button
-                      onClick={handleBack}
-                      className="mother-button-light px-4 py-2 text-sm font-semibold"
-                    >
-                      1音戻る
-                    </button>
+  <div className="flex items-center gap-2">
+    <button
+      onClick={handleBack}
+      className="mother-button-light px-4 py-2 text-sm font-semibold"
+    >
+      1音戻る
+    </button>
 
-                    <button
-                      onClick={() => void playCurrentNote()}
-                      className="mother-button-blue px-4 py-2 text-sm font-semibold"
-                    >
-                      お手本
-                    </button>
+    <button
+      onClick={handleNext}
+      className="mother-button-light px-4 py-2 text-sm font-semibold"
+    >
+      1音進む
+    </button>
+  </div>
 
-                    <button
-                      onClick={handleNext}
-                      className="mother-button-light px-4 py-2 text-sm font-semibold"
-                    >
-                      1音進む
-                    </button>
+  <button
+    onClick={() => void playCurrentNote()}
+    className="mother-button-blue px-4 py-2 text-sm font-semibold"
+  >
+    お手本
+  </button>
 
-                    <button
-                      onClick={() => void handleStage3PlayMelody()}
-                      className="mother-button-blue px-4 py-2 text-sm font-semibold"
-                    >
-                      このメロディーを再生
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        clearPlaybackTimer()
-                        clearCountdownTimer()
-                        setCountdown(null)
-                        setIsPlaying(false)
-                      }}
-                      className="mother-button-light px-4 py-2 text-sm font-semibold"
-                    >
-                      とめる
-                    </button>
-                  </div>
+  <button
+    onClick={() => {
+      if (isPlaying) {
+        clearPlaybackTimer()
+        clearCountdownTimer()
+        setCountdown(null)
+        setIsPlaying(false)
+      } else {
+        void handleStage3PlayMelody()
+      }
+    }}
+    className="mother-button-blue px-4 py-2 text-sm font-semibold"
+  >
+    {isPlaying ? "とめる" : "このメロディーを再生"}
+  </button>
+</div>
                 </div>
               </div>
             </div>
