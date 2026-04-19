@@ -301,38 +301,46 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-1">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-3">
-            {item.isPhraseStart && (
-              <div className="flex flex-col items-center justify-center gap-1">
-                <div className="h-12 w-px bg-slate-300" />
-                <span className="rounded-full bg-slate-200 px-2 py-1 text-[10px] font-black text-slate-600">
-                  MELODY {item.melodyNumber}
-                </span>
-              </div>
-            )}
+        {items.map((item, index) => {
+          const toneClass = item.isCurrent
+            ? "bg-[#FFD54A] text-[#1F325C] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_14px_rgba(255,213,74,0.18)]"
+            : item.isNext
+            ? "border-2 border-[#3F8CFF] bg-[#EAF4FF] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_14px_rgba(63,140,255,0.10)]"
+            : index === 2
+            ? "bg-[#F3F8FF] text-slate-700"
+            : index === 3
+            ? "bg-[#F8FBFF] text-slate-700"
+            : "bg-white text-slate-700"
 
-            <div
-              className={`min-w-[96px] rounded-[22px] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${
-                item.isCurrent
-                  ? "bg-[#FFD54A] text-[#1F325C]"
-                  : item.isNext
-                  ? "border-2 border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
-                  : "bg-white text-slate-700"
-              }`}
-            >
-              <p className="text-[10px] font-black tracking-wide">
-                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
-              </p>
-              <p className="mt-1 min-h-[40px] text-2xl font-black leading-none">
-                {item.note}
-              </p>
-              <p className="mt-2 text-[11px] font-bold opacity-70">
-                長さ {item.length}
-              </p>
+          return (
+            <div key={item.id} className="flex items-center gap-3">
+              {item.isPhraseStart && (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="h-12 w-px bg-slate-300" />
+                  <span className="rounded-full bg-slate-200 px-2 py-1 text-[10px] font-black text-slate-600">
+                    MELODY {item.melodyNumber}
+                  </span>
+                </div>
+              )}
+
+              <div
+                className={`min-w-[136px] rounded-[22px] px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
+              >
+                <p className="text-[10px] font-black tracking-wide">
+                  {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+                </p>
+
+                <p className="mt-1 flex min-h-[56px] items-center justify-center text-2xl font-black leading-tight">
+                  {item.note}
+                </p>
+
+                <p className="mt-2 text-[11px] font-bold opacity-70">
+                  長さ {item.length}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
