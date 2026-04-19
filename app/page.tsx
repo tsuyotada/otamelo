@@ -42,7 +42,6 @@ const noteToFreq: Record<string, number> = {
 type Screen = "home" | "stageSelect" | "practice"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "miss"
-
 type StageId = 1 | 2 | 3 | 4 | 5 | 6
 
 type StageItem = {
@@ -59,123 +58,6 @@ type PreviewItem = {
   isPhraseStart: boolean
   melodyNumber: number
   isPlaceholder?: boolean
-}
-
-/* ===============================
-   5音プレビュー（ステージ3・4用）
-================================ */
-function PreviewLane({ items }: { items: PreviewItem[] }) {
-  return (
-    <div className="mother-subpanel min-h-[214px] px-4 py-3">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">5音先まで</p>
-      </div>
-
-      <div className="grid grid-cols-5 gap-3">
-        {items.map((item, index) => {
-          const toneClass = item.isPlaceholder
-            ? "border-transparent bg-white/10 text-transparent shadow-none"
-            : item.isCurrent
-            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
-            : item.isNext
-            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
-            : index === 2
-            ? "bg-[#F3F8FF]"
-            : index === 3
-            ? "bg-[#F8FBFF]"
-            : "bg-white"
-
-          return (
-            <div
-              key={item.id}
-              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-3 text-center ${toneClass}`}
-            >
-              <p className="h-[16px] text-[10px] font-black">
-                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
-              </p>
-
-              <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black">
-                {item.isPlaceholder ? "" : item.note}
-              </p>
-
-              <p className="mt-2 text-[11px] font-bold opacity-70">
-                {item.isPlaceholder ? "" : `長さ ${item.length}`}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/* ===============================
-   6音プレビュー（ステージ5専用）
-================================ */
-function PreviewLaneSix({ items }: { items: PreviewItem[] }) {
-  return (
-    <div className="mother-subpanel min-h-[214px] px-4 py-3">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
-      </div>
-
-      <div className="grid grid-cols-6 gap-2">
-        {items.map((item, index) => {
-          const toneClass = item.isPlaceholder
-            ? "border-transparent bg-white/10 text-transparent shadow-none"
-            : item.isCurrent
-            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
-            : item.isNext
-            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
-            : index === 2
-            ? "bg-[#F3F8FF]"
-            : index === 3
-            ? "bg-[#F8FBFF]"
-            : index === 4
-            ? "bg-[#FBFDFF]"
-            : "bg-white"
-
-          return (
-            <div
-              key={item.id}
-              className={`min-h-[132px] rounded-[20px] border-2 px-2 py-3 text-center ${toneClass}`}
-            >
-              <p className="h-[16px] text-[10px] font-black">
-                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
-              </p>
-
-              <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black">
-                {item.isPlaceholder ? "" : item.note}
-              </p>
-
-              <p className="mt-2 text-[10px] font-bold opacity-70">
-                {item.isPlaceholder ? "" : `長さ ${item.length}`}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/* ===============================
-   プレビュー生成ロジック
-================================ */
-
-function makePlaceholders(count: number, prefix: string): PreviewItem[] {
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `${prefix}-empty-${i}`,
-    note: "",
-    length: 0,
-    isCurrent: false,
-    isNext: false,
-    isPhraseStart: false,
-    melodyNumber: 0,
-    isPlaceholder: true,
-  }))
 }
 
 type FlatNoteItem = {
@@ -212,6 +94,7 @@ const noteNamesSharp = [
 const STAGE3_TEMPO = 24
 const STAGE4_TEMPO = 28
 const STAGE5_TEMPO = 34
+const STAGE6_TEMPO = 34
 
 function frequencyToMidi(freq: number): number {
   return Math.round(69 + 12 * Math.log2(freq / 440))
@@ -389,11 +272,9 @@ function PixelInventorFace() {
       <div className="absolute left-[4px] top-[7px] h-[4px] w-[24px] bg-[#e0b63f]" />
       <div className="absolute left-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
       <div className="absolute right-[2px] top-[9px] h-[4px] w-[5px] bg-[#e0b63f]" />
-
       <div className="absolute left-[5px] top-[14px] h-[7px] w-[9px] rounded-[2px] border-2 border-slate-800 bg-white/70" />
       <div className="absolute right-[5px] top-[14px] h-[7px] w-[9px] rounded-[2px] border-2 border-slate-800 bg-white/70" />
       <div className="absolute left-1/2 top-[17px] h-[2px] w-[4px] -translate-x-1/2 bg-slate-800" />
-
       <div className="absolute left-1/2 top-[21px] h-[2px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
       <div className="absolute left-1/2 top-[25px] h-[2px] w-[9px] -translate-x-1/2 bg-slate-800" />
     </div>
@@ -412,6 +293,109 @@ function HomeOtamatoneFace() {
   )
 }
 
+function PreviewLane({ items }: { items: PreviewItem[] }) {
+  return (
+    <div className="mother-subpanel min-h-[214px] px-4 py-3">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="mother-text-main text-sm font-bold">これからの音</p>
+        <p className="mother-text-soft text-xs font-bold">5音先まで</p>
+      </div>
+
+      <div className="grid grid-cols-5 gap-3">
+        {items.map((item, index) => {
+          const toneClass = item.isPlaceholder
+            ? "border-transparent bg-white/10 text-transparent shadow-none"
+            : item.isCurrent
+            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
+            : item.isNext
+            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
+            : index === 2
+            ? "bg-[#F3F8FF]"
+            : index === 3
+            ? "bg-[#F8FBFF]"
+            : "bg-white"
+
+          return (
+            <div
+              key={item.id}
+              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-3 text-center ${toneClass}`}
+            >
+              <p className="h-[16px] text-[10px] font-black">
+                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+              </p>
+              <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black">
+                {item.isPlaceholder ? "" : item.note}
+              </p>
+              <p className="mt-2 text-[11px] font-bold opacity-70">
+                {item.isPlaceholder ? "" : `長さ ${item.length}`}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function PreviewLaneSix({ items }: { items: PreviewItem[] }) {
+  return (
+    <div className="mother-subpanel min-h-[214px] px-4 py-3">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="mother-text-main text-sm font-bold">これからの音</p>
+        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2">
+        {items.map((item, index) => {
+          const toneClass = item.isPlaceholder
+            ? "border-transparent bg-white/10 text-transparent shadow-none"
+            : item.isCurrent
+            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
+            : item.isNext
+            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
+            : index === 2
+            ? "bg-[#F3F8FF]"
+            : index === 3
+            ? "bg-[#F8FBFF]"
+            : index === 4
+            ? "bg-[#FBFDFF]"
+            : "bg-white"
+
+          return (
+            <div
+              key={item.id}
+              className={`min-h-[132px] rounded-[20px] border-2 px-2 py-3 text-center ${toneClass}`}
+            >
+              <p className="h-[16px] text-[10px] font-black">
+                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+              </p>
+              <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black">
+                {item.isPlaceholder ? "" : item.note}
+              </p>
+              <p className="mt-2 text-[10px] font-bold opacity-70">
+                {item.isPlaceholder ? "" : `長さ ${item.length}`}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function makePlaceholders(count: number, prefix: string): PreviewItem[] {
+  return Array.from({ length: count }).map((_, i) => ({
+    id: `${prefix}-empty-${i}`,
+    note: "",
+    length: 0,
+    isCurrent: false,
+    isNext: false,
+    isPhraseStart: false,
+    melodyNumber: 0,
+    isPlaceholder: true,
+  }))
+}
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
@@ -428,6 +412,11 @@ export default function Page() {
   const [detectedNote, setDetectedNote] = useState("")
   const [judgeState, setJudgeState] = useState<JudgeState>("idle")
   const [successCount, setSuccessCount] = useState(0)
+
+  const [stage6Score, setStage6Score] = useState(0)
+  const [stage6Hits, setStage6Hits] = useState(0)
+  const [stage6JudgedCount, setStage6JudgedCount] = useState(0)
+  const [stage6ResultOpen, setStage6ResultOpen] = useState(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -466,6 +455,8 @@ export default function Page() {
     )
   }, [safePhrases])
 
+  const totalPlayableNotes = flatPlayableNotes.length
+
   const getFlatPlayableIndex = (pIndex: number, nIndex: number) => {
     return flatPlayableNotes.findIndex(
       (item) => item.phraseIndex === pIndex && item.noteIndex === nIndex
@@ -475,15 +466,20 @@ export default function Page() {
   const phrase = safePhrases[phraseIndex]
   const safeNotes = phrase.notes
   const current = safeNotes[noteIndex] ?? safeNotes[0]
-  const stageLabel = stages.find((stage) => stage.id === selectedStage)?.title ?? ""
+  const stageLabel =
+    stages.find((stage) => stage.id === selectedStage)?.title ?? ""
+
   const stage1IndicatorTop =
     isMicEnabled && detectedNote ? getOtamatoneTopPercent(detectedNote) : null
 
   const nextVisibleNote = useMemo(() => {
-    if (selectedStage === 5) {
+    if (selectedStage === 5 || selectedStage === 6) {
       const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
       if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
-        return { note: flatPlayableNotes[flatIndex + 1].note, length: flatPlayableNotes[flatIndex + 1].length }
+        return {
+          note: flatPlayableNotes[flatIndex + 1].note,
+          length: flatPlayableNotes[flatIndex + 1].length,
+        }
       }
       return null
     }
@@ -501,24 +497,19 @@ export default function Page() {
     }
 
     return null
-  }, [selectedStage, phraseIndex, noteIndex, flatPlayableNotes, safeNotes, playMode, safePhrases])
+  }, [
+    selectedStage,
+    phraseIndex,
+    noteIndex,
+    flatPlayableNotes,
+    safeNotes,
+    playMode,
+    safePhrases,
+  ])
 
   const previewItems = useMemo<PreviewItem[]>(() => {
-    const makePlaceholders = (count: number, prefix: string) =>
-      Array.from({ length: count }).map((_, index) => ({
-        id: `${prefix}-placeholder-${index}`,
-        note: "",
-        length: 0,
-        isCurrent: false,
-        isNext: false,
-        isPhraseStart: false,
-        melodyNumber: phraseIndex + 1,
-        isPlaceholder: true,
-      }))
-
     if (selectedStage === 3) {
-      const stage3Phrase = safePhrases[0]
-      const visible = stage3Phrase.notes
+      const visible = safePhrases[0].notes
         .filter((item) => item.note !== "休符")
         .slice(0, 5)
         .map((item, index) => ({
@@ -531,65 +522,84 @@ export default function Page() {
           melodyNumber: 1,
         }))
 
-      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3")]
+      return [
+        ...visible,
+        ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3"),
+      ]
     }
 
     if (selectedStage === 4) {
-      const stage4Phrase = safePhrases[phraseIndex]
-      const usableNotes = stage4Phrase.notes.filter((item) => item.note !== "休符")
+      const usableNotes = safePhrases[phraseIndex].notes.filter(
+        (item) => item.note !== "休符"
+      )
 
       let windowStart = 0
       if (noteIndex >= 4) {
         const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
-        const hasMoreAfterCurrentWindow = usableNotes.length > candidateStart + 1
+        const hasMoreAfterCurrentWindow =
+          usableNotes.length > candidateStart + 1
         windowStart = hasMoreAfterCurrentWindow
           ? candidateStart
           : Math.max(0, usableNotes.length - 5)
       }
 
-      const visible = usableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
-        const originalIndex = windowStart + index
-        return {
-          id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
-          note: item.note,
-          length: item.length,
-          isCurrent: originalIndex === noteIndex,
-          isNext: originalIndex === noteIndex + 1,
-          isPhraseStart: false,
-          melodyNumber: phraseIndex + 1,
-        }
-      })
+      const visible = usableNotes
+        .slice(windowStart, windowStart + 5)
+        .map((item, index) => {
+          const originalIndex = windowStart + index
+          return {
+            id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
+            note: item.note,
+            length: item.length,
+            isCurrent: originalIndex === noteIndex,
+            isNext: originalIndex === noteIndex + 1,
+            isPhraseStart: false,
+            melodyNumber: phraseIndex + 1,
+          }
+        })
 
-      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
+      return [
+        ...visible,
+        ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4"),
+      ]
     }
 
-if (selectedStage === 5) {
-  const safeFlatIndex = Math.max(0, getFlatPlayableIndex(phraseIndex, noteIndex))
+    if (selectedStage === 5 || selectedStage === 6) {
+      const safeFlatIndex = Math.max(
+        0,
+        getFlatPlayableIndex(phraseIndex, noteIndex)
+      )
 
-  let windowStart = 0
-  if (safeFlatIndex >= 5) {
-    const candidateStart = 5 * Math.floor((safeFlatIndex - 5) / 5) + 5
-    const hasMoreAfterCurrentWindow = flatPlayableNotes.length > candidateStart + 1
-    windowStart = hasMoreAfterCurrentWindow
-      ? candidateStart
-      : Math.max(0, flatPlayableNotes.length - 6)
-  }
+      let windowStart = 0
+      if (safeFlatIndex >= 5) {
+        const candidateStart = 5 * Math.floor((safeFlatIndex - 5) / 5) + 5
+        const hasMoreAfterCurrentWindow =
+          flatPlayableNotes.length > candidateStart + 1
+        windowStart = hasMoreAfterCurrentWindow
+          ? candidateStart
+          : Math.max(0, flatPlayableNotes.length - 6)
+      }
 
-  const visible = flatPlayableNotes.slice(windowStart, windowStart + 6).map((item, index) => {
-    const originalIndex = windowStart + index
-    return {
-      id: `stage5-${originalIndex}-${item.note}`,
-      note: item.note,
-      length: item.length,
-      isCurrent: originalIndex === safeFlatIndex,
-      isNext: originalIndex === safeFlatIndex + 1,
-      isPhraseStart: false,
-      melodyNumber: item.phraseIndex + 1,
+      const visible = flatPlayableNotes
+        .slice(windowStart, windowStart + 6)
+        .map((item, index) => {
+          const originalIndex = windowStart + index
+          return {
+            id: `stage56-${originalIndex}-${item.note}`,
+            note: item.note,
+            length: item.length,
+            isCurrent: originalIndex === safeFlatIndex,
+            isNext: originalIndex === safeFlatIndex + 1,
+            isPhraseStart: false,
+            melodyNumber: item.phraseIndex + 1,
+          }
+        })
+
+      return [
+        ...visible,
+        ...makePlaceholders(Math.max(0, 6 - visible.length), "stage56"),
+      ]
     }
-  })
-
-  return [...visible, ...makePlaceholders(Math.max(0, 6 - visible.length), "stage5")]
-}
 
     const items: PreviewItem[] = []
     let p = phraseIndex
@@ -628,20 +638,26 @@ if (selectedStage === 5) {
       n += 1
     }
 
-    const currentIndex = items.findIndex((item) => item.isCurrent)
-    const firstPreviewIndex = items.findIndex((item) => !item.isCurrent && !item.isPlaceholder)
+    const firstPreviewIndex = items.findIndex(
+      (item) => !item.isCurrent && !item.isPlaceholder
+    )
 
-    if (currentIndex !== -1 && firstPreviewIndex !== -1) {
+    if (firstPreviewIndex !== -1) {
       items[firstPreviewIndex] = {
         ...items[firstPreviewIndex],
         isNext: true,
       }
     }
 
-    return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "default")]
-  }, [phraseIndex, noteIndex, safePhrases, playMode, selectedStage, flatPlayableNotes])
-
-  const visibleCurrentLabel = current.note === "休符" ? "" : current.note
+    return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "d")]
+  }, [
+    selectedStage,
+    safePhrases,
+    phraseIndex,
+    noteIndex,
+    playMode,
+    flatPlayableNotes,
+  ])
 
   const currentIndicatorTop = getOtamatoneTopPercent(current.note)
   const nextIndicatorTop = nextVisibleNote
@@ -662,11 +678,18 @@ if (selectedStage === 5) {
     () =>
       safePhrases
         .slice(0, phraseIndex)
-        .reduce((sum, p) => sum + p.notes.length, 0) + noteIndex + 1,
+        .reduce((sum, p) => sum + p.notes.length, 0) +
+      noteIndex +
+      1,
     [safePhrases, phraseIndex, noteIndex]
   )
 
   const progressPercent = totalNotes > 0 ? (passedNotes / totalNotes) * 100 : 0
+
+  const stage6Accuracy =
+    stage6JudgedCount > 0
+      ? Math.round((stage6Hits / stage6JudgedCount) * 100)
+      : 0
 
   const clearPlaybackTimer = () => {
     if (timerRef.current !== null) {
@@ -682,6 +705,13 @@ if (selectedStage === 5) {
     }
   }
 
+  const resetStage6Result = () => {
+    setStage6Score(0)
+    setStage6Hits(0)
+    setStage6JudgedCount(0)
+    setStage6ResultOpen(false)
+  }
+
   const getStepMs = (length = 1) => {
     const effectiveTempo =
       selectedStage === 3
@@ -690,6 +720,8 @@ if (selectedStage === 5) {
         ? STAGE4_TEMPO
         : selectedStage === 5
         ? STAGE5_TEMPO
+        : selectedStage === 6
+        ? STAGE6_TEMPO
         : tempo
 
     const base = Math.round(60000 / effectiveTempo)
@@ -764,20 +796,47 @@ if (selectedStage === 5) {
     oscillator.stop(now + durationSec)
   }
 
+  const playClick = async () => {
+    const ctx = await ensureAudioReady()
+    if (!ctx) return
+
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    const now = ctx.currentTime
+
+    oscillator.type = "square"
+    oscillator.frequency.value = 1100
+
+    gainNode.gain.setValueAtTime(0.0001, now)
+    gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.025)
+
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    oscillator.start(now)
+    oscillator.stop(now + 0.03)
+  }
+
   const playCurrentNote = async () => {
     if (isMicEnabled) return
     await playNote(current.note, getStepMs(current.length))
   }
 
   const moveToNextNote = () => {
-    if (selectedStage === 5) {
+    if (selectedStage === 5 || selectedStage === 6) {
       const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+
       if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
         const nextFlat = flatPlayableNotes[flatIndex + 1]
         setPhraseIndex(nextFlat.phraseIndex)
         setNoteIndex(nextFlat.noteIndex)
-      } else {
-        setIsPlaying(false)
+        return
+      }
+
+      setIsPlaying(false)
+      if (selectedStage === 6) {
+        setStage6ResultOpen(true)
       }
       return
     }
@@ -826,6 +885,7 @@ if (selectedStage === 5) {
     setJudgeState("idle")
     setDetectedNote("")
     setSuccessCount(0)
+    resetStage6Result()
 
     if (stageId === 1) {
       setPlayMode("phrase")
@@ -876,7 +936,7 @@ if (selectedStage === 5) {
     setCountdown(null)
     setIsPlaying(false)
 
-    if (selectedStage === 5) {
+    if (selectedStage === 5 || selectedStage === 6) {
       const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
       if (flatIndex > 0) {
         const prev = flatPlayableNotes[flatIndex - 1]
@@ -936,9 +996,11 @@ if (selectedStage === 5) {
   }
 
   const startMic = async () => {
-    if (isMicEnabled) return
+    if (isMicEnabled) return true
+
     try {
       setIsMicPreparing(true)
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -953,11 +1015,12 @@ if (selectedStage === 5) {
           webkitAudioContext?: typeof AudioContext
         }).webkitAudioContext
 
-      if (!AudioCtx) return
+      if (!AudioCtx) return false
 
       const ctx = new AudioCtx()
       const source = ctx.createMediaStreamSource(stream)
       const analyser = ctx.createAnalyser()
+
       analyser.fftSize = 2048
       analyser.smoothingTimeConstant = 0.1
       source.connect(analyser)
@@ -972,8 +1035,11 @@ if (selectedStage === 5) {
       setDetectedNote("")
       stableHitCountRef.current = 0
       noteSolvedRef.current = false
+
+      return true
     } catch {
       setIsMicEnabled(false)
+      return false
     } finally {
       setIsMicPreparing(false)
     }
@@ -1006,6 +1072,49 @@ if (selectedStage === 5) {
     setCountdown(null)
   }
 
+  const runCountdownThenStart = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setIsPlaying(false)
+
+    const run = (value: number) => {
+      setCountdown(value)
+
+      if (value === 0) {
+        setCountdown(null)
+        setIsPlaying(true)
+        return
+      }
+
+      countdownTimerRef.current = window.setTimeout(() => {
+        run(value - 1)
+      }, 700)
+    }
+
+    run(3)
+  }
+
+  const handleStage6Start = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setPlayMode("full")
+    setPhraseIndex(0)
+    setNoteIndex(0)
+    setJudgeState("idle")
+    setDetectedNote("")
+    resetStage6Result()
+    stableHitCountRef.current = 0
+    noteSolvedRef.current = false
+
+    const micOk = await startMic()
+    if (!micOk) return
+
+    await ensureAudioReady()
+    await runCountdownThenStart()
+  }
+
   useEffect(() => {
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
@@ -1014,28 +1123,131 @@ if (selectedStage === 5) {
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
-    awaitPromise(playNote(current.note, getStepMs(current.length)))
-  }, [screen, selectedStage, isPlaying, phraseIndex, noteIndex, current.note, current.length, tempo])
+
+    if (selectedStage === 6) {
+      void playClick()
+    } else {
+      void playNote(current.note, getStepMs(current.length))
+    }
+  }, [
+    screen,
+    selectedStage,
+    isPlaying,
+    phraseIndex,
+    noteIndex,
+    tempo,
+    current.note,
+    current.length,
+  ])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
     if (isMicEnabled || isMicPreparing) return
     if (stage1AutoMicTriedRef.current) return
+
     stage1AutoMicTriedRef.current = true
     void startMic()
   }, [screen, selectedStage, isMicEnabled, isMicPreparing])
 
   useEffect(() => {
     clearPlaybackTimer()
+
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
 
     const stepMs = getStepMs(current.length)
+
     timerRef.current = window.setTimeout(() => {
       moveToNextNote()
     }, stepMs)
 
-    return () => clearPlaybackTimer()
-  }, [screen, selectedStage, isPlaying, phraseIndex, noteIndex, current.length, tempo])
+    return () => {
+      clearPlaybackTimer()
+    }
+  }, [
+    screen,
+    selectedStage,
+    isPlaying,
+    playMode,
+    phraseIndex,
+    noteIndex,
+    tempo,
+    current.length,
+  ])
+
+  useEffect(() => {
+    if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) {
+      return
+    }
+
+    const analyser = analyserRef.current
+    const sampleRate = micAudioContextRef.current.sampleRate
+    const buffer = new Float32Array(analyser.fftSize)
+
+    const tick = () => {
+      analyser.getFloatTimeDomainData(buffer)
+      const freq = getAutocorrelatedPitch(buffer, sampleRate)
+      const note = freq > 0 ? closestNoteFromFrequency(freq) : ""
+      setDetectedNote(note)
+
+      if (selectedStage === 1) {
+        setJudgeState("idle")
+      } else if (!isPlaying || current.note === "休符") {
+        setJudgeState("idle")
+      } else if (!noteSolvedRef.current) {
+        if (note && note === current.note) {
+          stableHitCountRef.current += 1
+
+          if (stableHitCountRef.current >= 4) {
+            noteSolvedRef.current = true
+            setJudgeState("ok")
+
+            if (selectedStage === 6) {
+              setStage6Score((prev) => prev + 100)
+              setStage6Hits((prev) => prev + 1)
+              setStage6JudgedCount((prev) => prev + 1)
+            } else {
+              setSuccessCount((prev) => prev + 1)
+            }
+          } else {
+            setJudgeState("idle")
+          }
+        } else if (note && note !== current.note) {
+          stableHitCountRef.current = 0
+          setJudgeState("miss")
+        } else {
+          setJudgeState("idle")
+        }
+      } else {
+        if (selectedStage !== 6) {
+          setJudgeState("ok")
+        }
+      }
+
+      micAnimationRef.current = requestAnimationFrame(tick)
+    }
+
+    micAnimationRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      if (micAnimationRef.current !== null) {
+        cancelAnimationFrame(micAnimationRef.current)
+        micAnimationRef.current = null
+      }
+    }
+  }, [isMicEnabled, isPlaying, current.note, selectedStage])
+
+  useEffect(() => {
+    if (selectedStage !== 6) return
+    if (!isPlaying) return
+    if (noteSolvedRef.current) return
+
+    const stepMs = getStepMs(current.length)
+    const missTimer = window.setTimeout(() => {
+      setStage6JudgedCount((prev) => prev + 1)
+    }, Math.max(100, stepMs - 60))
+
+    return () => window.clearTimeout(missTimer)
+  }, [selectedStage, isPlaying, phraseIndex, noteIndex, current.length])
 
   useEffect(() => {
     return () => {
@@ -1050,15 +1262,18 @@ if (selectedStage === 5) {
       <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
         <div className="mother-panel w-full max-w-[720px] px-10 py-10 text-center text-slate-900">
           <HomeOtamatoneFace />
+
           <p className="mother-text-main mb-6 text-lg font-bold">
             オタマトーンの準備はできましたか？
           </p>
+
           {isPreparingAudio && (
             <div className="mother-subpanel mother-text-main mb-5 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
               音を準備しています…
             </div>
           )}
+
           <button
             onClick={() => void handleOpenStage()}
             className="mother-button-blue px-8 py-4 text-xl font-bold disabled:opacity-70"
@@ -1090,7 +1305,7 @@ if (selectedStage === 5) {
                 key={stage.id}
                 type="button"
                 onClick={() => handleSelectStage(stage.id)}
-                className="mother-white-panel text-left px-5 py-5 transition hover:translate-y-[1px]"
+                className="mother-white-panel px-5 py-5 text-left transition hover:translate-y-[1px]"
               >
                 <p className="text-xs font-black text-slate-500">
                   STAGE {stage.id}
@@ -1256,7 +1471,9 @@ if (selectedStage === 5) {
 
             <div className="mother-white-panel mb-4 p-4">
               <div className="mb-3 flex items-center justify-center gap-4">
-                <p className="mother-text-soft text-base font-bold">いまのメロディー</p>
+                <p className="mother-text-soft text-base font-bold">
+                  いまのメロディー
+                </p>
                 <p className="mother-text-main text-base font-black">
                   {phraseIndex + 1} / {safePhrases.length}
                 </p>
@@ -1325,7 +1542,7 @@ if (selectedStage === 5) {
                 <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                   <p className="text-sm font-bold text-slate-600">いまきいている音</p>
                   <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
-                    {visibleCurrentLabel || "-"}
+                    {current.note === "休符" ? "-" : current.note}
                   </p>
                   <p className="mt-3 text-sm font-bold text-slate-600">
                     {safePhrases[phraseIndex]?.title ?? ""}
@@ -1333,7 +1550,9 @@ if (selectedStage === 5) {
                 </div>
 
                 <div className="mother-settings-card p-4">
-                  <p className="mother-text-main mb-3 text-base font-bold">さいせい</p>
+                  <p className="mother-text-main mb-3 text-base font-bold">
+                    さいせい
+                  </p>
 
                   <div className="grid grid-cols-1 gap-3">
                     <button
@@ -1342,7 +1561,11 @@ if (selectedStage === 5) {
                     >
                       <span className="flex items-center justify-center gap-2">
                         {isPreparingAudio && <Spinner />}
-                        {isPreparingAudio ? "準備中…" : isPlaying ? "再生中…" : "きいてみる"}
+                        {isPreparingAudio
+                          ? "準備中…"
+                          : isPlaying
+                          ? "再生中…"
+                          : "きいてみる"}
                       </span>
                     </button>
 
@@ -1528,7 +1751,7 @@ if (selectedStage === 5) {
   if (selectedStage === 4) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-<div className="mx-auto flex max-w-[1320px] flex-col gap-3">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
           <section className="mother-panel flex flex-col p-4 text-slate-900">
             <div className="mb-3 flex items-center gap-3">
               <PixelInventorFace />
@@ -1795,7 +2018,7 @@ if (selectedStage === 5) {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-<PreviewLaneSix items={previewItems} />
+                <PreviewLaneSix items={previewItems} />
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
@@ -1875,13 +2098,275 @@ if (selectedStage === 5) {
     )
   }
 
+  if (selectedStage === 6) {
+    return (
+      <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
+          <section className="mother-panel flex flex-col p-4 text-slate-900">
+            <div className="mb-3 flex items-center gap-3">
+              <PixelInventorFace />
+              <div>
+                <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                  STAGE {selectedStage}
+                </p>
+                <p className="mother-text-main text-base font-bold">
+                  本番だ　全体とおして　自分だけでひいてみて
+                </p>
+              </div>
+            </div>
+
+            <div className="mother-subpanel px-4 py-3">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="mother-text-main text-sm font-bold">ぜんたいの進行</p>
+                <p className="mother-text-soft text-xs font-bold">
+                  {phraseIndex + 1} / {safePhrases.length}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-8 gap-2">
+                {safePhrases.map((_, index) => {
+                  const isCurrent = index === phraseIndex
+                  const isDone = index < phraseIndex
+
+                  return (
+                    <div
+                      key={index}
+                      className={`mother-step-card px-2 py-2 text-center ${
+                        isCurrent
+                          ? "is-active"
+                          : isDone
+                          ? "bg-[#eaf4ff] text-slate-900"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      <p className="text-[9px] font-bold">MELODY</p>
+                      <p className="mt-1 text-xl font-black">{index + 1}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="mother-progress-track mt-4 h-3 w-full overflow-hidden">
+                <div
+                  className="mother-progress-fill h-full transition-all"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
+              <div className="mother-subpanel flex items-center justify-center p-4">
+                <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">
+                  <div className="mother-neck relative h-full w-10 rounded-full">
+                    <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                      {Array.from({ length: 9 }).map((_, i) => (
+                        <div key={i} className="h-px w-full bg-white/10" />
+                      ))}
+                    </div>
+
+                    {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
+                      <div
+                        className="mother-indicator-next absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full"
+                        style={{
+                          top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                          marginLeft: indicatorsAreClose ? "26px" : "0px",
+                        }}
+                      />
+                    )}
+
+                    {current.note !== "休符" && currentIndicatorTop !== null && (
+                      <div
+                        className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
+                        style={{
+                          top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                    <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-4">
+                <PreviewLaneSix items={previewItems} />
+
+                <div className="mother-subpanel flex min-h-[164px] flex-col gap-3 px-4 py-4">
+                  <p className="mother-text-soft text-center text-sm font-bold">
+                    マイクで本番ちゅう
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    <div className="mother-info-card px-3 py-3 text-center">
+                      <p className="mb-1 text-xs font-bold text-slate-500">
+                        入力された音
+                      </p>
+                      <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                        {detectedNote || "-"}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`rounded-[22px] px-3 py-3 text-center ${
+                        judgeState === "ok"
+                          ? "bg-[#dff7df] text-[#1b6b2c]"
+                          : judgeState === "miss"
+                          ? "bg-[#ffe2e2] text-[#b33737]"
+                          : "mother-info-card text-slate-500"
+                      }`}
+                    >
+                      <p className="mb-1 text-xs font-bold">判定</p>
+                      <p className="min-h-[36px] text-2xl font-black">
+                        {judgeState === "ok"
+                          ? "OK!"
+                          : judgeState === "miss"
+                          ? "MISS"
+                          : "..."}
+                      </p>
+                    </div>
+
+                    <div className="mother-info-card px-3 py-3 text-center">
+                      <p className="mb-1 text-xs font-bold text-slate-500">
+                        スコア
+                      </p>
+                      <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                        {stage6Score}
+                      </p>
+                    </div>
+
+                    <div className="mother-info-card px-3 py-3 text-center">
+                      <p className="mb-1 text-xs font-bold text-slate-500">
+                        成功数
+                      </p>
+                      <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                        {stage6Hits}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isPlaying || countdown !== null) {
+                          clearPlaybackTimer()
+                          clearCountdownTimer()
+                          setCountdown(null)
+                          setIsPlaying(false)
+                        } else {
+                          void handleStage6Start()
+                        }
+                      }}
+                      className="mother-button-blue px-5 py-3 text-sm font-bold"
+                    >
+                      {countdown !== null
+                        ? `${countdown}`
+                        : isPlaying
+                        ? "ちゅうし"
+                        : "はじめる"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearPlaybackTimer()
+                        clearCountdownTimer()
+                        setCountdown(null)
+                        setIsPlaying(false)
+                        resetStage6Result()
+                        setPhraseIndex(0)
+                        setNoteIndex(0)
+                        setJudgeState("idle")
+                        setDetectedNote("")
+                      }}
+                      className="mother-button-light px-5 py-3 text-sm font-bold"
+                    >
+                      もういちど
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="mother-text-main text-sm font-bold">
+                  とまってもいいけど　さいごまでいこう
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  stopMic()
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-3 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
+            </div>
+
+            {stage6ResultOpen && (
+              <div className="mother-subpanel mt-3 px-5 py-5 text-center">
+                <p className="mother-text-main text-base font-black">
+                  けっか
+                </p>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="mother-info-card px-4 py-4">
+                    <p className="text-xs font-bold text-slate-500">スコア</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900">
+                      {stage6Score}
+                    </p>
+                  </div>
+
+                  <div className="mother-info-card px-4 py-4">
+                    <p className="text-xs font-bold text-slate-500">成功数</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900">
+                      {stage6Hits} / {totalPlayableNotes}
+                    </p>
+                  </div>
+
+                  <div className="mother-info-card px-4 py-4">
+                    <p className="text-xs font-bold text-slate-500">正答率</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900">
+                      {stage6Accuracy}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => void handleStage6Start()}
+                    className="mother-button-blue px-6 py-3 text-sm font-bold"
+                  >
+                    もういちど本番
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    )
+  }
+
   return (
-    <main className="min-h-screen bg-[#10234d] px-6 py-10 text-white">
-      <div className="mx-auto max-w-[720px] text-center">
-        <p className="text-lg font-bold">ステージ6は次に作りましょう。</p>
+    <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
+      <div className="mother-panel w-full max-w-[720px] px-10 py-10 text-center text-slate-900">
+        <p className="text-lg font-bold">ここは準備中です。</p>
       </div>
     </main>
   )
 }
-
-function awaitPromise(_p: Promise<unknown>) {}
