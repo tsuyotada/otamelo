@@ -61,6 +61,171 @@ type PreviewItem = {
   isPlaceholder?: boolean
 }
 
+/* ===============================
+   5音プレビュー（ステージ3・4用）
+================================ */
+function PreviewLane({ items }: { items: PreviewItem[] }) {
+  return (
+    <div className="mother-subpanel min-h-[214px] px-4 py-3">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="mother-text-main text-sm font-bold">これからの音</p>
+        <p className="mother-text-soft text-xs font-bold">5音先まで</p>
+      </div>
+
+      <div className="grid grid-cols-5 gap-3">
+        {items.map((item, index) => {
+          const toneClass = item.isPlaceholder
+            ? "border-transparent bg-white/10 text-transparent shadow-none"
+            : item.isCurrent
+            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
+            : item.isNext
+            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
+            : index === 2
+            ? "bg-[#F3F8FF]"
+            : index === 3
+            ? "bg-[#F8FBFF]"
+            : "bg-white"
+
+          return (
+            <div
+              key={item.id}
+              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-3 text-center ${toneClass}`}
+            >
+              <p className="h-[16px] text-[10px] font-black">
+                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+              </p>
+
+              <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black">
+                {item.isPlaceholder ? "" : item.note}
+              </p>
+
+              <p className="mt-2 text-[11px] font-bold opacity-70">
+                {item.isPlaceholder ? "" : `長さ ${item.length}`}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ===============================
+   6音プレビュー（ステージ5専用）
+================================ */
+function PreviewLaneSix({ items }: { items: PreviewItem[] }) {
+  return (
+    <div className="mother-subpanel min-h-[214px] px-4 py-3">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="mother-text-main text-sm font-bold">これからの音</p>
+        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2">
+        {items.map((item, index) => {
+          const toneClass = item.isPlaceholder
+            ? "border-transparent bg-white/10 text-transparent shadow-none"
+            : item.isCurrent
+            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
+            : item.isNext
+            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
+            : index === 2
+            ? "bg-[#F3F8FF]"
+            : index === 3
+            ? "bg-[#F8FBFF]"
+            : index === 4
+            ? "bg-[#FBFDFF]"
+            : "bg-white"
+
+          return (
+            <div
+              key={item.id}
+              className={`min-h-[132px] rounded-[20px] border-2 px-2 py-3 text-center ${toneClass}`}
+            >
+              <p className="h-[16px] text-[10px] font-black">
+                {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+              </p>
+
+              <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black">
+                {item.isPlaceholder ? "" : item.note}
+              </p>
+
+              <p className="mt-2 text-[10px] font-bold opacity-70">
+                {item.isPlaceholder ? "" : `長さ ${item.length}`}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ===============================
+   プレビュー生成ロジック
+================================ */
+
+function makePlaceholders(count: number, prefix: string): PreviewItem[] {
+  return Array.from({ length: count }).map((_, i) => ({
+    id: `${prefix}-empty-${i}`,
+    note: "",
+    length: 0,
+    isCurrent: false,
+    isNext: false,
+    isPhraseStart: false,
+    melodyNumber: 0,
+    isPlaceholder: true,
+  }))
+}
+
+/* ===============================
+   previewItems 作成
+================================ */
+
+const previewItems: PreviewItem[] = (() => {
+  // ステージ5（6音）
+  if (selectedStage === 5) {
+    const safeIndex = Math.max(0, flatIndex)
+
+    const windowStart =
+      safeIndex < 5
+        ? 0
+        : Math.min(safeIndex, flatPlayableNotes.length - 6)
+
+    const visible = flatPlayableNotes
+      .slice(windowStart, windowStart + 6)
+      .map((n, i) => {
+        const idx = windowStart + i
+        return {
+          id: `s5-${idx}`,
+          note: n.note,
+          length: n.length,
+          isCurrent: idx === safeIndex,
+          isNext: idx === safeIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: n.phraseIndex + 1,
+        }
+      })
+
+    return [...visible, ...makePlaceholders(6 - visible.length, "s5")]
+  }
+
+  // ステージ3・4（5音）
+  const visible = flatPlayableNotes
+    .slice(flatIndex, flatIndex + 5)
+    .map((n, i) => ({
+      id: `s-${i}`,
+      note: n.note,
+      length: n.length,
+      isCurrent: i === 0,
+      isNext: i === 1,
+      isPhraseStart: false,
+      melodyNumber: n.phraseIndex + 1,
+    }))
+
+  return [...visible, ...makePlaceholders(5 - visible.length, "s")]
+})()
+
 type FlatNoteItem = {
   phraseIndex: number
   noteIndex: number
