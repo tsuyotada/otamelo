@@ -1341,14 +1341,20 @@ if (screen === "home") {
     <main className="flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
       <div className="w-full max-w-[860px] rounded-[36px] border border-white/10 bg-[#102A68] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
         <div className="mx-auto flex max-w-[560px] flex-col items-center">
-          <img
-            src="/otamatone-logo.svg"
-            alt="オタマトーン"
-            className="h-auto w-[min(88vw,420px)] object-contain drop-shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
-          />
+          <div className="flex flex-col items-center">
+            <p className="bg-gradient-to-b from-white to-white/72 bg-clip-text text-[clamp(42px,9vw,84px)] font-black italic leading-none tracking-[-0.04em] text-transparent drop-shadow-[0_8px_20px_rgba(255,255,255,0.14)]">
+              EIGHT MELODIES
+            </p>
 
-          <p className="mt-8 text-sm font-black tracking-[0.18em] text-white/90">
-            EIGHT MELODIES
+            <p className="mt-3 text-[clamp(16px,2.5vw,24px)] font-black tracking-[0.18em] text-white/92">
+              for OTAMATONE
+            </p>
+
+            <div className="mt-4 h-[3px] w-[min(48vw,290px)] rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.22)]" />
+          </div>
+
+          <p className="mt-8 text-sm font-black tracking-[0.18em] text-white/85">
+            START SCREEN
           </p>
 
           <p className="mt-5 text-sm font-bold leading-relaxed text-white/90 md:text-base">
@@ -1364,7 +1370,7 @@ if (screen === "home") {
             </div>
           )}
 
-          <div className="mt-7">
+          <div className="mt-8">
             <button
               onClick={() => void handleOpenStage()}
               className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:translate-y-[1px] disabled:opacity-70"
@@ -1373,6 +1379,10 @@ if (screen === "home") {
               {isPreparingAudio ? "準備中…" : "START"}
             </button>
           </div>
+
+          <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
+            UNOFFICIAL PRACTICE EXPERIENCE
+          </p>
         </div>
       </div>
     </main>
