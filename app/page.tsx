@@ -152,10 +152,6 @@ function invLerp(a: number, b: number, value: number) {
   return (value - a) / (b - a)
 }
 
-/**
- * 0 = 下端（顔から遠い）
- * 1 = 上端（顔のすぐ上）
- */
 function getOtamatoneNormalizedPosition(note: string): number | null {
   const anchors = [
     { note: "低いソ", pos: 0.0 },
@@ -191,10 +187,6 @@ function getOtamatoneNormalizedPosition(note: string): number | null {
   return null
 }
 
-/**
- * 0 = 上側（顔から遠い）
- * 1 = 下側（顔に近い）
- */
 function getOtamatoneTopPercent(note: string): number | null {
   const normalized = getOtamatoneNormalizedPosition(note)
   if (normalized === null) return null
@@ -423,6 +415,14 @@ export default function Page() {
     isMicEnabled && detectedNote ? getOtamatoneTopPercent(detectedNote) : null
 
   const nextVisibleNote = useMemo(() => {
+    if (selectedStage === 5) {
+      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+      if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
+        return { note: flatPlayableNotes[flatIndex + 1].note, length: flatPlayableNotes[flatIndex + 1].length }
+      }
+      return null
+    }
+
     for (let i = noteIndex + 1; i < safeNotes.length; i += 1) {
       if (safeNotes[i].note !== "休符") return safeNotes[i]
     }
@@ -436,7 +436,7 @@ export default function Page() {
     }
 
     return null
-  }, [noteIndex, safeNotes, playMode, phraseIndex, safePhrases])
+  }, [selectedStage, phraseIndex, noteIndex, flatPlayableNotes, safeNotes, playMode, safePhrases])
 
   const previewItems = useMemo<PreviewItem[]>(() => {
     const makePlaceholders = (count: number, prefix: string) =>
@@ -499,8 +499,7 @@ export default function Page() {
     }
 
     if (selectedStage === 5) {
-      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
-      const safeFlatIndex = flatIndex === -1 ? 0 : flatIndex
+      const safeFlatIndex = Math.max(0, getFlatPlayableIndex(phraseIndex, noteIndex))
 
       let windowStart = 0
       if (safeFlatIndex >= 4) {
@@ -511,20 +510,18 @@ export default function Page() {
           : Math.max(0, flatPlayableNotes.length - 5)
       }
 
-      const visible = flatPlayableNotes
-        .slice(windowStart, windowStart + 5)
-        .map((item, index) => {
-          const originalIndex = windowStart + index
-          return {
-            id: `stage5-${item.phraseIndex}-${item.noteIndex}-${item.note}`,
-            note: item.note,
-            length: item.length,
-            isCurrent: originalIndex === safeFlatIndex,
-            isNext: originalIndex === safeFlatIndex + 1,
-            isPhraseStart: false,
-            melodyNumber: item.phraseIndex + 1,
-          }
-        })
+      const visible = flatPlayableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
+        const originalIndex = windowStart + index
+        return {
+          id: `stage5-${originalIndex}-${item.note}`,
+          note: item.note,
+          length: item.length,
+          isCurrent: originalIndex === safeFlatIndex,
+          isNext: originalIndex === safeFlatIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: item.phraseIndex + 1,
+        }
+      })
 
       return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage5")]
     }
@@ -536,7 +533,6 @@ export default function Page() {
 
     while (items.length < 5 && safety < 200) {
       safety += 1
-
       if (p >= safePhrases.length) break
 
       const targetPhrase = safePhrases[p]
@@ -578,14 +574,7 @@ export default function Page() {
     }
 
     return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "default")]
-  }, [
-    phraseIndex,
-    noteIndex,
-    safePhrases,
-    playMode,
-    selectedStage,
-    flatPlayableNotes,
-  ])
+  }, [phraseIndex, noteIndex, safePhrases, playMode, selectedStage, flatPlayableNotes])
 
   const visibleCurrentLabel = current.note === "休符" ? "" : current.note
 
@@ -710,35 +699,24 @@ export default function Page() {
     oscillator.stop(now + durationSec)
   }
 
-  const playClick = async () => {
-    const ctx = await ensureAudioReady()
-    if (!ctx) return
-
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
-
-    const now = ctx.currentTime
-
-    oscillator.type = "square"
-    oscillator.frequency.value = 1100
-
-    gainNode.gain.setValueAtTime(0.0001, now)
-    gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.025)
-
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
-
-    oscillator.start(now)
-    oscillator.stop(now + 0.03)
-  }
-
   const playCurrentNote = async () => {
     if (isMicEnabled) return
     await playNote(current.note, getStepMs(current.length))
   }
 
   const moveToNextNote = () => {
+    if (selectedStage === 5) {
+      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+      if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
+        const nextFlat = flatPlayableNotes[flatIndex + 1]
+        setPhraseIndex(nextFlat.phraseIndex)
+        setNoteIndex(nextFlat.noteIndex)
+      } else {
+        setIsPlaying(false)
+      }
+      return
+    }
+
     const isPhraseMode = playMode === "phrase"
     const isStage2ListenMode = selectedStage === 2 && playMode === "full"
 
@@ -819,28 +797,6 @@ export default function Page() {
     setScreen("practice")
   }
 
-  const handlePrevPhrase = () => {
-    clearPlaybackTimer()
-    clearCountdownTimer()
-    setCountdown(null)
-    setIsPlaying(false)
-    setPlayMode("phrase")
-    setPhraseIndex((prev) => Math.max(0, prev - 1))
-    setNoteIndex(0)
-    setJudgeState("idle")
-  }
-
-  const handleNextPhrase = () => {
-    clearPlaybackTimer()
-    clearCountdownTimer()
-    setCountdown(null)
-    setIsPlaying(false)
-    setPlayMode("phrase")
-    setPhraseIndex((prev) => Math.min(safePhrases.length - 1, prev + 1))
-    setNoteIndex(0)
-    setJudgeState("idle")
-  }
-
   const handleNext = () => {
     clearPlaybackTimer()
     clearCountdownTimer()
@@ -857,14 +813,12 @@ export default function Page() {
 
     if (selectedStage === 5) {
       const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
-
       if (flatIndex > 0) {
         const prev = flatPlayableNotes[flatIndex - 1]
         setPhraseIndex(prev.phraseIndex)
         setNoteIndex(prev.noteIndex)
         return
       }
-
       setPhraseIndex(0)
       setNoteIndex(0)
       return
@@ -875,21 +829,7 @@ export default function Page() {
       return
     }
 
-    if (playMode === "full" && phraseIndex > 0) {
-      const prevPhraseIndex = phraseIndex - 1
-      const prevPhrase = safePhrases[prevPhraseIndex]
-      const prevNotes = prevPhrase.notes
-      setPhraseIndex(prevPhraseIndex)
-      setNoteIndex(Math.max(0, prevNotes.length - 1))
-      return
-    }
-
     setNoteIndex(0)
-  }
-
-  const handleResetSuccess = () => {
-    setSuccessCount(0)
-    setJudgeState("idle")
   }
 
   const handleStage3PlayMelody = async () => {
@@ -932,14 +872,8 @@ export default function Page() {
 
   const startMic = async () => {
     if (isMicEnabled) return
-
     try {
       setIsMicPreparing(true)
-      clearPlaybackTimer()
-      clearCountdownTimer()
-      setCountdown(null)
-      setIsPlaying(false)
-
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -954,18 +888,13 @@ export default function Page() {
           webkitAudioContext?: typeof AudioContext
         }).webkitAudioContext
 
-      if (!AudioCtx) {
-        setIsMicPreparing(false)
-        return
-      }
+      if (!AudioCtx) return
 
       const ctx = new AudioCtx()
       const source = ctx.createMediaStreamSource(stream)
       const analyser = ctx.createAnalyser()
-
       analyser.fftSize = 2048
       analyser.smoothingTimeConstant = 0.1
-
       source.connect(analyser)
 
       micStreamRef.current = stream
@@ -1012,36 +941,6 @@ export default function Page() {
     setCountdown(null)
   }
 
-  const startPlaybackWithCountdown = async () => {
-    clearPlaybackTimer()
-    clearCountdownTimer()
-    setIsPlaying(false)
-
-    if (!isMicEnabled) {
-      await ensureAudioReady()
-      setIsPlaying(true)
-      return
-    }
-
-    await ensureAudioReady()
-
-    const run = (value: number) => {
-      setCountdown(value)
-
-      if (value === 0) {
-        setCountdown(null)
-        setIsPlaying(true)
-        return
-      }
-
-      countdownTimerRef.current = window.setTimeout(() => {
-        run(value - 1)
-      }, 700)
-    }
-
-    run(3)
-  }
-
   useEffect(() => {
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
@@ -1050,136 +949,28 @@ export default function Page() {
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
-
-    if (isMicEnabled) {
-      void playClick()
-    } else {
-      void playNote(current.note, getStepMs(current.length))
-    }
-  }, [
-    screen,
-    selectedStage,
-    isPlaying,
-    isMicEnabled,
-    phraseIndex,
-    noteIndex,
-    tempo,
-    current.note,
-    current.length,
-  ])
+    awaitPromise(playNote(current.note, getStepMs(current.length)))
+  }, [screen, selectedStage, isPlaying, phraseIndex, noteIndex, current.note, current.length, tempo])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
     if (isMicEnabled || isMicPreparing) return
     if (stage1AutoMicTriedRef.current) return
-
     stage1AutoMicTriedRef.current = true
     void startMic()
   }, [screen, selectedStage, isMicEnabled, isMicPreparing])
 
   useEffect(() => {
     clearPlaybackTimer()
-
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
 
     const stepMs = getStepMs(current.length)
-
     timerRef.current = window.setTimeout(() => {
       moveToNextNote()
     }, stepMs)
 
-    return () => {
-      clearPlaybackTimer()
-    }
-  }, [
-    screen,
-    selectedStage,
-    isPlaying,
-    playMode,
-    phraseIndex,
-    noteIndex,
-    tempo,
-    current.length,
-    successCount,
-  ])
-
-  useEffect(() => {
-    if (!isMicEnabled || !analyserRef.current || !micAudioContextRef.current) {
-      return
-    }
-
-    const analyser = analyserRef.current
-    const sampleRate = micAudioContextRef.current.sampleRate
-    const buffer = new Float32Array(analyser.fftSize)
-
-    const tick = () => {
-      analyser.getFloatTimeDomainData(buffer)
-      const freq = getAutocorrelatedPitch(buffer, sampleRate)
-      const note = freq > 0 ? closestNoteFromFrequency(freq) : ""
-      setDetectedNote(note)
-
-      if (selectedStage === 1) {
-        setJudgeState("idle")
-      } else if (!isPlaying || current.note === "休符") {
-        setJudgeState("idle")
-      } else if (!noteSolvedRef.current) {
-        if (note && note === current.note) {
-          stableHitCountRef.current += 1
-          if (stableHitCountRef.current >= 4) {
-            noteSolvedRef.current = true
-            setJudgeState("ok")
-            setSuccessCount((prev) => prev + 1)
-          } else {
-            setJudgeState("idle")
-          }
-        } else if (note && note !== current.note) {
-          stableHitCountRef.current = 0
-          setJudgeState("miss")
-        } else {
-          setJudgeState("idle")
-        }
-      } else {
-        setJudgeState("ok")
-      }
-
-      micAnimationRef.current = requestAnimationFrame(tick)
-    }
-
-    micAnimationRef.current = requestAnimationFrame(tick)
-
-    return () => {
-      if (micAnimationRef.current !== null) {
-        cancelAnimationFrame(micAnimationRef.current)
-        micAnimationRef.current = null
-      }
-    }
-  }, [isMicEnabled, isPlaying, current.note, selectedStage])
-
-  useEffect(() => {
-    if (screen !== "practice" || selectedStage === 1) return
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat) return
-
-      if (e.key === "ArrowLeft") {
-        e.preventDefault()
-        handleBack()
-      }
-
-      if (e.key === "ArrowRight") {
-        e.preventDefault()
-        handleNext()
-      }
-
-      if (e.key === " " || e.key === "Spacebar") {
-        e.preventDefault()
-        void startPlaybackWithCountdown()
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [screen, selectedStage, playMode, noteIndex, phraseIndex, isMicEnabled])
+    return () => clearPlaybackTimer()
+  }, [screen, selectedStage, isPlaying, phraseIndex, noteIndex, current.length, tempo])
 
   useEffect(() => {
     return () => {
@@ -1194,18 +985,15 @@ export default function Page() {
       <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
         <div className="mother-panel w-full max-w-[720px] px-10 py-10 text-center text-slate-900">
           <HomeOtamatoneFace />
-
           <p className="mother-text-main mb-6 text-lg font-bold">
             オタマトーンの準備はできましたか？
           </p>
-
           {isPreparingAudio && (
             <div className="mother-subpanel mother-text-main mb-5 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
               音を準備しています…
             </div>
           )}
-
           <button
             onClick={() => void handleOpenStage()}
             className="mother-button-blue px-8 py-4 text-xl font-bold disabled:opacity-70"
@@ -1403,9 +1191,7 @@ export default function Page() {
 
             <div className="mother-white-panel mb-4 p-4">
               <div className="mb-3 flex items-center justify-center gap-4">
-                <p className="mother-text-soft text-base font-bold">
-                  いまのメロディー
-                </p>
+                <p className="mother-text-soft text-base font-bold">いまのメロディー</p>
                 <p className="mother-text-main text-base font-black">
                   {phraseIndex + 1} / {safePhrases.length}
                 </p>
@@ -1482,22 +1268,16 @@ export default function Page() {
                 </div>
 
                 <div className="mother-settings-card p-4">
-                  <p className="mother-text-main mb-3 text-base font-bold">
-                    さいせい
-                  </p>
+                  <p className="mother-text-main mb-3 text-base font-bold">さいせい</p>
 
                   <div className="grid grid-cols-1 gap-3">
                     <button
-                      onClick={() => void startPlaybackWithCountdown()}
+                      onClick={() => void ensureAudioReady().then(() => setIsPlaying(true))}
                       className="mother-button-blue px-4 py-3 text-lg font-bold disabled:opacity-70"
                     >
                       <span className="flex items-center justify-center gap-2">
                         {isPreparingAudio && <Spinner />}
-                        {isPreparingAudio
-                          ? "準備中…"
-                          : isPlaying
-                          ? "再生中…"
-                          : "きいてみる"}
+                        {isPreparingAudio ? "準備中…" : isPlaying ? "再生中…" : "きいてみる"}
                       </span>
                     </button>
 
@@ -2031,299 +1811,12 @@ export default function Page() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-[#10234d] px-4 py-4 text-white">
-      <div className="mx-auto grid h-[calc(100vh-32px)] max-w-[1560px] grid-cols-[2.3fr_0.9fr] gap-3">
-        <section className="mother-panel flex flex-col p-4 text-slate-900">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <PixelInventorFace />
-              <div>
-                <p className="mother-text-soft text-[11px] font-black tracking-wide">
-                  STAGE {selectedStage}
-                </p>
-                <p className="mother-text-main text-base font-bold">
-                  {stageLabel}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                clearPlaybackTimer()
-                clearCountdownTimer()
-                setCountdown(null)
-                setIsPlaying(false)
-                setScreen("stageSelect")
-              }}
-              className="mother-button-light px-4 py-2 text-xs font-bold"
-            >
-              ステージ選択へ
-            </button>
-          </div>
-
-          <PreviewLane items={previewItems} />
-
-          <div className="grid flex-1 grid-cols-[210px_minmax(0,1fr)] gap-4">
-            <div className="mother-subpanel flex items-center justify-center p-2">
-              <div className="relative flex h-[min(58vh,460px)] w-[145px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
-                <div className="mother-neck relative h-full w-10 rounded-full">
-                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div key={i} className="h-px w-full bg-white/10" />
-                    ))}
-                  </div>
-
-                  {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
-                    <div
-                      className="mother-indicator-next absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full"
-                      style={{
-                        top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
-                        marginLeft: indicatorsAreClose ? "26px" : "0px",
-                      }}
-                    />
-                  )}
-
-                  {current.note !== "休符" && currentIndicatorTop !== null && (
-                    <div
-                      className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
-                      style={{
-                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
-                  <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
-                </div>
-              </div>
-            </div>
-
-            <div className="mother-subpanel flex flex-col p-4">
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                <div className="mother-info-card px-3 py-3 text-center">
-                  <p className="mb-1 text-xs font-bold text-slate-500">入力された音</p>
-                  <p className="min-h-[36px] text-2xl font-black text-slate-900">
-                    {detectedNote || "-"}
-                  </p>
-
-                  {isMicEnabled && (
-                    <p className="mt-2 text-xs font-bold text-[#2E6EDC]">
-                      マイク判定中
-                    </p>
-                  )}
-                </div>
-
-                <div
-                  className={`rounded-[22px] px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_2px_10px_rgba(20,44,99,0.04)] ${
-                    judgeState === "ok"
-                      ? "bg-[#dff7df] text-[#1b6b2c]"
-                      : judgeState === "miss"
-                      ? "bg-[#ffe2e2] text-[#b33737]"
-                      : "mother-info-card text-slate-500"
-                  }`}
-                >
-                  <p className="mb-1 text-xs font-bold">判定</p>
-                  <p className="min-h-[36px] text-2xl font-black">
-                    {judgeState === "ok"
-                      ? "OK!"
-                      : judgeState === "miss"
-                      ? "MISS"
-                      : "..."}
-                  </p>
-                </div>
-
-                <div className="mother-info-card px-3 py-3 text-center">
-                  <p className="mb-1 text-xs font-bold text-slate-500">成功数</p>
-                  <p className="min-h-[36px] text-2xl font-black text-slate-900">
-                    {successCount}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <button
-                  onClick={handleBack}
-                  className="mother-button-light px-3 py-2 text-xs font-semibold"
-                >
-                  1音戻る（←）
-                </button>
-                <button
-                  onClick={handleNext}
-                  className="mother-button-light px-3 py-2 text-xs font-semibold"
-                >
-                  1音進む（→）
-                </button>
-
-                {!isMicEnabled && (
-                  <button
-                    onClick={() => void playCurrentNote()}
-                    className="mother-button-blue px-3 py-2 text-xs font-semibold"
-                  >
-                    お手本
-                  </button>
-                )}
-
-                <button
-                  onClick={handleResetSuccess}
-                  className="mother-button-light px-3 py-2 text-xs font-semibold"
-                >
-                  成功数リセット
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <aside className="mother-panel flex flex-col gap-3 p-4 text-slate-900">
-          <div className="mother-settings-card p-4">
-            <p className="mother-text-main mb-3 text-base font-bold">テンポ</p>
-            <div className="mother-option flex items-center gap-3 px-4 py-3">
-              <span className="inline-flex w-14 items-center justify-center rounded-full bg-[#FFD54A] px-3 py-1 text-center text-lg font-black text-[#1F325C]">
-                {tempo}
-              </span>
-              <input
-                type="range"
-                min={20}
-                max={180}
-                step={5}
-                value={tempo}
-                onChange={(e) => setTempo(Number(e.target.value))}
-                className="cursor-pointer flex-1"
-              />
-            </div>
-          </div>
-
-          <div className="mother-settings-card p-4">
-            <p className="mother-text-main mb-3 text-base font-bold">再生モード</p>
-
-            <div className="flex flex-col gap-3">
-              <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
-                <input
-                  type="radio"
-                  name="playMode"
-                  checked={playMode === "full"}
-                  onChange={() => {
-                    clearPlaybackTimer()
-                    clearCountdownTimer()
-                    setCountdown(null)
-                    setIsPlaying(false)
-                    setPlayMode("full")
-                    setPhraseIndex(0)
-                    setNoteIndex(0)
-                  }}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm font-bold text-slate-800">
-                  全体通し再生
-                </span>
-              </label>
-
-              <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
-                <input
-                  type="radio"
-                  name="playMode"
-                  checked={playMode === "phrase"}
-                  onChange={() => {
-                    clearPlaybackTimer()
-                    clearCountdownTimer()
-                    setCountdown(null)
-                    setIsPlaying(false)
-                    setPlayMode("phrase")
-                  }}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm font-bold text-slate-800">
-                  メロディーごと再生
-                </span>
-              </label>
-            </div>
-
-            {playMode === "phrase" && (
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  onClick={handlePrevPhrase}
-                  className="mother-button-light flex-1 px-3 py-2 text-xs font-semibold"
-                >
-                  前のメロディー
-                </button>
-                <button
-                  onClick={handleNextPhrase}
-                  className="mother-button-light flex-1 px-3 py-2 text-xs font-semibold"
-                >
-                  次のメロディー
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="mother-settings-card p-4">
-            <p className="mother-text-main mb-3 text-base font-bold">マイク</p>
-            <label className="mother-option flex cursor-pointer items-center gap-3 px-4 py-3">
-              <input
-                type="checkbox"
-                checked={isMicEnabled}
-                onChange={() => {
-                  if (isMicEnabled) {
-                    stopMic()
-                  } else {
-                    void startMic()
-                  }
-                }}
-                className="h-4 w-4"
-              />
-              <span className="text-sm font-bold text-slate-800">
-                マイク判定を使う
-              </span>
-            </label>
-          </div>
-
-          <div className="mother-settings-card p-4">
-            <p className="mother-text-main mb-3 text-base font-bold">
-              再生コントロール
-            </p>
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={() => void startPlaybackWithCountdown()}
-                className="mother-button-blue px-4 py-3 text-lg font-bold disabled:opacity-70"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {(isPreparingAudio || isMicPreparing) && <Spinner />}
-                  {countdown !== null
-                    ? `${countdown}`
-                    : isPreparingAudio
-                    ? "準備中…"
-                    : isMicEnabled
-                    ? "クリックで再生"
-                    : "再生"}
-                </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  clearPlaybackTimer()
-                  clearCountdownTimer()
-                  setCountdown(null)
-                  setIsPlaying(false)
-                }}
-                className="mother-button-blue px-4 py-3 text-lg font-bold"
-              >
-                停止
-              </button>
-            </div>
-
-            {(isPreparingAudio || isMicPreparing) && (
-              <div className="mother-subpanel mother-text-main mt-3 flex items-center justify-center gap-2 px-4 py-3 text-center text-sm font-bold">
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
-                音を準備しています…
-              </div>
-            )}
-          </div>
-        </aside>
+    <main className="min-h-screen bg-[#10234d] px-6 py-10 text-white">
+      <div className="mx-auto max-w-[720px] text-center">
+        <p className="text-lg font-bold">ステージ6は次に作りましょう。</p>
       </div>
     </main>
   )
 }
+
+function awaitPromise(_p: Promise<unknown>) {}
