@@ -1,0 +1,74 @@
+[33mef575c8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Restore working page.tsx
+[33mbe34284[m Fix React import in page.tsx
+[33mf170a0e[m Refine again
+[33m6f2e70d[m Refine home screen with dark background and yellow start button
+[33m7ac12c0[m Polish stage 6 tension and simplify home background
+[33m8918278[m Refine home and stage select layout
+[33m18cf23b[m Update home and stage select to game-like screens
+[33m4cb7b8e[m Adjust stage 6 result order and return message
+[33m0e2fb6b[m Add stage 6 microphone score challenge
+[33m192c92b[m Remove top-level previewItems block
+[33m2727b59[m fix duplicate PreviewLaneSix
+[33mf1cdd81[m Restore PreviewLane and keep PreviewLaneSix for stage 5
+[33m4ca1d57[m Try six-note preview for stage 5
+[33m37e301e[m Make stage 5 fully consistent with fixed five-note window
+[33mc0cf267[m Change stage 5 to fixed five-note full-run practice
+[33m9701fd1[m Add stage 5 full-run practice mode
+[33md17bff0[m Fix stages array syntax
+[33mbd12452[m Refine stage 2 copy and compact stage 4 layout
+[33m33ff08b[m Add stage 4 fixed five-note window with transparent placeholders
+[33mf7afaa2[m Add stage 4 melody selection practice
+[33m9e6a321[m Stabilize stage 3 layout with fixed five-note grid
+[33mc497bb3[m Fix stage 3 panel overflow width again and again
+[33m8199fa3[m Fix stage 3 panel overflow width again
+[33mfd41532[m Fix stage 3 panel overflow width
+[33m391a154[m Refine stage 3 preview lane and control layout
+[33md106f09[m stage 3 minor change
+[33mae79cd4[m Refine stage 3 control buttons
+[33me2df726[m Add five-note preview lane for melody practice
+[33m333a3da[m Add stage 3 first melody practice
+[33m1596aa2[m Fix TypeScript comparison in moveToNextNote
+[33m7f63ffe[m Disable auto return in stage 2
+[33mf7d6e45[m Add stage 2 listen-only flow
+[33m2bb9734[m Refine stage 1 layout v2
+[33me8a7a47[m Refine stage 1 layout into single panel
+[33m8cf8aee[m Auto-enable mic in stage 1 update again
+[33m67e2a86[m Auto-enable mic in stage 1 and update stage text
+[33mb92d29f[m Add stage one
+[33mb1d3f5c[m Add stage select flow scaffold
+[33mfc5864a[m Refine melody buttons and mic practice UI
+[33mc6c7181[m Apply Mother2 style classes to page
+[33m47a2f53[m Fix stop button color (remove opacity)
+[33m41a956a[m Unify UI colors (#3F8CFF)
+[33m6ab3f07[m Fix otamatone direction (high notes near face)
+[33m52b3f29[m Fix TypeScript error in note mapping
+[33m698ad36[m Adjust Otamatone indicator mapping and next note guide
+[33mb89fb61[m fix high note indicator update home ranking layout and set site title
+[33md357f92[m fix indicator range update2
+[33m9d55983[m fix indicator range update inventor face and move home ranking outside
+[33me35a74c[m adjust layout to show otamatone face at 100 percent zoom
+[33m6b531d8[m return to two panel layout and compact left panel stats
+[33m7263213[m split into three panels and simplify blue palette
+[33m2a6db93[m adjust layout and add arcade style ranking
+[33mb417aa4[m auto score full run when mic on
+[33m1b0fba1[m refine ui and add high score challenge mode
+[33m5365b93[m update full page and otamatone position map
+[33m5359cf6[m update inventor icon and retro rpg text
+[33m0914f2b[m refine judge ui countdown and home face
+[33mc7a22c1[m move mic and judge ui into left panel
+[33m302f748[m restore full page and refine otamatone face
+[33mafebd3a[m refine otamatone face and loop melody mode
+[33maf77e15[m fix stable judge layout and reverse otamatone position
+[33m2926ca9[m add guided judging mode with click track
+[33m9681f54[m disable sample playback during mic judging
+[33m0308edc[m update home text and clean labels
+[33m83b1527[m ui spacing and title update2
+[33mb949949[m ui spacing and title update
+[33mf190b40[m ui tweaks
+[33m63c4541[m compact layout
+[33mcc07f6e[m compact layout
+[33m2340c0e[m compact layout
+[33mf846ca8[m compact layout
+[33m34bf9c7[m update layout
+[33m96a1cda[m first deploy
+[33m697aa59[m Initial commit from Create Next App
