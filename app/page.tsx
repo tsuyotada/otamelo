@@ -300,7 +300,7 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
         <p className="mother-text-soft text-xs font-bold">5音先まで</p>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-1">
+<div className="flex flex-nowrap gap-3 pb-1">
         {items.map((item, index) => {
           const toneClass = item.isCurrent
             ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_14px_rgba(255,213,74,0.18)]"
@@ -1397,8 +1397,8 @@ export default function Page() {
   if (selectedStage === 3) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-        <div className="mx-auto flex max-w-[980px] flex-col gap-3">
-          <section className="mother-panel flex flex-col p-4 text-slate-900">
+ <div className="mx-auto flex max-w-[1080px] flex-col gap-3">
+            <section className="mother-panel flex flex-col p-4 text-slate-900">
             <div className="mb-3 flex items-center gap-3">
               <PixelInventorFace />
               <div>
@@ -1449,7 +1449,7 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
+<div className="min-w-0 flex flex-col gap-4">
                 <PreviewLane items={previewItems} />
 
 <div className="mother-subpanel flex min-h-[132px] flex-col gap-4 px-5 py-5">
