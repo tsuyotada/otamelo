@@ -43,7 +43,7 @@ type Screen = "home" | "stageSelect" | "practice"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "miss"
 
-type StageId = 1 | 2 | 3 | 4 | 5
+type StageId = 1 | 2 | 3 | 4 | 5 | 6
 
 type StageItem = {
   id: StageId
@@ -61,12 +61,20 @@ type PreviewItem = {
   isPlaceholder?: boolean
 }
 
+type FlatNoteItem = {
+  phraseIndex: number
+  noteIndex: number
+  note: string
+  length: number
+}
+
 const stages: StageItem[] = [
   { id: 1, title: "まずは　オタマトーンをならしてみようか" },
   { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
   { id: 3, title: "ひとつめのメロディーをひいてみて" },
   { id: 4, title: "ほかのメロディーもひいてみてよ" },
   { id: 5, title: "エイトメロディーズを　とおしで　ひいてみて" },
+  { id: 6, title: "本番だ　全体とおして　自分だけでひいてみて" },
 ]
 
 const noteNamesSharp = [
@@ -388,6 +396,25 @@ export default function Page() {
     []
   )
 
+  const flatPlayableNotes = useMemo<FlatNoteItem[]>(() => {
+    return safePhrases.flatMap((phrase, pIndex) =>
+      phrase.notes
+        .map((note, nIndex) => ({
+          phraseIndex: pIndex,
+          noteIndex: nIndex,
+          note: note.note,
+          length: note.length,
+        }))
+        .filter((item) => item.note !== "休符")
+    )
+  }, [safePhrases])
+
+  const getFlatPlayableIndex = (pIndex: number, nIndex: number) => {
+    return flatPlayableNotes.findIndex(
+      (item) => item.phraseIndex === pIndex && item.noteIndex === nIndex
+    )
+  }
+
   const phrase = safePhrases[phraseIndex]
   const safeNotes = phrase.notes
   const current = safeNotes[noteIndex] ?? safeNotes[0]
@@ -471,6 +498,37 @@ export default function Page() {
       return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
     }
 
+    if (selectedStage === 5) {
+      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+      const safeFlatIndex = flatIndex === -1 ? 0 : flatIndex
+
+      let windowStart = 0
+      if (safeFlatIndex >= 4) {
+        const candidateStart = 4 * Math.floor((safeFlatIndex - 4) / 4) + 4
+        const hasMoreAfterCurrentWindow = flatPlayableNotes.length > candidateStart + 1
+        windowStart = hasMoreAfterCurrentWindow
+          ? candidateStart
+          : Math.max(0, flatPlayableNotes.length - 5)
+      }
+
+      const visible = flatPlayableNotes
+        .slice(windowStart, windowStart + 5)
+        .map((item, index) => {
+          const originalIndex = windowStart + index
+          return {
+            id: `stage5-${item.phraseIndex}-${item.noteIndex}-${item.note}`,
+            note: item.note,
+            length: item.length,
+            isCurrent: originalIndex === safeFlatIndex,
+            isNext: originalIndex === safeFlatIndex + 1,
+            isPhraseStart: false,
+            melodyNumber: item.phraseIndex + 1,
+          }
+        })
+
+      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage5")]
+    }
+
     const items: PreviewItem[] = []
     let p = phraseIndex
     let n = noteIndex
@@ -520,7 +578,14 @@ export default function Page() {
     }
 
     return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "default")]
-  }, [phraseIndex, noteIndex, safePhrases, playMode, selectedStage])
+  }, [
+    phraseIndex,
+    noteIndex,
+    safePhrases,
+    playMode,
+    selectedStage,
+    flatPlayableNotes,
+  ])
 
   const visibleCurrentLabel = current.note === "休符" ? "" : current.note
 
@@ -744,6 +809,11 @@ export default function Page() {
       setPhraseIndex(0)
       setNoteIndex(0)
       setIsMicEnabled(false)
+    } else if (stageId === 6) {
+      setPlayMode("full")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
     }
 
     setScreen("practice")
@@ -784,6 +854,21 @@ export default function Page() {
     clearCountdownTimer()
     setCountdown(null)
     setIsPlaying(false)
+
+    if (selectedStage === 5) {
+      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+
+      if (flatIndex > 0) {
+        const prev = flatPlayableNotes[flatIndex - 1]
+        setPhraseIndex(prev.phraseIndex)
+        setNoteIndex(prev.noteIndex)
+        return
+      }
+
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      return
+    }
 
     if (noteIndex > 0) {
       setNoteIndex((prev) => prev - 1)
@@ -1872,49 +1957,28 @@ export default function Page() {
                     いまは メロディー{phraseIndex + 1} をつうか中
                   </p>
 
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                    <div className="mother-info-card px-3 py-3 text-center">
-                      <p className="mb-1 text-xs font-bold text-slate-500">入力された音</p>
-                      <p className="min-h-[36px] text-2xl font-black text-slate-900">
-                        {detectedNote || "-"}
-                      </p>
-                    </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleBack}
+                        className="mother-button-light px-4 py-2 text-sm font-semibold"
+                      >
+                        1音戻る
+                      </button>
 
-                    <div
-                      className={`rounded-[22px] px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_2px_10px_rgba(20,44,99,0.04)] ${
-                        judgeState === "ok"
-                          ? "bg-[#dff7df] text-[#1b6b2c]"
-                          : judgeState === "miss"
-                          ? "bg-[#ffe2e2] text-[#b33737]"
-                          : "mother-info-card text-slate-500"
-                      }`}
-                    >
-                      <p className="mb-1 text-xs font-bold">判定</p>
-                      <p className="min-h-[36px] text-2xl font-black">
-                        {judgeState === "ok"
-                          ? "OK!"
-                          : judgeState === "miss"
-                          ? "MISS"
-                          : "..."}
-                      </p>
+                      <button
+                        onClick={handleNext}
+                        className="mother-button-light px-4 py-2 text-sm font-semibold"
+                      >
+                        1音進む
+                      </button>
                     </div>
 
                     <button
-                      type="button"
-                      onClick={() => {
-                        if (isMicEnabled) {
-                          stopMic()
-                        } else {
-                          void startMic()
-                        }
-                      }}
-                      className="mother-button-light px-4 py-3 text-sm font-semibold"
+                      onClick={() => void playCurrentNote()}
+                      className="mother-button-blue px-4 py-2 text-sm font-semibold"
                     >
-                      {isMicPreparing
-                        ? "準備中…"
-                        : isMicEnabled
-                        ? "マイクをとめる"
-                        : "マイクをつかう"}
+                      お手本
                     </button>
 
                     <button
@@ -1929,35 +1993,10 @@ export default function Page() {
                           void handleStage5PlayAll()
                         }
                       }}
-                      className="mother-button-blue px-4 py-3 text-sm font-semibold"
+                      className="mother-button-blue px-4 py-2 text-sm font-semibold"
                     >
                       {isPlaying ? "とめる" : "はじめから再生"}
                     </button>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <button
-                      onClick={handleBack}
-                      className="mother-button-light px-4 py-2 text-sm font-semibold"
-                    >
-                      1音戻る
-                    </button>
-
-                    <button
-                      onClick={handleNext}
-                      className="mother-button-light px-4 py-2 text-sm font-semibold"
-                    >
-                      1音進む
-                    </button>
-
-                    {!isMicEnabled && (
-                      <button
-                        onClick={() => void playCurrentNote()}
-                        className="mother-button-blue px-4 py-2 text-sm font-semibold"
-                      >
-                        お手本
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
