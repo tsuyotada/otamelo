@@ -2293,7 +2293,7 @@ if (screen === "stageSelect") {
 
 if (selectedStage === 6) {
   return (
-<section className="rounded-[36px] border border-white/10 bg-[#171A22] p-4 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
+    <main className="min-h-screen bg-[#05070D] px-4 py-4 text-white">
       <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
         <section className="rounded-[36px] border border-white/10 bg-[#171A22] p-4 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
           <div className="mb-3 flex items-center gap-3">
@@ -2302,27 +2302,27 @@ if (selectedStage === 6) {
               <p className="text-[11px] font-black tracking-wide text-[#6B7280]">
                 STAGE {selectedStage}
               </p>
-              <p className="text-base font-bold text-[#1F325C]">
+              <p className="text-base font-bold text-white">
                 本番だ　全体とおして　自分だけでひいてみて
               </p>
             </div>
           </div>
 
-<div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 border-[#FF8B8B] bg-[#2A1215] px-4 py-3">
-  <p className="text-sm font-black text-[#FFD0D0]">
-    BOSS戦だとおもってください　マイク判定でスコアを記録します
-  </p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 border-[#FF8B8B] bg-[#2A1215] px-4 py-3">
+            <p className="text-sm font-black text-[#FFD0D0]">
+              BOSS戦だとおもってください　マイク判定でスコアを記録します
+            </p>
 
-  <div className="inline-flex items-center gap-2 rounded-full bg-[#3A161A] px-4 py-2 text-sm font-black text-[#FFB4B4]">
-    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#FF4D4F]" />
-    MIC ON
-  </div>
-</div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#3A161A] px-4 py-2 text-sm font-black text-[#FFB4B4]">
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#FF4D4F]" />
+              MIC ON
+            </div>
+          </div>
 
-          <div className="rounded-[24px] bg-[#F3EEE4] px-4 py-3">
+          <div className="rounded-[24px] bg-[#2A2F3A] px-4 py-3">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-bold text-[#1F325C]">ぜんたいの進行</p>
-              <p className="text-xs font-bold text-slate-500">
+              <p className="text-sm font-bold text-white">ぜんたいの進行</p>
+              <p className="text-xs font-bold text-slate-300">
                 {phraseIndex + 1} / {safePhrases.length}
               </p>
             </div>
@@ -2340,7 +2340,7 @@ if (selectedStage === 6) {
                         ? "bg-[#FFD54A] text-[#1F325C]"
                         : isDone
                         ? "bg-[#EAF4FF] text-slate-900"
-                        : "bg-white text-slate-500"
+                        : "bg-[#3A4050] text-slate-300"
                     }`}
                   >
                     <p className="text-[9px] font-bold">MELODY</p>
@@ -2350,7 +2350,7 @@ if (selectedStage === 6) {
               })}
             </div>
 
-            <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-slate-300">
+            <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-[#3A4050]">
               <div
                 className="h-full rounded-full bg-[#FF6B6B] transition-all"
                 style={{ width: `${progressPercent}%` }}
@@ -2359,10 +2359,10 @@ if (selectedStage === 6) {
           </div>
 
           <div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
-          <div className="rounded-[28px] bg-[#11141B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-  <div className="flex items-center justify-center">
-    <div className="relative flex h-[min(50vh,440px)] w-[190px] items-end justify-center rounded-full bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.26),rgba(255,255,255,0.10)_34%,rgba(255,255,255,0.03)_56%,transparent_74%)] px-4 py-4">
-                        <div className="mother-neck relative h-full w-10 rounded-full">
+            <div className="rounded-[28px] bg-[#11141B] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <div className="flex items-center justify-center">
+                <div className="relative flex h-[min(50vh,440px)] w-[190px] items-end justify-center rounded-full bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.26),rgba(255,255,255,0.10)_34%,rgba(255,255,255,0.03)_56%,transparent_74%)] px-4 py-4">
+                  <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
                       {Array.from({ length: 9 }).map((_, i) => (
                         <div key={i} className="h-px w-full bg-white/10" />
@@ -2401,17 +2401,17 @@ if (selectedStage === 6) {
             <div className="flex min-w-0 flex-col gap-4">
               <PreviewLaneSix items={previewItems} />
 
-              <div className="rounded-[28px] bg-[#EFE7D8] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                <p className="text-center text-sm font-bold text-[#6B7280]">
+              <div className="rounded-[28px] bg-[#2A2F3A] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <p className="text-center text-sm font-bold text-slate-300">
                   マイクで本番ちゅう
                 </p>
 
                 <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-                  <div className="rounded-[22px] bg-white px-3 py-3 text-center">
-                    <p className="mb-1 text-xs font-bold text-slate-500">
+                  <div className="rounded-[22px] bg-[#3A4050] px-3 py-3 text-center">
+                    <p className="mb-1 text-xs font-bold text-slate-300">
                       入力された音
                     </p>
-                    <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                    <p className="min-h-[36px] text-2xl font-black text-white">
                       {detectedNote || "-"}
                     </p>
                   </div>
@@ -2422,7 +2422,7 @@ if (selectedStage === 6) {
                         ? "bg-[#DFF7DF] text-[#1B6B2C]"
                         : judgeState === "miss"
                         ? "bg-[#FFE2E2] text-[#B33737]"
-                        : "bg-white text-slate-500"
+                        : "bg-[#3A4050] text-slate-300"
                     }`}
                   >
                     <p className="mb-1 text-xs font-bold">判定</p>
@@ -2444,11 +2444,11 @@ if (selectedStage === 6) {
                     </p>
                   </div>
 
-                  <div className="rounded-[22px] bg-white px-3 py-3 text-center">
-                    <p className="mb-1 text-xs font-bold text-slate-500">
+                  <div className="rounded-[22px] bg-[#3A4050] px-3 py-3 text-center">
+                    <p className="mb-1 text-xs font-bold text-slate-300">
                       成功数
                     </p>
-                    <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                    <p className="min-h-[36px] text-2xl font-black text-white">
                       {stage6Hits}
                     </p>
                   </div>
@@ -2524,8 +2524,6 @@ if (selectedStage === 6) {
                   </p>
                 </div>
               </div>
-
-
             </div>
           )}
 
@@ -2557,6 +2555,7 @@ if (selectedStage === 6) {
     </main>
   )
 }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#10234d] px-6 py-8 text-white">
       <div className="mother-panel w-full max-w-[720px] px-10 py-10 text-center text-slate-900">
