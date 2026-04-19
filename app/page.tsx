@@ -1272,29 +1272,27 @@ export default function Page() {
 if (screen === "home") {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
-      <div className="mother-panel w-full max-w-[860px] px-8 py-10 text-center text-slate-900">
+      <div className="w-full max-w-[860px] rounded-[36px] border border-white/10 bg-[#102A68] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
         <div className="mx-auto flex max-w-[560px] flex-col items-center">
-          <div className="flex w-full justify-center rounded-[28px] bg-[#102A68] px-6 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_30px_rgba(6,18,50,0.28)]">
-            <img
-              src="/otamatone-logo.png"
-              alt="オタマトーン"
-              className="h-auto w-[min(88vw,420px)] object-contain"
-            />
-          </div>
+          <img
+            src="/otamatone-logo.svg"
+            alt="オタマトーン"
+            className="h-auto w-[min(88vw,420px)] object-contain drop-shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
+          />
 
-          <p className="mother-text-soft mt-8 text-sm font-black tracking-[0.18em]">
+          <p className="mt-8 text-sm font-black tracking-[0.18em] text-white/90">
             EIGHT MELODIES
           </p>
 
-          <p className="mt-5 text-sm font-bold leading-relaxed text-slate-600 md:text-base">
+          <p className="mt-5 text-sm font-bold leading-relaxed text-white/90 md:text-base">
             すこしずつ　音をならして、
             <br />
             さいごは　とおしで　ひいてみよう
           </p>
 
           {isPreparingAudio && (
-            <div className="mother-subpanel mother-text-main mt-6 flex items-center justify-center gap-2 px-5 py-3 text-center text-sm font-bold">
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-slate-700" />
+            <div className="mt-6 flex items-center justify-center gap-2 rounded-[18px] bg-white/10 px-5 py-3 text-center text-sm font-bold text-white">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               音を準備しています…
             </div>
           )}
@@ -1302,7 +1300,7 @@ if (screen === "home") {
           <div className="mt-7">
             <button
               onClick={() => void handleOpenStage()}
-              className="mother-button-blue min-w-[220px] px-8 py-4 text-xl font-bold disabled:opacity-70"
+              className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:translate-y-[1px] disabled:opacity-70"
               disabled={isPreparingAudio}
             >
               {isPreparingAudio ? "準備中…" : "START"}
