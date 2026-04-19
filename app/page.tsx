@@ -2292,31 +2292,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
-              <div className="flex items-center gap-3">
-                <PixelInventorFace />
-                <p className="mother-text-main text-sm font-bold">
-                  とまってもいいけど　さいごまでいこう
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  clearPlaybackTimer()
-                  clearCountdownTimer()
-                  setCountdown(null)
-                  setIsPlaying(false)
-                  stopMic()
-                  setScreen("stageSelect")
-                }}
-                className="mother-button-light px-5 py-3 text-sm font-bold"
-              >
-                ステージ選択へ
-              </button>
-            </div>
-
-            {stage6ResultOpen && (
+                        {stage6ResultOpen && (
               <div className="mother-subpanel mt-3 px-5 py-5 text-center">
                 <p className="mother-text-main text-base font-black">
                   けっか
@@ -2356,6 +2332,30 @@ export default function Page() {
                 </div>
               </div>
             )}
+
+            <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="mother-text-main text-sm font-bold">
+                  うまくいかなかったら　もどって　練習だ
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  stopMic()
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-3 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
+            </div>
           </section>
         </div>
       </main>
