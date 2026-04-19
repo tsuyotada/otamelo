@@ -295,15 +295,15 @@ function HomeOtamatoneFace() {
   )
 }
 
-function PreviewLane({ items }: { items: PreviewItem[] }) {
+function PreviewLaneSix({ items }: { items: PreviewItem[] }) {
   return (
     <div className="mother-subpanel min-h-[214px] px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">5音先まで</p>
+        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
       </div>
 
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-6 gap-2">
         {items.map((item, index) => {
           const toneClass = item.isPlaceholder
             ? "border-transparent bg-white/10 text-transparent shadow-none"
@@ -315,12 +315,14 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
             ? "border-transparent bg-[#F3F8FF] text-slate-700"
             : index === 3
             ? "border-transparent bg-[#F8FBFF] text-slate-700"
+            : index === 4
+            ? "border-transparent bg-[#FBFDFF] text-slate-700"
             : "border-transparent bg-white text-slate-700"
 
           return (
             <div
               key={item.id}
-              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
+              className={`min-h-[132px] rounded-[20px] border-2 px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
             >
               <p className="h-[16px] text-[10px] font-black tracking-wide">
                 {item.isPlaceholder
@@ -332,11 +334,11 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
                   : ""}
               </p>
 
-              <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black leading-tight">
+              <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black leading-tight">
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
-              <p className="mt-2 text-[11px] font-bold opacity-70">
+              <p className="mt-2 text-[10px] font-bold opacity-70">
                 {item.isPlaceholder ? "" : `長さ ${item.length}`}
               </p>
             </div>
@@ -498,33 +500,33 @@ export default function Page() {
       return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
     }
 
-    if (selectedStage === 5) {
-      const safeFlatIndex = Math.max(0, getFlatPlayableIndex(phraseIndex, noteIndex))
+if (selectedStage === 5) {
+  const safeFlatIndex = Math.max(0, getFlatPlayableIndex(phraseIndex, noteIndex))
 
-      let windowStart = 0
-      if (safeFlatIndex >= 4) {
-        const candidateStart = 4 * Math.floor((safeFlatIndex - 4) / 4) + 4
-        const hasMoreAfterCurrentWindow = flatPlayableNotes.length > candidateStart + 1
-        windowStart = hasMoreAfterCurrentWindow
-          ? candidateStart
-          : Math.max(0, flatPlayableNotes.length - 5)
-      }
+  let windowStart = 0
+  if (safeFlatIndex >= 5) {
+    const candidateStart = 5 * Math.floor((safeFlatIndex - 5) / 5) + 5
+    const hasMoreAfterCurrentWindow = flatPlayableNotes.length > candidateStart + 1
+    windowStart = hasMoreAfterCurrentWindow
+      ? candidateStart
+      : Math.max(0, flatPlayableNotes.length - 6)
+  }
 
-      const visible = flatPlayableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
-        const originalIndex = windowStart + index
-        return {
-          id: `stage5-${originalIndex}-${item.note}`,
-          note: item.note,
-          length: item.length,
-          isCurrent: originalIndex === safeFlatIndex,
-          isNext: originalIndex === safeFlatIndex + 1,
-          isPhraseStart: false,
-          melodyNumber: item.phraseIndex + 1,
-        }
-      })
-
-      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage5")]
+  const visible = flatPlayableNotes.slice(windowStart, windowStart + 6).map((item, index) => {
+    const originalIndex = windowStart + index
+    return {
+      id: `stage5-${originalIndex}-${item.note}`,
+      note: item.note,
+      length: item.length,
+      isCurrent: originalIndex === safeFlatIndex,
+      isNext: originalIndex === safeFlatIndex + 1,
+      isPhraseStart: false,
+      melodyNumber: item.phraseIndex + 1,
     }
+  })
+
+  return [...visible, ...makePlaceholders(Math.max(0, 6 - visible.length), "stage5")]
+}
 
     const items: PreviewItem[] = []
     let p = phraseIndex
@@ -1463,7 +1465,7 @@ export default function Page() {
   if (selectedStage === 4) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-        <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
+<div className="mx-auto flex max-w-[1320px] flex-col gap-3">
           <section className="mother-panel flex flex-col p-4 text-slate-900">
             <div className="mb-3 flex items-center gap-3">
               <PixelInventorFace />
@@ -1730,7 +1732,7 @@ export default function Page() {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                <PreviewLane items={previewItems} />
+<PreviewLaneSix items={previewItems} />
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
