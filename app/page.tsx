@@ -370,26 +370,52 @@ function PreviewLane({
 function PreviewLaneSix({
   items,
   onSelect,
+  variant = "light",
 }: {
   items: PreviewItem[]
   onSelect?: (item: PreviewItem) => void
+  variant?: "light" | "dark"
 }) {
+  const isDark = variant === "dark"
+
   return (
-    <div className="rounded-[28px] bg-[#2A2F3A] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <div
+      className={
+        isDark
+          ? "rounded-[28px] bg-[#2A2F3A] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          : "mother-subpanel min-h-[214px] px-4 py-3"
+      }
+    >
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-sm font-bold text-white">これからの音</p>
-        <p className="text-xs font-bold text-slate-400">6音先まで</p>
+        <p className={isDark ? "text-sm font-bold text-white" : "mother-text-main text-sm font-bold"}>
+          これからの音
+        </p>
+        <p className={isDark ? "text-xs font-bold text-slate-400" : "mother-text-soft text-xs font-bold"}>
+          6音先まで
+        </p>
       </div>
 
       <div className="grid grid-cols-6 gap-2">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const toneClass = item.isPlaceholder
-            ? "border-transparent bg-[#232833] text-transparent shadow-none"
+            ? isDark
+              ? "border-transparent bg-[#232833] text-transparent shadow-none"
+              : "border-transparent bg-white/10 text-transparent shadow-none"
             : item.isCurrent
             ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
             : item.isNext
-            ? "border-[#3F8CFF] bg-[#DCEBFF] text-slate-900"
-            : "border-[#485066] bg-[#343A4D] text-slate-100"
+            ? isDark
+              ? "border-[#3F8CFF] bg-[#DCEBFF] text-slate-900"
+              : "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
+            : isDark
+            ? "border-[#485066] bg-[#343A4D] text-slate-100"
+            : index === 2
+            ? "bg-[#F3F8FF] text-slate-900"
+            : index === 3
+            ? "bg-[#F8FBFF] text-slate-900"
+            : index === 4
+            ? "bg-[#FBFDFF] text-slate-900"
+            : "bg-white text-slate-900"
 
           const clickable = !item.isPlaceholder && onSelect
 
@@ -403,7 +429,13 @@ function PreviewLaneSix({
                 clickable ? "cursor-pointer transition hover:-translate-y-[2px]" : "cursor-default"
               }`}
             >
-              <p className="h-[16px] text-[10px] font-black text-inherit/80">
+              <p
+                className={
+                  isDark
+                    ? "h-[16px] text-[10px] font-black text-inherit/80"
+                    : "h-[16px] text-[10px] font-black"
+                }
+              >
                 {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
               </p>
 
@@ -411,7 +443,13 @@ function PreviewLaneSix({
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
-              <p className="mt-2 text-[10px] font-bold text-inherit/70">
+              <p
+                className={
+                  isDark
+                    ? "mt-2 text-[10px] font-bold text-inherit/70"
+                    : "mt-2 text-[10px] font-bold opacity-70"
+                }
+              >
                 {item.isPlaceholder ? "" : `長さ ${item.length}`}
               </p>
             </button>
@@ -438,6 +476,7 @@ function makePlaceholders(count: number, prefix: string): PreviewItem[] {
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
+  const [isFading, setIsFading] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [noteIndex, setNoteIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -1341,60 +1380,62 @@ useEffect(() => {
 
 if (screen === "home") {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
+    <main className="relative flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
       <div className="w-full max-w-[860px] rounded-[36px] border border-white/10 bg-[#102A68] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
         <div className="mx-auto flex max-w-[560px] flex-col items-center">
 
-          {/* タイトル（ここだけフェードイン） */}
           <div className="flex flex-col items-center animate-fadeIn">
-            <p
-              className={`${cinzel.className} bg-gradient-to-b from-white to-white/75 bg-clip-text text-[clamp(44px,9vw,88px)] font-black leading-none tracking-[0.08em] text-transparent drop-shadow-[0_10px_28px_rgba(255,255,255,0.18)]`}
-            >
+            <p className={`${cinzel.className} bg-gradient-to-b from-white to-white/75 bg-clip-text text-[clamp(44px,9vw,88px)] font-black leading-none tracking-[0.08em] text-transparent`}>
               EIGHT MELODIES
             </p>
 
-            <p
-              className={`${cinzel.className} mt-4 text-[clamp(14px,2vw,20px)] font-bold tracking-[0.35em] text-white/85`}
-            >
+            <p className={`${cinzel.className} mt-4 text-[clamp(14px,2vw,20px)] font-bold tracking-[0.35em] text-white/85`}>
               FOR OTAMATONE
             </p>
 
-            <div className="mt-4 h-[3px] w-[min(48vw,300px)] rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.25)]" />
+            <div className="mt-4 h-[3px] w-[min(48vw,300px)] rounded-full bg-white/70" />
           </div>
 
-          {/* 説明 */}
           <p className="mt-8 text-sm font-bold leading-relaxed text-white/90 md:text-base">
             すこしずつ　音をならして、
             <br />
             さいごは　とおしで　ひいてみよう
           </p>
 
-          {/* ローディング */}
           {isPreparingAudio && (
-            <div className="mt-6 flex items-center justify-center gap-2 rounded-[18px] bg-white/10 px-5 py-3 text-center text-sm font-bold text-white">
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <div className="mt-6 flex items-center justify-center gap-2 rounded-[18px] bg-white/10 px-5 py-3 text-sm font-bold">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               音を準備しています…
             </div>
           )}
 
-          {/* STARTボタン */}
           <div className="mt-8">
             <button
-              onClick={() => void handleOpenStage()}
-              className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:translate-y-[1px] disabled:opacity-70"
+              onClick={() => {
+                setIsFading(true)
+                setTimeout(() => {
+                  void handleOpenStage()
+                }, 300)
+              }}
+              className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] transition hover:translate-y-[1px]"
               disabled={isPreparingAudio}
             >
               {isPreparingAudio ? "準備中…" : "START"}
             </button>
           </div>
 
-          {/* 非公式表記 */}
           <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
             UNOFFICIAL PRACTICE APP
           </p>
-
         </div>
       </div>
+
+      {/* 暗転 */}
+      <div
+        className={`fixed inset-0 bg-black pointer-events-none transition-opacity duration-300 ${
+          isFading ? "opacity-100" : "opacity-0"
+        }`}
+      />
     </main>
   )
 }
@@ -2227,7 +2268,11 @@ if (screen === "stageSelect") {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                <PreviewLaneSix items={previewItems} onSelect={handlePreviewSelect} />
+               <PreviewLaneSix
+  items={previewItems}
+  onSelect={handlePreviewSelect}
+  variant="light"
+/>
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
@@ -2415,7 +2460,7 @@ if (selectedStage === 6) {
             </div>
 
             <div className="flex min-w-0 flex-col gap-4">
-              <PreviewLaneSix items={previewItems} />
+<PreviewLaneSix items={previewItems} variant="dark" />
 
               <div className="rounded-[28px] bg-[#2A2F3A] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <p className="text-center text-sm font-bold text-slate-300">
