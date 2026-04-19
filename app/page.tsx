@@ -63,7 +63,7 @@ type PreviewItem = {
 
 const stages: StageItem[] = [
   { id: 1, title: "まずは　オタマトーンをならしてみようか" },
- { id: 2, title: "エイトメロディーズの全体を　きいてみて" },,
+ { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
   { id: 3, title: "ひとつめのメロディーをひいてみる" },
   { id: 4, title: "ほかのメロディーもひいてみてよ" },
   { id: 5, title: "マイク判定をつかってみる" },
