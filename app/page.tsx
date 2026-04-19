@@ -1341,28 +1341,32 @@ if (screen === "home") {
     <main className="flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
       <div className="w-full max-w-[860px] rounded-[36px] border border-white/10 bg-[#102A68] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
         <div className="mx-auto flex max-w-[560px] flex-col items-center">
+
+          {/* タイトル */}
           <div className="flex flex-col items-center">
-            <p className="bg-gradient-to-b from-white to-white/72 bg-clip-text text-[clamp(42px,9vw,84px)] font-black italic leading-none tracking-[-0.04em] text-transparent drop-shadow-[0_8px_20px_rgba(255,255,255,0.14)]">
+            <p
+              className={`${cinzel.className} bg-gradient-to-b from-white to-white/75 bg-clip-text text-[clamp(44px,9vw,88px)] font-black leading-none tracking-[0.08em] text-transparent drop-shadow-[0_10px_28px_rgba(255,255,255,0.18)]`}
+            >
               EIGHT MELODIES
             </p>
 
-            <p className="mt-3 text-[clamp(16px,2.5vw,24px)] font-black tracking-[0.18em] text-white/92">
+            <p
+              className={`${nunito.className} mt-3 text-[clamp(16px,2.5vw,24px)] font-bold tracking-[0.22em] text-white/90`}
+            >
               for OTAMATONE
             </p>
 
-            <div className="mt-4 h-[3px] w-[min(48vw,290px)] rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.22)]" />
+            <div className="mt-4 h-[3px] w-[min(48vw,300px)] rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.25)]" />
           </div>
 
-          <p className="mt-8 text-sm font-black tracking-[0.18em] text-white/85">
-            START SCREEN
-          </p>
-
-          <p className="mt-5 text-sm font-bold leading-relaxed text-white/90 md:text-base">
+          {/* 説明 */}
+          <p className="mt-8 text-sm font-bold leading-relaxed text-white/90 md:text-base">
             すこしずつ　音をならして、
             <br />
             さいごは　とおしで　ひいてみよう
           </p>
 
+          {/* ローディング */}
           {isPreparingAudio && (
             <div className="mt-6 flex items-center justify-center gap-2 rounded-[18px] bg-white/10 px-5 py-3 text-center text-sm font-bold text-white">
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -1370,6 +1374,7 @@ if (screen === "home") {
             </div>
           )}
 
+          {/* STARTボタン */}
           <div className="mt-8">
             <button
               onClick={() => void handleOpenStage()}
@@ -1380,9 +1385,11 @@ if (screen === "home") {
             </button>
           </div>
 
+          {/* 非公式表記 */}
           <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
-            UNOFFICIAL PRACTICE EXPERIENCE
+            UNOFFICIAL PRACTICE APP
           </p>
+
         </div>
       </div>
     </main>

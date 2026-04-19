@@ -17,3 +17,8 @@ export default function RootLayout({
     </html>
   )
 }
+
+import { Cinzel, Nunito } from "next/font/google"
+
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["700", "900"] })
+const nunito = Nunito({ subsets: ["latin"], weight: ["400", "700"] })
