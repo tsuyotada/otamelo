@@ -477,6 +477,7 @@ export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
   const [isFading, setIsFading] = useState(false)
+  const [stageSelectVisible, setStageSelectVisible] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [noteIndex, setNoteIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -882,27 +883,34 @@ const previewItems = useMemo<PreviewItem[]>(() => {
     oscillator.stop(now + durationSec)
   }
 
-  const playClick = async () => {
-    const ctx = await ensureAudioReady()
-    if (!ctx) return
+const playClick = async () => {
+  const ctx = await ensureAudioReady()
+  if (!ctx) return
 
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
-    const now = ctx.currentTime
+  const now = ctx.currentTime
 
-    oscillator.type = "square"
-    oscillator.frequency.value = 1100
+  const oscillator = ctx.createOscillator()
+  const gainNode = ctx.createGain()
+  const filter = ctx.createBiquadFilter()
 
-    gainNode.gain.setValueAtTime(0.0001, now)
-    gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.005)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.025)
+  oscillator.type = "square"
+  oscillator.frequency.setValueAtTime(1800, now)
+  oscillator.frequency.exponentialRampToValueAtTime(900, now + 0.04)
 
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
+  filter.type = "lowpass"
+  filter.frequency.setValueAtTime(2200, now)
 
-    oscillator.start(now)
-    oscillator.stop(now + 0.03)
-  }
+  gainNode.gain.setValueAtTime(0.0001, now)
+  gainNode.gain.exponentialRampToValueAtTime(0.07, now + 0.004)
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
+
+  oscillator.connect(filter)
+  filter.connect(gainNode)
+  gainNode.connect(ctx.destination)
+
+  oscillator.start(now)
+  oscillator.stop(now + 0.055)
+}
 
   const playCurrentNote = async () => {
     if (isMicEnabled) return
@@ -953,15 +961,19 @@ const previewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(false)
   }
 
-  const handleOpenStage = async () => {
-    clearPlaybackTimer()
-    clearCountdownTimer()
-    setCountdown(null)
-    setIsPlaying(false)
-    await ensureAudioReady()
-    setScreen("stageSelect")
-  }
+const handleOpenStage = async () => {
+  clearPlaybackTimer()
+  clearCountdownTimer()
+  setCountdown(null)
+  setIsPlaying(false)
+  await ensureAudioReady()
+  setScreen("stageSelect")
+  setStageSelectVisible(false)
 
+  window.setTimeout(() => {
+    setStageSelectVisible(true)
+  }, 30)
+}
   const handleSelectStage = (stageId: StageId) => {
     clearPlaybackTimer()
     clearCountdownTimer()
@@ -1410,18 +1422,25 @@ if (screen === "home") {
           )}
 
           <div className="mt-8">
-            <button
-              onClick={() => {
-                setIsFading(true)
-                setTimeout(() => {
-                  void handleOpenStage()
-                }, 300)
-              }}
-              className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] transition hover:translate-y-[1px]"
-              disabled={isPreparingAudio}
-            >
-              {isPreparingAudio ? "準備中…" : "START"}
-            </button>
+<button
+  onClick={() => {
+    if (isPreparingAudio) return
+
+    void (async () => {
+      await playClick()
+      setIsFading(true)
+
+      window.setTimeout(() => {
+        void handleOpenStage()
+        setIsFading(false)
+      }, 300)
+    })()
+  }}
+  className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:translate-y-[1px] disabled:opacity-70"
+  disabled={isPreparingAudio}
+>
+  {isPreparingAudio ? "準備中…" : "START"}
+</button>
           </div>
 
           <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
@@ -1443,7 +1462,13 @@ if (screen === "home") {
 if (screen === "stageSelect") {
   return (
     <main className="min-h-screen bg-[#10234d] px-4 py-6 text-white">
-      <div className="mx-auto flex max-w-[900px] flex-col gap-4">
+      <div
+        className={`mx-auto flex max-w-[900px] flex-col gap-4 transition-all duration-500 ${
+          stageSelectVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-3 opacity-0"
+        }`}
+      >
         <section className="mother-panel px-6 py-6 text-slate-900">
           <div className="flex flex-col items-center text-center">
             <p className="mother-text-soft text-sm font-black tracking-[0.18em]">
