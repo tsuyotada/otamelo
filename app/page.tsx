@@ -294,7 +294,7 @@ function HomeOtamatoneFace() {
 
 function PreviewLane({ items }: { items: PreviewItem[] }) {
   return (
-    <div className="mother-subpanel px-4 py-4">
+    <div className="mother-subpanel min-h-[246px] px-4 py-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
         <p className="mother-text-soft text-xs font-bold">5音先まで</p>
@@ -303,14 +303,14 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
       <div className="flex gap-3 overflow-x-auto pb-1">
         {items.map((item, index) => {
           const toneClass = item.isCurrent
-            ? "bg-[#FFD54A] text-[#1F325C] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_14px_rgba(255,213,74,0.18)]"
+            ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_14px_rgba(255,213,74,0.18)]"
             : item.isNext
-            ? "border-2 border-[#3F8CFF] bg-[#EAF4FF] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_14px_rgba(63,140,255,0.10)]"
+            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_14px_rgba(63,140,255,0.10)]"
             : index === 2
-            ? "bg-[#F3F8FF] text-slate-700"
+            ? "border-transparent bg-[#F3F8FF] text-slate-700"
             : index === 3
-            ? "bg-[#F8FBFF] text-slate-700"
-            : "bg-white text-slate-700"
+            ? "border-transparent bg-[#F8FBFF] text-slate-700"
+            : "border-transparent bg-white text-slate-700"
 
           return (
             <div key={item.id} className="flex items-center gap-3">
@@ -324,9 +324,9 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
               )}
 
               <div
-                className={`min-w-[136px] rounded-[22px] px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
+                className={`min-h-[156px] min-w-[136px] rounded-[22px] border-2 px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
               >
-                <p className="text-[10px] font-black tracking-wide">
+                <p className="h-[16px] text-[10px] font-black tracking-wide">
                   {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
                 </p>
 
@@ -1250,15 +1250,6 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-display-navy mb-4 px-5 py-5 text-center">
-              <p className="text-sm font-bold text-white/75">
-                エイトメロディーズをきいてみて
-              </p>
-              <p className="mt-2 text-xs font-bold text-white/60">
-                ひととおりきいたら　ステージ選択にもどってよ
-              </p>
-            </div>
-
             <div className="mother-white-panel mb-4 p-4">
               <div className="mb-3 flex items-center justify-center gap-4">
                 <p className="mother-text-soft text-base font-bold">
@@ -1420,17 +1411,8 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-display-navy mb-4 px-5 py-5 text-center">
-              <p className="text-sm font-bold text-white/75">
-                ひとつめのメロディーをひいてみて
-              </p>
-              <p className="mt-2 text-xs font-bold text-white/60">
-                流れも見ながら　少しずつやってみよう
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[0.85fr_1.15fr]">
-              <div className="mother-subpanel flex items-center justify-center p-4">
+<div className="grid gap-4 md:grid-cols-[0.78fr_1.22fr]">
+                <div className="mother-subpanel flex items-center justify-center p-4">
                 <div className="relative flex h-[min(56vh,500px)] w-[160px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
                   <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -1470,8 +1452,8 @@ export default function Page() {
               <div className="flex flex-col gap-4">
                 <PreviewLane items={previewItems} />
 
-                <div className="mother-subpanel flex flex-col gap-3 px-4 py-4">
-                  <p className="mother-text-soft text-center text-sm font-bold">
+<div className="mother-subpanel flex min-h-[132px] flex-col gap-4 px-5 py-5">
+                    <p className="mother-text-soft text-center text-sm font-bold">
                     メロディー1 をれんしゅう中
                   </p>
 
