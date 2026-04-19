@@ -1345,8 +1345,8 @@ if (screen === "home") {
       <div className="w-full max-w-[860px] rounded-[36px] border border-white/10 bg-[#102A68] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.28)]">
         <div className="mx-auto flex max-w-[560px] flex-col items-center">
 
-          {/* タイトル */}
-          <div className="flex flex-col items-center">
+          {/* タイトル（フェードイン） */}
+          <div className="flex flex-col items-center animate-fadeIn">
             <p
               className={`${cinzel.className} bg-gradient-to-b from-white to-white/75 bg-clip-text text-[clamp(44px,9vw,88px)] font-black leading-none tracking-[0.08em] text-transparent drop-shadow-[0_10px_28px_rgba(255,255,255,0.18)]`}
             >
@@ -1354,16 +1354,16 @@ if (screen === "home") {
             </p>
 
             <p
-              className={`${nunito.className} mt-3 text-[clamp(16px,2.5vw,24px)] font-bold tracking-[0.22em] text-white/90`}
+              className={`${cinzel.className} mt-4 text-[clamp(14px,2vw,20px)] font-bold tracking-[0.35em] text-white/85`}
             >
-              for OTAMATONE
+              FOR OTAMATONE
             </p>
 
             <div className="mt-4 h-[3px] w-[min(48vw,300px)] rounded-full bg-white/70 shadow-[0_0_16px_rgba(255,255,255,0.25)]" />
           </div>
 
-          {/* 説明 */}
-          <p className="mt-8 text-sm font-bold leading-relaxed text-white/90 md:text-base">
+          {/* 説明（少し遅れてフェードイン） */}
+          <p className="mt-8 text-sm font-bold leading-relaxed text-white/90 md:text-base animate-fadeIn delay-200">
             すこしずつ　音をならして、
             <br />
             さいごは　とおしで　ひいてみよう
@@ -1377,8 +1377,8 @@ if (screen === "home") {
             </div>
           )}
 
-          {/* STARTボタン */}
-          <div className="mt-8">
+          {/* STARTボタン（最後にフェードイン） */}
+          <div className="mt-8 animate-fadeIn delay-500">
             <button
               onClick={() => void handleOpenStage()}
               className="min-w-[220px] rounded-[24px] border-b-4 border-[#D6A800] bg-[#FFD54A] px-8 py-4 text-xl font-black text-[#1F325C] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:translate-y-[1px] disabled:opacity-70"
@@ -1389,7 +1389,7 @@ if (screen === "home") {
           </div>
 
           {/* 非公式表記 */}
-          <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
+          <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45 animate-fadeIn delay-700">
             UNOFFICIAL PRACTICE APP
           </p>
 
