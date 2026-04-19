@@ -63,10 +63,10 @@ type PreviewItem = {
 
 const stages: StageItem[] = [
   { id: 1, title: "まずは　オタマトーンをならしてみようか" },
- { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
-  { id: 3, title: "ひとつめのメロディーをひいてみる" },
+  { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
+  { id: 3, title: "ひとつめのメロディーをひいてみて" },
   { id: 4, title: "ほかのメロディーもひいてみてよ" },
-  { id: 5, title: "マイク判定をつかってみる" },
+  { id: 5, title: "エイトメロディーズを　とおしで　ひいてみて" },
 ]
 
 const noteNamesSharp = [
@@ -86,6 +86,7 @@ const noteNamesSharp = [
 
 const STAGE3_TEMPO = 24
 const STAGE4_TEMPO = 28
+const STAGE5_TEMPO = 34
 
 function frequencyToMidi(freq: number): number {
   return Math.round(69 + 12 * Math.log2(freq / 440))
@@ -296,7 +297,7 @@ function HomeOtamatoneFace() {
 
 function PreviewLane({ items }: { items: PreviewItem[] }) {
   return (
-<div className="mother-subpanel min-h-[214px] px-4 py-3">
+    <div className="mother-subpanel min-h-[214px] px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
         <p className="mother-text-soft text-xs font-bold">5音先まで</p>
@@ -319,7 +320,7 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
           return (
             <div
               key={item.id}
-              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
+              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
             >
               <p className="h-[16px] text-[10px] font-black tracking-wide">
                 {item.isPlaceholder
@@ -331,7 +332,7 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
                   : ""}
               </p>
 
-<p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black leading-tight">
+              <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black leading-tight">
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
@@ -441,34 +442,34 @@ export default function Page() {
       return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3")]
     }
 
-if (selectedStage === 4) {
-  const stage4Phrase = safePhrases[phraseIndex]
-  const usableNotes = stage4Phrase.notes.filter((item) => item.note !== "休符")
+    if (selectedStage === 4) {
+      const stage4Phrase = safePhrases[phraseIndex]
+      const usableNotes = stage4Phrase.notes.filter((item) => item.note !== "休符")
 
-  let windowStart = 0
+      let windowStart = 0
+      if (noteIndex >= 4) {
+        const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
+        const hasMoreAfterCurrentWindow = usableNotes.length > candidateStart + 1
+        windowStart = hasMoreAfterCurrentWindow
+          ? candidateStart
+          : Math.max(0, usableNotes.length - 5)
+      }
 
-  if (noteIndex >= 4) {
-    const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
-    const hasMoreAfterCurrentWindow = usableNotes.length > candidateStart + 1
+      const visible = usableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
+        const originalIndex = windowStart + index
+        return {
+          id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
+          note: item.note,
+          length: item.length,
+          isCurrent: originalIndex === noteIndex,
+          isNext: originalIndex === noteIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: phraseIndex + 1,
+        }
+      })
 
-    windowStart = hasMoreAfterCurrentWindow ? candidateStart : Math.max(0, usableNotes.length - 5)
-  }
-
-  const visible = usableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
-    const originalIndex = windowStart + index
-    return {
-      id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
-      note: item.note,
-      length: item.length,
-      isCurrent: originalIndex === noteIndex,
-      isNext: originalIndex === noteIndex + 1,
-      isPhraseStart: false,
-      melodyNumber: phraseIndex + 1,
+      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
     }
-  })
-
-  return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
-}
 
     const items: PreviewItem[] = []
     let p = phraseIndex
@@ -509,7 +510,7 @@ if (selectedStage === 4) {
     }
 
     const currentIndex = items.findIndex((item) => item.isCurrent)
-    const firstPreviewIndex = items.findIndex((item) => !item.isCurrent)
+    const firstPreviewIndex = items.findIndex((item) => !item.isCurrent && !item.isPlaceholder)
 
     if (currentIndex !== -1 && firstPreviewIndex !== -1) {
       items[firstPreviewIndex] = {
@@ -568,6 +569,8 @@ if (selectedStage === 4) {
         ? STAGE3_TEMPO
         : selectedStage === 4
         ? STAGE4_TEMPO
+        : selectedStage === 5
+        ? STAGE5_TEMPO
         : tempo
 
     const base = Math.round(60000 / effectiveTempo)
@@ -737,9 +740,10 @@ if (selectedStage === 4) {
       setNoteIndex(0)
       setIsMicEnabled(false)
     } else if (stageId === 5) {
-      setPlayMode("phrase")
+      setPlayMode("full")
       setPhraseIndex(0)
       setNoteIndex(0)
+      setIsMicEnabled(false)
     }
 
     setScreen("practice")
@@ -786,6 +790,15 @@ if (selectedStage === 4) {
       return
     }
 
+    if (playMode === "full" && phraseIndex > 0) {
+      const prevPhraseIndex = phraseIndex - 1
+      const prevPhrase = safePhrases[prevPhraseIndex]
+      const prevNotes = prevPhrase.notes
+      setPhraseIndex(prevPhraseIndex)
+      setNoteIndex(Math.max(0, prevNotes.length - 1))
+      return
+    }
+
     setNoteIndex(0)
   }
 
@@ -813,6 +826,19 @@ if (selectedStage === 4) {
     setCountdown(null)
     setIsPlaying(false)
     setPlayMode("phrase")
+    setNoteIndex(0)
+    setJudgeState("idle")
+    await ensureAudioReady()
+    setIsPlaying(true)
+  }
+
+  const handleStage5PlayAll = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setPlayMode("full")
+    setPhraseIndex(0)
     setNoteIndex(0)
     setJudgeState("idle")
     await ensureAudioReady()
@@ -1492,7 +1518,7 @@ if (selectedStage === 4) {
               <div className="flex min-w-0 flex-col gap-4">
                 <PreviewLane items={previewItems} />
 
-<div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
+                <div className="mother-subpanel flex min-h-[148px] flex-col gap-4 px-5 py-5">
                   <p className="mother-text-soft text-center text-sm font-bold">
                     メロディー1 をれんしゅう中
                   </p>
@@ -1541,7 +1567,7 @@ if (selectedStage === 4) {
               </div>
             </div>
 
-<div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
+            <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
               <div className="flex items-center gap-3">
                 <PixelInventorFace />
                 <p className="mother-text-main text-sm font-bold">
@@ -1572,7 +1598,7 @@ if (selectedStage === 4) {
   if (selectedStage === 4) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-<div className="mx-auto flex max-w-[1240px] flex-col gap-3">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
           <section className="mother-panel flex flex-col p-4 text-slate-900">
             <div className="mb-3 flex items-center gap-3">
               <PixelInventorFace />
@@ -1626,9 +1652,10 @@ if (selectedStage === 4) {
               </div>
             </div>
 
-<div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
+            <div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
               <div className="mother-subpanel flex items-center justify-center p-4">
- <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">                  <div className="mother-neck relative h-full w-10 rounded-full">
+                <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">
+                  <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
                       {Array.from({ length: 9 }).map((_, i) => (
                         <div key={i} className="h-px w-full bg-white/10" />
@@ -1666,7 +1693,7 @@ if (selectedStage === 4) {
               <div className="flex min-w-0 flex-col gap-4">
                 <PreviewLane items={previewItems} />
 
-                <div className="mother-subpanel flex min-h-[148px] flex-col gap-4 px-5 py-5">
+                <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
                     メロディー{phraseIndex + 1} をれんしゅう中
                   </p>
@@ -1715,11 +1742,232 @@ if (selectedStage === 4) {
               </div>
             </div>
 
-            <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
+            <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
               <div className="flex items-center gap-3">
                 <PixelInventorFace />
                 <p className="mother-text-main text-sm font-bold">
                   いろいろひいたら　ステージ選択にもどってよ
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-3 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
+            </div>
+          </section>
+        </div>
+      </main>
+    )
+  }
+
+  if (selectedStage === 5) {
+    return (
+      <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
+          <section className="mother-panel flex flex-col p-4 text-slate-900">
+            <div className="mb-3 flex items-center gap-3">
+              <PixelInventorFace />
+              <div>
+                <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                  STAGE {selectedStage}
+                </p>
+                <p className="mother-text-main text-base font-bold">
+                  エイトメロディーズを　とおしで　ひいてみて
+                </p>
+              </div>
+            </div>
+
+            <div className="mother-subpanel px-4 py-3">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="mother-text-main text-sm font-bold">ぜんたいの進行</p>
+                <p className="mother-text-soft text-xs font-bold">
+                  {phraseIndex + 1} / {safePhrases.length}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-8 gap-2">
+                {safePhrases.map((_, index) => {
+                  const isCurrent = index === phraseIndex
+                  const isDone = index < phraseIndex
+
+                  return (
+                    <div
+                      key={index}
+                      className={`mother-step-card px-2 py-2 text-center ${
+                        isCurrent
+                          ? "is-active"
+                          : isDone
+                          ? "bg-[#eaf4ff] text-slate-900"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      <p className="text-[9px] font-bold">MELODY</p>
+                      <p className="mt-1 text-xl font-black">{index + 1}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="mother-progress-track mt-4 h-3 w-full overflow-hidden">
+                <div
+                  className="mother-progress-fill h-full transition-all"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
+              <div className="mother-subpanel flex items-center justify-center p-4">
+                <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">
+                  <div className="mother-neck relative h-full w-10 rounded-full">
+                    <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                      {Array.from({ length: 9 }).map((_, i) => (
+                        <div key={i} className="h-px w-full bg-white/10" />
+                      ))}
+                    </div>
+
+                    {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
+                      <div
+                        className="mother-indicator-next absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full"
+                        style={{
+                          top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                          marginLeft: indicatorsAreClose ? "26px" : "0px",
+                        }}
+                      />
+                    )}
+
+                    {current.note !== "休符" && currentIndicatorTop !== null && (
+                      <div
+                        className="mother-indicator-current absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full"
+                        style={{
+                          top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                    <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-4">
+                <PreviewLane items={previewItems} />
+
+                <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
+                  <p className="mother-text-soft text-center text-sm font-bold">
+                    いまは メロディー{phraseIndex + 1} をつうか中
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    <div className="mother-info-card px-3 py-3 text-center">
+                      <p className="mb-1 text-xs font-bold text-slate-500">入力された音</p>
+                      <p className="min-h-[36px] text-2xl font-black text-slate-900">
+                        {detectedNote || "-"}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`rounded-[22px] px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_2px_10px_rgba(20,44,99,0.04)] ${
+                        judgeState === "ok"
+                          ? "bg-[#dff7df] text-[#1b6b2c]"
+                          : judgeState === "miss"
+                          ? "bg-[#ffe2e2] text-[#b33737]"
+                          : "mother-info-card text-slate-500"
+                      }`}
+                    >
+                      <p className="mb-1 text-xs font-bold">判定</p>
+                      <p className="min-h-[36px] text-2xl font-black">
+                        {judgeState === "ok"
+                          ? "OK!"
+                          : judgeState === "miss"
+                          ? "MISS"
+                          : "..."}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isMicEnabled) {
+                          stopMic()
+                        } else {
+                          void startMic()
+                        }
+                      }}
+                      className="mother-button-light px-4 py-3 text-sm font-semibold"
+                    >
+                      {isMicPreparing
+                        ? "準備中…"
+                        : isMicEnabled
+                        ? "マイクをとめる"
+                        : "マイクをつかう"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isPlaying) {
+                          clearPlaybackTimer()
+                          clearCountdownTimer()
+                          setCountdown(null)
+                          setIsPlaying(false)
+                        } else {
+                          void handleStage5PlayAll()
+                        }
+                      }}
+                      className="mother-button-blue px-4 py-3 text-sm font-semibold"
+                    >
+                      {isPlaying ? "とめる" : "はじめから再生"}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      onClick={handleBack}
+                      className="mother-button-light px-4 py-2 text-sm font-semibold"
+                    >
+                      1音戻る
+                    </button>
+
+                    <button
+                      onClick={handleNext}
+                      className="mother-button-light px-4 py-2 text-sm font-semibold"
+                    >
+                      1音進む
+                    </button>
+
+                    {!isMicEnabled && (
+                      <button
+                        onClick={() => void playCurrentNote()}
+                        className="mother-button-blue px-4 py-2 text-sm font-semibold"
+                      >
+                        お手本
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="mother-text-main text-sm font-bold">
+                  とまってもいいから　さいごまでやってみてよ
                 </p>
               </div>
 
