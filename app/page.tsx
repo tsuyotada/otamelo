@@ -372,27 +372,21 @@ function PreviewLaneSix({
   onSelect?: (item: PreviewItem) => void
 }) {
   return (
-    <div className="mother-subpanel min-h-[214px] px-4 py-3">
+    <div className="rounded-[28px] bg-[#2A2F3A] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="mb-3 flex items-center justify-between">
-        <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">6音先まで</p>
+        <p className="text-sm font-bold text-white">これからの音</p>
+        <p className="text-xs font-bold text-slate-400">6音先まで</p>
       </div>
 
       <div className="grid grid-cols-6 gap-2">
-        {items.map((item, index) => {
+        {items.map((item) => {
           const toneClass = item.isPlaceholder
-            ? "border-transparent bg-white/10 text-transparent shadow-none"
+            ? "border-transparent bg-[#232833] text-transparent shadow-none"
             : item.isCurrent
             ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
             : item.isNext
-            ? "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
-            : index === 2
-            ? "bg-[#F3F8FF]"
-            : index === 3
-            ? "bg-[#F8FBFF]"
-            : index === 4
-            ? "bg-[#FBFDFF]"
-            : "bg-white"
+            ? "border-[#3F8CFF] bg-[#DCEBFF] text-slate-900"
+            : "border-[#485066] bg-[#343A4D] text-slate-100"
 
           const clickable = !item.isPlaceholder && onSelect
 
@@ -406,13 +400,15 @@ function PreviewLaneSix({
                 clickable ? "cursor-pointer transition hover:-translate-y-[2px]" : "cursor-default"
               }`}
             >
-              <p className="h-[16px] text-[10px] font-black">
+              <p className="h-[16px] text-[10px] font-black text-inherit/80">
                 {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
               </p>
+
               <p className="mt-1 flex min-h-[44px] items-center justify-center text-[18px] font-black">
                 {item.isPlaceholder ? "" : item.note}
               </p>
-              <p className="mt-2 text-[10px] font-bold opacity-70">
+
+              <p className="mt-2 text-[10px] font-bold text-inherit/70">
                 {item.isPlaceholder ? "" : `長さ ${item.length}`}
               </p>
             </button>
@@ -2499,27 +2495,27 @@ if (selectedStage === 6) {
           </div>
 
           {stage6ResultOpen && (
-            <div className="mother-subpanel mt-3 px-5 py-5 text-center">
-              <p className="mother-text-main text-base font-black">けっか</p>
+            <div className="mt-3 rounded-[24px] bg-[#2A2F3A] px-5 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <p className="text-base font-black text-white">けっか</p>
 
               <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <div className="mother-info-card px-4 py-4">
-                  <p className="text-xs font-bold text-slate-500">スコア</p>
-                  <p className="mt-2 text-3xl font-black text-slate-900">
+                <div className="rounded-[22px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">スコア</p>
+                  <p className="mt-2 text-3xl font-black text-white">
                     {stage6Score}
                   </p>
                 </div>
 
-                <div className="mother-info-card px-4 py-4">
-                  <p className="text-xs font-bold text-slate-500">成功数</p>
-                  <p className="mt-2 text-3xl font-black text-slate-900">
+                <div className="rounded-[22px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">成功数</p>
+                  <p className="mt-2 text-3xl font-black text-white">
                     {stage6Hits} / {totalPlayableNotes}
                   </p>
                 </div>
 
-                <div className="mother-info-card px-4 py-4">
-                  <p className="text-xs font-bold text-slate-500">正答率</p>
-                  <p className="mt-2 text-3xl font-black text-slate-900">
+                <div className="rounded-[22px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">正答率</p>
+                  <p className="mt-2 text-3xl font-black text-white">
                     {stage6Accuracy}%
                   </p>
                 </div>
@@ -2527,28 +2523,30 @@ if (selectedStage === 6) {
             </div>
           )}
 
-          <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
-            <div className="flex items-center gap-3">
-              <PixelInventorFace />
-              <p className="mother-text-main text-sm font-bold">
-                うまくいかなかったら　もどって　練習だ
-              </p>
-            </div>
+          <div className="mt-3 rounded-[24px] bg-[#2A2F3A] px-5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="text-sm font-bold text-white">
+                  うまくいかなかったら　もどって　練習だ
+                </p>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                clearPlaybackTimer()
-                clearCountdownTimer()
-                setCountdown(null)
-                setIsPlaying(false)
-                stopMic()
-                setScreen("stageSelect")
-              }}
-              className="mother-button-light px-5 py-3 text-sm font-bold"
-            >
-              ステージ選択へ
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  stopMic()
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-3 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
+            </div>
           </div>
         </section>
       </div>
