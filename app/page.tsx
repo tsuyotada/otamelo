@@ -63,7 +63,7 @@ type PreviewItem = {
 
 const stages: StageItem[] = [
   { id: 1, title: "まずは　オタマトーンをならしてみようか" },
-  { id: 2, title: "エイトメロディーズをきいてみる" },
+ { id: 2, title: "エイトメロディーズの全体を　きいてみて" },,
   { id: 3, title: "ひとつめのメロディーをひいてみる" },
   { id: 4, title: "ほかのメロディーもひいてみてよ" },
   { id: 5, title: "マイク判定をつかってみる" },
@@ -296,7 +296,7 @@ function HomeOtamatoneFace() {
 
 function PreviewLane({ items }: { items: PreviewItem[] }) {
   return (
-    <div className="mother-subpanel min-h-[238px] px-4 py-4">
+<div className="mother-subpanel min-h-[214px] px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
         <p className="mother-text-soft text-xs font-bold">5音先まで</p>
@@ -319,7 +319,7 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
           return (
             <div
               key={item.id}
-              className={`min-h-[156px] rounded-[22px] border-2 px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
+              className={`min-h-[142px] rounded-[22px] border-2 px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_2px_10px_rgba(20,44,99,0.04)] ${toneClass}`}
             >
               <p className="h-[16px] text-[10px] font-black tracking-wide">
                 {item.isPlaceholder
@@ -331,7 +331,7 @@ function PreviewLane({ items }: { items: PreviewItem[] }) {
                   : ""}
               </p>
 
-              <p className="mt-1 flex min-h-[56px] items-center justify-center text-[22px] font-black leading-tight">
+<p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black leading-tight">
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
@@ -441,28 +441,34 @@ export default function Page() {
       return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3")]
     }
 
-    if (selectedStage === 4) {
-      const stage4Phrase = safePhrases[phraseIndex]
-      const usableNotes = stage4Phrase.notes.filter((item) => item.note !== "休符")
+if (selectedStage === 4) {
+  const stage4Phrase = safePhrases[phraseIndex]
+  const usableNotes = stage4Phrase.notes.filter((item) => item.note !== "休符")
 
-      const windowStart =
-        noteIndex < 4 ? 0 : 4 * Math.floor((noteIndex - 4) / 4) + 4
+  let windowStart = 0
 
-      const visible = usableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
-        const originalIndex = windowStart + index
-        return {
-          id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
-          note: item.note,
-          length: item.length,
-          isCurrent: originalIndex === noteIndex,
-          isNext: originalIndex === noteIndex + 1,
-          isPhraseStart: false,
-          melodyNumber: phraseIndex + 1,
-        }
-      })
+  if (noteIndex >= 4) {
+    const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
+    const hasMoreAfterCurrentWindow = usableNotes.length > candidateStart + 1
 
-      return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
+    windowStart = hasMoreAfterCurrentWindow ? candidateStart : Math.max(0, usableNotes.length - 5)
+  }
+
+  const visible = usableNotes.slice(windowStart, windowStart + 5).map((item, index) => {
+    const originalIndex = windowStart + index
+    return {
+      id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
+      note: item.note,
+      length: item.length,
+      isCurrent: originalIndex === noteIndex,
+      isNext: originalIndex === noteIndex + 1,
+      isPhraseStart: false,
+      melodyNumber: phraseIndex + 1,
     }
+  })
+
+  return [...visible, ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4")]
+}
 
     const items: PreviewItem[] = []
     let p = phraseIndex
@@ -1284,15 +1290,6 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-display-navy mb-4 px-5 py-5 text-center">
-              <p className="text-sm font-bold text-white/75">
-                エイトメロディーズをきいてみて
-              </p>
-              <p className="mt-2 text-xs font-bold text-white/60">
-                ひととおりきいたら　ステージ選択にもどってよ
-              </p>
-            </div>
-
             <div className="mother-white-panel mb-4 p-4">
               <div className="mb-3 flex items-center justify-center gap-4">
                 <p className="mother-text-soft text-base font-bold">
@@ -1495,7 +1492,7 @@ export default function Page() {
               <div className="flex min-w-0 flex-col gap-4">
                 <PreviewLane items={previewItems} />
 
-                <div className="mother-subpanel flex min-h-[148px] flex-col gap-4 px-5 py-5">
+<div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
                     メロディー1 をれんしゅう中
                   </p>
@@ -1544,7 +1541,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
+<div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
               <div className="flex items-center gap-3">
                 <PixelInventorFace />
                 <p className="mother-text-main text-sm font-bold">
@@ -1575,7 +1572,7 @@ export default function Page() {
   if (selectedStage === 4) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-        <div className="mx-auto flex max-w-[1180px] flex-col gap-3">
+<div className="mx-auto flex max-w-[1240px] flex-col gap-3">
           <section className="mother-panel flex flex-col p-4 text-slate-900">
             <div className="mb-3 flex items-center gap-3">
               <PixelInventorFace />
@@ -1589,7 +1586,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mother-subpanel px-4 py-4">
+            <div className="mother-subpanel px-4 py-3">
               <div className="mb-3 flex items-center justify-between">
                 <p className="mother-text-main text-sm font-bold">メロディーをえらぶ</p>
                 <p className="mother-text-soft text-xs font-bold">
@@ -1629,10 +1626,9 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-[0.38fr_0.62fr]">
+<div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
               <div className="mother-subpanel flex items-center justify-center p-4">
-                <div className="relative flex h-[min(56vh,500px)] w-[160px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
-                  <div className="mother-neck relative h-full w-10 rounded-full">
+ <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">                  <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
                       {Array.from({ length: 9 }).map((_, i) => (
                         <div key={i} className="h-px w-full bg-white/10" />
