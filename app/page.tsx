@@ -1,5 +1,5 @@
 "use client"
-
+import { Cinzel, Nunito } from "next/font/google"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { phrases } from "@/src/data/eightMelodies"
 
@@ -92,6 +92,9 @@ const noteNamesSharp = [
   "ラ#",
   "シ",
 ]
+
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["700", "900"] })
+const nunito = Nunito({ subsets: ["latin"], weight: ["400", "700"] })
 
 const STAGE3_TEMPO = 24
 const STAGE4_TEMPO = 28
