@@ -178,54 +178,6 @@ function makePlaceholders(count: number, prefix: string): PreviewItem[] {
   }))
 }
 
-/* ===============================
-   previewItems 作成
-================================ */
-
-const previewItems: PreviewItem[] = (() => {
-  // ステージ5（6音）
-  if (selectedStage === 5) {
-    const safeIndex = Math.max(0, flatIndex)
-
-    const windowStart =
-      safeIndex < 5
-        ? 0
-        : Math.min(safeIndex, flatPlayableNotes.length - 6)
-
-    const visible = flatPlayableNotes
-      .slice(windowStart, windowStart + 6)
-      .map((n, i) => {
-        const idx = windowStart + i
-        return {
-          id: `s5-${idx}`,
-          note: n.note,
-          length: n.length,
-          isCurrent: idx === safeIndex,
-          isNext: idx === safeIndex + 1,
-          isPhraseStart: false,
-          melodyNumber: n.phraseIndex + 1,
-        }
-      })
-
-    return [...visible, ...makePlaceholders(6 - visible.length, "s5")]
-  }
-
-  // ステージ3・4（5音）
-  const visible = flatPlayableNotes
-    .slice(flatIndex, flatIndex + 5)
-    .map((n, i) => ({
-      id: `s-${i}`,
-      note: n.note,
-      length: n.length,
-      isCurrent: i === 0,
-      isNext: i === 1,
-      isPhraseStart: false,
-      melodyNumber: n.phraseIndex + 1,
-    }))
-
-  return [...visible, ...makePlaceholders(5 - visible.length, "s")]
-})()
-
 type FlatNoteItem = {
   phraseIndex: number
   noteIndex: number
