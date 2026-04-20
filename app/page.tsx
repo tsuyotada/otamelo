@@ -421,18 +421,253 @@ function PixelInventorFace() {
   )
 }
 
-function PreviewLane({
+function getNotationMidi(note: string): number | null {
+  return japaneseNoteToMidi(note)
+}
+
+function getStaffPositionFromMidi(midi: number): number {
+  // E4 を五線の最下線とみなす簡易配置
+  return midi - 64
+}
+
+function getDurationLabel(length: number) {
+  if (length >= 2) return "2"
+  if (length >= 1) return "1"
+  return "0.5"
+}
+
+function getLedgerOffsets(noteCenterY: number, staffTop: number, staffBottom: number, lineGap: number) {
+  const offsets: number[] = []
+
+  if (noteCenterY < staffTop) {
+    for (let y = staffTop - lineGap; y >= noteCenterY - 1; y -= lineGap) {
+      offsets.push(y)
+    }
+  }
+
+  if (noteCenterY > staffBottom) {
+    for (let y = staffBottom + lineGap; y <= noteCenterY + 1; y += lineGap) {
+      offsets.push(y)
+    }
+  }
+
+  return offsets
+}
+
+function StaffPreview({
   items,
   onSelect,
+  compact = false,
+  variant = "light",
+  onToggleNotation,
 }: {
   items: PreviewItem[]
   onSelect?: (item: PreviewItem) => void
+  compact?: boolean
+  variant?: "light" | "dark"
+  onToggleNotation: (checked: boolean) => void
 }) {
+  const isDark = variant === "dark"
+  const visibleItems = items.filter((item) => !item.isPlaceholder)
+
+  const lineGap = compact ? 10 : 12
+  const topBase = compact ? 28 : 32
+  const noteWidth = compact ? 18 : 20
+  const noteHeight = compact ? 12 : 14
+  const stemHeight = compact ? 24 : 28
+  const leftStart = compact ? 28 : 34
+  const stepX = compact ? 72 : 84
+  const boxHeight = compact ? 164 : 182
+  const minWidth = Math.max(520, leftStart * 2 + Math.max(visibleItems.length - 1, 0) * stepX + 90)
+  const staffTop = topBase
+  const staffBottom = topBase + lineGap * 4
+
+  return (
+    <div
+      className={
+        isDark
+          ? "rounded-[28px] bg-[#2A2F3A] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          : "mother-subpanel min-h-[214px] px-4 py-3"
+      }
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <p className={isDark ? "text-sm font-bold text-white" : "mother-text-main text-sm font-bold"}>
+          これからの音
+        </p>
+
+        <label
+          className={
+            isDark
+              ? "flex items-center gap-2 text-xs font-bold text-slate-400 select-none"
+              : "flex items-center gap-2 text-xs font-bold text-slate-500 select-none"
+          }
+        >
+          <input
+            type="checkbox"
+            checked
+            onChange={(e) => onToggleNotation(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300"
+          />
+          音符表示
+        </label>
+      </div>
+
+      <div
+        className={`relative overflow-x-auto rounded-[20px] border ${
+          isDark ? "border-[#485066] bg-[#202530]" : "border-slate-200 bg-[#FCFCFD]"
+        }`}
+        style={{ height: `${boxHeight}px` }}
+      >
+        <div className="relative" style={{ height: `${boxHeight}px`, minWidth: `${minWidth}px` }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className={`absolute left-4 right-4 h-[1.5px] ${isDark ? "bg-[#667085]" : "bg-slate-400"}`}
+              style={{ top: `${staffTop + i * lineGap}px` }}
+            />
+          ))}
+
+          {visibleItems.map((item, index) => {
+            const midi = getNotationMidi(item.note)
+            if (midi === null) return null
+
+            const staffStep = getStaffPositionFromMidi(midi)
+            const noteCenterY = staffBottom - staffStep * (lineGap / 2)
+            const left = leftStart + index * stepX
+            const ledgerYs = getLedgerOffsets(noteCenterY, staffTop, staffBottom, lineGap)
+            const clickable = !!onSelect
+
+            const headToneClass = item.isCurrent
+              ? "border-[#D4A300] bg-[#FFD54A]"
+              : item.isNext
+              ? "border-[#3F8CFF] bg-[#EAF4FF]"
+              : isDark
+              ? "border-slate-100 bg-slate-100"
+              : "border-slate-800 bg-slate-800"
+
+            const stemToneClass = item.isCurrent
+              ? "bg-[#D4A300]"
+              : item.isNext
+              ? "bg-[#3F8CFF]"
+              : isDark
+              ? "bg-slate-100"
+              : "bg-slate-800"
+
+            const labelToneClass = item.isCurrent
+              ? "text-[#B38700]"
+              : item.isNext
+              ? "text-[#2563EB]"
+              : isDark
+              ? "text-slate-300"
+              : "text-slate-500"
+
+            return (
+              <div key={item.id}>
+                {ledgerYs.map((ledgerY, ledgerIndex) => (
+                  <div
+                    key={`${item.id}-ledger-${ledgerIndex}`}
+                    className={`absolute h-[1.5px] ${isDark ? "bg-slate-300" : "bg-slate-500"}`}
+                    style={{
+                      top: `${ledgerY}px`,
+                      left: `${left - 8}px`,
+                      width: `${noteWidth + 16}px`,
+                    }}
+                  />
+                ))}
+
+                <button
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => clickable && onSelect(item)}
+                  className={clickable ? "absolute cursor-pointer" : "absolute cursor-default"}
+                  style={{
+                    left: `${left - 6}px`,
+                    top: `${noteCenterY - stemHeight - 8}px`,
+                    width: `${noteWidth + 18}px`,
+                    height: `${stemHeight + noteHeight + 18}px`,
+                  }}
+                >
+                  <span
+                    className={`absolute rounded-full border-2 ${headToneClass}`}
+                    style={{
+                      width: `${noteWidth}px`,
+                      height: `${noteHeight}px`,
+                      left: "6px",
+                      top: `${stemHeight}px`,
+                      transform: "rotate(-18deg)",
+                    }}
+                  />
+
+                  <span
+                    className={`absolute w-[2px] ${stemToneClass}`}
+                    style={{
+                      left: `${noteWidth + 5}px`,
+                      top: "0px",
+                      height: `${stemHeight + 1}px`,
+                    }}
+                  />
+                </button>
+
+                <div
+                  className="absolute -translate-x-1/2 text-center"
+                  style={{
+                    left: `${left + noteWidth / 2}px`,
+                    top: `${staffBottom + 28}px`,
+                    width: compact ? "54px" : "60px",
+                  }}
+                >
+                  <p className={`text-[11px] font-black ${labelToneClass}`}>
+                    {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+                  </p>
+                  <p className={isDark ? "mt-1 text-[10px] font-bold text-slate-400" : "mt-1 text-[10px] font-bold text-slate-500"}>
+                    長さ {getDurationLabel(item.length)}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PreviewLane({
+  items,
+  onSelect,
+  showNotation,
+  onToggleNotation,
+}: {
+  items: PreviewItem[]
+  onSelect?: (item: PreviewItem) => void
+  showNotation: boolean
+  onToggleNotation: (checked: boolean) => void
+}) {
+  if (showNotation) {
+    return (
+      <StaffPreview
+        items={items}
+        onSelect={onSelect}
+        onToggleNotation={onToggleNotation}
+        variant="light"
+      />
+    )
+  }
+
   return (
     <div className="mother-subpanel min-h-[214px] px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
-        <p className="mother-text-soft text-xs font-bold">5音先まで</p>
+
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-500 select-none">
+          <input
+            type="checkbox"
+            checked={showNotation}
+            onChange={(e) => onToggleNotation(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300"
+          />
+          音符表示
+        </label>
       </div>
 
       <div className="grid grid-cols-5 gap-3">
@@ -482,12 +717,28 @@ function PreviewLaneSix({
   items,
   onSelect,
   variant = "light",
+  showNotation,
+  onToggleNotation,
 }: {
   items: PreviewItem[]
   onSelect?: (item: PreviewItem) => void
   variant?: "light" | "dark"
+  showNotation: boolean
+  onToggleNotation: (checked: boolean) => void
 }) {
   const isDark = variant === "dark"
+
+  if (showNotation) {
+    return (
+      <StaffPreview
+        items={items}
+        onSelect={onSelect}
+        compact
+        variant={variant}
+        onToggleNotation={onToggleNotation}
+      />
+    )
+  }
 
   return (
     <div
@@ -501,9 +752,22 @@ function PreviewLaneSix({
         <p className={isDark ? "text-sm font-bold text-white" : "mother-text-main text-sm font-bold"}>
           これからの音
         </p>
-        <p className={isDark ? "text-xs font-bold text-slate-400" : "mother-text-soft text-xs font-bold"}>
-          6音先まで
-        </p>
+
+        <label
+          className={
+            isDark
+              ? "flex items-center gap-2 text-xs font-bold text-slate-400 select-none"
+              : "flex items-center gap-2 text-xs font-bold text-slate-500 select-none"
+          }
+        >
+          <input
+            type="checkbox"
+            checked={showNotation}
+            onChange={(e) => onToggleNotation(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300"
+          />
+          音符表示
+        </label>
       </div>
 
       <div className="grid grid-cols-6 gap-2">
@@ -596,6 +860,7 @@ export default function Page() {
   const [playMode, setPlayMode] = useState<PlayMode>("full")
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [showNotation, setShowNotation] = useState(false)
 
   const [isMicEnabled, setIsMicEnabled] = useState(false)
   const [isMicPreparing, setIsMicPreparing] = useState(false)
@@ -1120,6 +1385,7 @@ export default function Page() {
     setDetectedNote("")
     setDetectedFreq(0)
     setSuccessCount(0)
+    setShowNotation(false)
     resetStage6Result()
 
     if (stageId === 1) {
@@ -2491,7 +2757,12 @@ export default function Page() {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                <PreviewLane items={previewItems} onSelect={handlePreviewSelect} />
+                <PreviewLane
+                  items={previewItems}
+                  onSelect={handlePreviewSelect}
+                  showNotation={showNotation}
+                  onToggleNotation={setShowNotation}
+                />
 
                 <div className="mother-subpanel flex min-h-[148px] flex-col gap-4 px-5 py-5">
                   <p className="mother-text-soft text-center text-sm font-bold">
@@ -2666,7 +2937,12 @@ export default function Page() {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                <PreviewLane items={previewItems} onSelect={handlePreviewSelect} />
+                <PreviewLane
+                  items={previewItems}
+                  onSelect={handlePreviewSelect}
+                  showNotation={showNotation}
+                  onToggleNotation={setShowNotation}
+                />
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
                   <p className="mother-text-soft text-center text-sm font-bold">
@@ -2844,6 +3120,8 @@ export default function Page() {
                   items={previewItems}
                   onSelect={handlePreviewSelect}
                   variant="light"
+                  showNotation={showNotation}
+                  onToggleNotation={setShowNotation}
                 />
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
@@ -3032,7 +3310,12 @@ export default function Page() {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                <PreviewLaneSix items={previewItems} variant="dark" />
+                <PreviewLaneSix
+                  items={previewItems}
+                  variant="dark"
+                  showNotation={showNotation}
+                  onToggleNotation={setShowNotation}
+                />
 
                 <div className="rounded-[28px] bg-[#2A2F3A] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                   <p className="text-center text-sm font-bold text-slate-300">
