@@ -609,23 +609,18 @@ function StaffPreview({
                   />
                 </button>
 
-                <div
-                  className="absolute -translate-x-1/2 text-center"
-                  style={{
-                    left: `${left + noteWidth / 2}px`,
-                    top: `${staffBottom + 28}px`,
-                    width: compact ? "54px" : "60px",
-                  }}
-                >
-                  <p className={`text-[11px] font-black ${labelToneClass}`}>
-                    {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
-                  </p>
-{!showNotation && (
-  <p className={isDark ? "mt-1 text-[10px] font-bold text-slate-400" : "mt-1 text-[10px] font-bold text-slate-500"}>
-    長さ {getDurationLabel(item.length)}
+<div
+  className="absolute -translate-x-1/2 text-center"
+  style={{
+    left: `${left + noteWidth / 2}px`,
+    top: `${staffBottom + 28}px`,
+    width: compact ? "54px" : "60px",
+  }}
+>
+  <p className={`text-[11px] font-black ${labelToneClass}`}>
+    {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
   </p>
-)}
-                </div>
+</div>
               </div>
             )
           })}
