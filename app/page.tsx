@@ -2250,14 +2250,21 @@ useEffect(() => {
                       <button
                         type="button"
                         onClick={() => handleSelectStage(stage.id)}
-                        className={`mother-white-panel relative w-full px-6 py-5 text-left transition hover:-translate-y-[2px] hover:shadow-lg ${
-                          isCurrent ? "ring-4 ring-[#3F8CFF]/35" : ""
+                        className={`relative w-full rounded-[20px] bg-[#fffdf8] px-5 py-4 text-left transition hover:-translate-y-1 ${
+                          isCurrent
+                            ? "border-2 border-[#3F8CFF] shadow-[0_6px_24px_rgba(63,140,255,0.28)] ring-2 ring-[#FFD54A]/60"
+                            : "border-2 border-[#d8d0bc] shadow-[0_4px_0_#c4bbab,0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)]"
                         }`}
                       >
-                        <p className="text-lg font-black text-[#3F8CFF]">
-                          STAGE {stage.id}
-                        </p>
-                        <p className="mother-text-main mt-1 text-lg font-black leading-tight">
+                        {isCurrent && (
+                          <span className="absolute right-3 top-3 rounded-full bg-[#FFD54A] px-2 py-0.5 text-[9px] font-black text-[#1F325C]">
+                            ▶ NOW
+                          </span>
+                        )}
+                        <div className="mb-1.5 inline-flex items-center rounded-full bg-[#3F8CFF] px-2.5 py-0.5">
+                          <span className="text-[10px] font-black tracking-widest text-white">STAGE {stage.id}</span>
+                        </div>
+                        <p className="mother-text-main text-base font-black leading-tight">
                           {stage.title}
                         </p>
                       </button>
@@ -2265,11 +2272,11 @@ useEffect(() => {
 
                     {index < stages.length - 1 && (
                       <div className="pointer-events-none my-3 flex justify-center">
-                        <div
-                          className={`h-8 w-[3px] rounded-full bg-[#FFD54A]/80 ${
-                            isLeft ? "rotate-[20deg]" : "-rotate-[20deg]"
-                          }`}
-                        />
+                        <div className={`flex flex-col items-center gap-1 ${isLeft ? "translate-x-8" : "-translate-x-8"}`}>
+                          <div className="h-3 w-[3px] rounded-full bg-[#FFD54A]/80" />
+                          <div className="h-3.5 w-3.5 rounded-full border-2 border-[#FFD54A] bg-[#FFD54A]/25 shadow-[0_0_6px_rgba(255,213,74,0.4)]" />
+                          <div className="h-3 w-[3px] rounded-full bg-[#FFD54A]/80" />
+                        </div>
                       </div>
                     )}
                   </div>
