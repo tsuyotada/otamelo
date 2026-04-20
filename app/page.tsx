@@ -793,7 +793,7 @@ function PreviewLaneSix({
             ? "border-[#E0B323] bg-[#FFD54A] text-[#1F325C]"
             : item.isNext
             ? isDark
-              ? "border-[#3F8CFF] bg-[#DCEBFF] text-slate-900"
+              ? "border-[#6B7280] bg-[#4B5263] text-slate-200"
               : "border-[#3F8CFF] bg-[#EAF4FF] text-slate-900"
             : isDark
             ? "border-[#485066] bg-[#343A4D] text-slate-100"
