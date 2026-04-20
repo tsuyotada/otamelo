@@ -94,30 +94,30 @@ const defaultTuningAnchors: TuningAnchor[] = [
     capturedNote: "",
   },
   {
-    id: "midFar",
-    label: "その中間",
-    pos: 0.25,
+    id: "near",
+    label: "顔にいちばん近いところ",
+    pos: 1.0,
     capturedFreq: null,
     capturedNote: "",
   },
   {
     id: "center",
-    label: "まんなか",
+    label: "全体のまんなかあたり",
     pos: 0.5,
     capturedFreq: null,
     capturedNote: "",
   },
   {
     id: "midNear",
-    label: "まんなかと顔の間",
+    label: "全体のまんなかと、顔にいちばん近いところの間",
     pos: 0.75,
     capturedFreq: null,
     capturedNote: "",
   },
   {
-    id: "near",
-    label: "顔にいちばん近いところ",
-    pos: 1.0,
+    id: "midFar",
+    label: "全体のまんなかと、顔からいちばん遠いところの間",
+    pos: 0.25,
     capturedFreq: null,
     capturedNote: "",
   },
@@ -402,30 +402,6 @@ function PixelInventorFace() {
   )
 }
 
-function HomeOtamatoneFace() {
-  return (
-    <div className="mx-auto mb-5 h-[110px] w-[110px] rounded-[46%] border-4 border-slate-700 bg-[#fffaf0] shadow-md">
-      <div className="relative h-full w-full">
-        <div className="absolute left-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
-        <div className="absolute right-[28px] top-[32px] h-[10px] w-[10px] rounded-full bg-slate-700" />
-        <div className="absolute left-0 top-[56px] h-[3px] w-full bg-slate-700" />
-      </div>
-    </div>
-  )
-}
-
-function OtamatoneTitleLogo() {
-  return (
-    <div className="flex flex-col items-center">
-      <img
-        src="/otamatone-logo.svg"
-        alt="オタマトーン"
-        className="h-auto w-[min(88vw,420px)]"
-      />
-    </div>
-  )
-}
-
 function PreviewLane({
   items,
   onSelect,
@@ -615,6 +591,8 @@ export default function Page() {
   const [tuningCompleted, setTuningCompleted] = useState(false)
   const [tuningAverageFreq, setTuningAverageFreq] = useState(0)
   const [tuningAverageNote, setTuningAverageNote] = useState("")
+  const [tuningLockedFreq, setTuningLockedFreq] = useState(0)
+  const [tuningLockedNote, setTuningLockedNote] = useState("")
 
   const [stage6Score, setStage6Score] = useState(0)
   const [stage6Hits, setStage6Hits] = useState(0)
@@ -1308,6 +1286,8 @@ export default function Page() {
     setDetectedFreq(0)
     setTuningAverageFreq(0)
     setTuningAverageNote("")
+    setTuningLockedFreq(0)
+    setTuningLockedNote("")
     setJudgeState("idle")
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
@@ -1375,15 +1355,15 @@ export default function Page() {
 
   const handleCaptureTuningPoint = () => {
     if (!currentTuningAnchor) return
-    if (!tuningAverageNote || tuningAverageFreq <= 0) return
+    if (!tuningLockedNote || tuningLockedFreq <= 0) return
 
     setTuningAnchors((prev) =>
       prev.map((item, index) =>
         index === tuningStepIndex
           ? {
               ...item,
-              capturedFreq: Number(tuningAverageFreq.toFixed(2)),
-              capturedNote: tuningAverageNote,
+              capturedFreq: Number(tuningLockedFreq.toFixed(2)),
+              capturedNote: tuningLockedNote,
             }
           : item
       )
@@ -1392,6 +1372,8 @@ export default function Page() {
     tuningSamplesRef.current = []
     setTuningAverageFreq(0)
     setTuningAverageNote("")
+    setTuningLockedFreq(0)
+    setTuningLockedNote("")
 
     if (tuningStepIndex < tuningAnchors.length - 1) {
       setTuningStepIndex((prev) => prev + 1)
@@ -1407,6 +1389,8 @@ export default function Page() {
     setTuningCompleted(false)
     setTuningAverageFreq(0)
     setTuningAverageNote("")
+    setTuningLockedFreq(0)
+    setTuningLockedNote("")
 
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(TUNING_STORAGE_KEY)
@@ -1535,6 +1519,8 @@ export default function Page() {
     tuningSamplesRef.current = []
     setTuningAverageFreq(0)
     setTuningAverageNote("")
+    setTuningLockedFreq(0)
+    setTuningLockedNote("")
   }, [screen, tuningStepIndex])
 
   useEffect(() => {
@@ -1600,8 +1586,12 @@ export default function Page() {
           const average =
             tuningSamplesRef.current.reduce((sum, item) => sum + item.freq, 0) /
             tuningSamplesRef.current.length
+          const averageNote = closestNoteFromFrequency(average)
+
           setTuningAverageFreq(average)
-          setTuningAverageNote(closestNoteFromFrequency(average))
+          setTuningAverageNote(averageNote)
+          setTuningLockedFreq(average)
+          setTuningLockedNote(averageNote)
         } else {
           setTuningAverageFreq(0)
           setTuningAverageNote("")
@@ -1873,30 +1863,59 @@ export default function Page() {
 
             {!tuningCompleted && currentTuningAnchor && (
               <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr]">
-                <div className="mother-white-panel flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
-                  <p className="text-[11px] font-black tracking-wide text-[#3F8CFF]">
-                    STEP {tuningStepIndex + 1}
-                  </p>
+                <div className="mother-subpanel flex items-center justify-center p-4">
+                  <div className="flex h-full w-full flex-col items-center justify-center">
+                    <p className="text-[11px] font-black tracking-wide text-[#3F8CFF]">
+                      STEP {tuningStepIndex + 1}
+                    </p>
 
-                  <p className="mt-3 text-base font-black text-slate-800">
-                    つぎはここです
-                  </p>
+                    <p className="mt-3 text-base font-black text-slate-800">
+                      {tuningStepIndex === 0
+                        ? "まずはここです"
+                        : tuningStepIndex === 4
+                        ? "最後はここです"
+                        : "つぎはここです"}
+                    </p>
 
-                  <p className="mt-4 text-2xl font-black leading-relaxed text-slate-900">
-                    {currentTuningAnchor.label}
-                  </p>
+                    <p className="mt-3 text-center text-xl font-black leading-relaxed text-slate-900">
+                      {currentTuningAnchor.label}
+                    </p>
 
-                  <p className="mt-4 text-xs font-bold leading-relaxed text-slate-500">
-                    その位置を押さえて、
-                    <br />
-                    安定した音を少し出してください
-                  </p>
+                    <div className="mt-6 relative flex h-[360px] w-[170px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
+                      <div className="mother-neck relative h-full w-10 rounded-full">
+                        <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                          {Array.from({ length: 9 }).map((_, i) => (
+                            <div key={i} className="h-px w-full bg-white/10" />
+                          ))}
+                        </div>
+
+                        <div
+                          className="mother-indicator-current absolute left-1/2 h-3.5 w-16 -translate-x-1/2 rounded-full"
+                          style={{
+                            top: `clamp(8px, calc(${currentTuningAnchor.pos * 100}% - 7px), calc(100% - 22px))`,
+                          }}
+                        />
+                      </div>
+
+                      <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                        <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                        <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                        <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                      </div>
+                    </div>
+
+                    <p className="mt-8 text-center text-xs font-bold leading-relaxed text-slate-500">
+                      光っている位置を押さえて、
+                      <br />
+                      安定した音を少し出してください
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <div className="mother-display-blue flex min-h-[180px] flex-col items-center justify-center px-5 py-6 text-center">
+                  <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                     <p className="text-sm font-bold text-slate-600">最新の入力音</p>
-                    <p className="mt-3 min-h-[52px] text-4xl font-black leading-none text-slate-900">
+                    <p className="mt-3 min-h-[44px] text-4xl font-black leading-none text-slate-900">
                       {detectedNote || "-"}
                     </p>
                     <p className="mt-2 text-sm font-bold text-slate-600">
@@ -1906,15 +1925,19 @@ export default function Page() {
                     <div className="mt-4 h-px w-24 bg-slate-300" />
 
                     <p className="mt-4 text-sm font-bold text-slate-600">
-                      約0.8秒の平均
+                      記録する音
                     </p>
-                    <p className="mt-3 min-h-[52px] text-4xl font-black leading-none text-[#1F325C]">
-                      {tuningAverageNote || "-"}
+                    <p className="mt-3 min-h-[44px] text-4xl font-black leading-none text-[#1F325C]">
+                      {tuningLockedNote || "-"}
                     </p>
                     <p className="mt-2 text-sm font-bold text-slate-600">
-                      {tuningAverageFreq > 0
-                        ? `${tuningAverageFreq.toFixed(2)} Hz`
+                      {tuningLockedFreq > 0
+                        ? `${tuningLockedFreq.toFixed(2)} Hz`
                         : ""}
+                    </p>
+
+                    <p className="mt-3 text-[11px] font-bold text-slate-500">
+                      安定して取れた平均値を保持しています
                     </p>
                   </div>
 
@@ -1923,7 +1946,7 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={handleCaptureTuningPoint}
-                        disabled={!isMicEnabled || !tuningAverageNote || tuningAverageFreq <= 0}
+                        disabled={!isMicEnabled || !tuningLockedNote || tuningLockedFreq <= 0}
                         className="mother-button-blue w-full px-4 py-3 text-base font-bold disabled:opacity-50"
                       >
                         この位置をきろくする
@@ -1958,9 +1981,9 @@ export default function Page() {
 
                     <div className="mt-4 rounded-[18px] bg-white/70 px-4 py-3 text-center">
                       <p className="text-xs font-bold leading-relaxed text-slate-500">
-                        記録には平均値を使います。
+                        音が止まっても、最後に安定していた値を保持します。
                         <br />
-                        音が少し安定してから押すと、ずれにくくなります。
+                        よさそうならそのまま記録してください。
                       </p>
                     </div>
                   </div>
