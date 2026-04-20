@@ -858,6 +858,57 @@ function makePlaceholders(count: number, prefix: string): PreviewItem[] {
   }))
 }
 
+function getNeighborCapturedAnchors(
+  anchors: TuningAnchor[],
+  targetId: string
+): {
+  lower: TuningAnchor | null
+  higher: TuningAnchor | null
+} {
+  const sorted = [...anchors].sort((a, b) => a.pos - b.pos)
+  const index = sorted.findIndex((item) => item.id === targetId)
+
+  if (index === -1) {
+    return { lower: null, higher: null }
+  }
+
+  let lower: TuningAnchor | null = null
+  for (let i = index - 1; i >= 0; i -= 1) {
+    if (sorted[i].capturedFreq && sorted[i].capturedFreq > 0) {
+      lower = sorted[i]
+      break
+    }
+  }
+
+  let higher: TuningAnchor | null = null
+  for (let i = index + 1; i < sorted.length; i += 1) {
+    if (sorted[i].capturedFreq && sorted[i].capturedFreq > 0) {
+      higher = sorted[i]
+      break
+    }
+  }
+
+  return { lower, higher }
+}
+
+function getTuningGuardErrorMessage(
+  anchors: TuningAnchor[],
+  target: TuningAnchor,
+  freq: number
+): string {
+  const { lower, higher } = getNeighborCapturedAnchors(anchors, target.id)
+
+  if (lower?.capturedFreq && freq <= lower.capturedFreq) {
+    return `この位置の音は「${lower.label}」より高くしてください`
+  }
+
+  if (higher?.capturedFreq && freq >= higher.capturedFreq) {
+    return `この位置の音は「${higher.label}」より低くしてください`
+  }
+
+  return ""
+}
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
@@ -871,7 +922,7 @@ export default function Page() {
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [showNotation, setShowNotation] = useState(false)
-
+const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [isMicEnabled, setIsMicEnabled] = useState(false)
   const [isMicPreparing, setIsMicPreparing] = useState(false)
   const [detectedNote, setDetectedNote] = useState("")
@@ -1648,49 +1699,64 @@ export default function Page() {
     setJudgeState("idle")
   }
 
-  const handleCaptureTuningPoint = () => {
-    if (!currentTuningAnchor) return
-    if (!tuningLockedNote || tuningLockedFreq <= 0) return
+const handleCaptureTuningPoint = () => {
+  if (!currentTuningAnchor) return
+  if (!tuningLockedNote || tuningLockedFreq <= 0) return
 
-    setTuningAnchors((prev) =>
-      prev.map((item, index) =>
-        index === tuningStepIndex
-          ? {
-              ...item,
-              capturedFreq: Number(tuningLockedFreq.toFixed(2)),
-              capturedNote: tuningLockedNote,
-            }
-          : item
-      )
+  const roundedFreq = Number(tuningLockedFreq.toFixed(2))
+  const guardMessage = getTuningGuardErrorMessage(
+    tuningAnchors,
+    currentTuningAnchor,
+    roundedFreq
+  )
+
+  if (guardMessage) {
+    setTuningGuardMessage(guardMessage)
+    return
+  }
+
+  setTuningGuardMessage("")
+
+  setTuningAnchors((prev) =>
+    prev.map((item, index) =>
+      index === tuningStepIndex
+        ? {
+            ...item,
+            capturedFreq: roundedFreq,
+            capturedNote: tuningLockedNote,
+          }
+        : item
     )
+  )
 
-    tuningSamplesRef.current = []
-    setTuningAverageFreq(0)
-    setTuningAverageNote("")
-    setTuningLockedFreq(0)
-    setTuningLockedNote("")
+  tuningSamplesRef.current = []
+  setTuningAverageFreq(0)
+  setTuningAverageNote("")
+  setTuningLockedFreq(0)
+  setTuningLockedNote("")
 
-    if (tuningStepIndex < tuningAnchors.length - 1) {
-      setTuningStepIndex((prev) => prev + 1)
-    } else {
-      setTuningCompleted(true)
-    }
+  if (tuningStepIndex < tuningAnchors.length - 1) {
+    setTuningStepIndex((prev) => prev + 1)
+  } else {
+    setTuningCompleted(true)
   }
+}
 
-  const handleResetTuning = () => {
-    tuningSamplesRef.current = []
-    setTuningAnchors(defaultTuningAnchors)
-    setTuningStepIndex(0)
-    setTuningCompleted(false)
-    setTuningAverageFreq(0)
-    setTuningAverageNote("")
-    setTuningLockedFreq(0)
-    setTuningLockedNote("")
+const handleResetTuning = () => {
+  tuningSamplesRef.current = []
+  setTuningAnchors(defaultTuningAnchors)
+  setTuningStepIndex(0)
+  setTuningCompleted(false)
+  setTuningAverageFreq(0)
+  setTuningAverageNote("")
+  setTuningLockedFreq(0)
+  setTuningLockedNote("")
+  setTuningGuardMessage("")
 
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(TUNING_STORAGE_KEY)
-    }
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(TUNING_STORAGE_KEY)
   }
+}
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -1809,14 +1875,15 @@ export default function Page() {
     void startMic()
   }, [screen, isMicEnabled, isMicPreparing])
 
-  useEffect(() => {
-    if (screen !== "tune") return
-    tuningSamplesRef.current = []
-    setTuningAverageFreq(0)
-    setTuningAverageNote("")
-    setTuningLockedFreq(0)
-    setTuningLockedNote("")
-  }, [screen, tuningStepIndex])
+useEffect(() => {
+  if (screen !== "tune") return
+  tuningSamplesRef.current = []
+  setTuningAverageFreq(0)
+  setTuningAverageNote("")
+  setTuningLockedFreq(0)
+  setTuningLockedNote("")
+  setTuningGuardMessage("")
+}, [screen, tuningStepIndex])
 
   useEffect(() => {
     clearPlaybackTimer()
@@ -2284,42 +2351,49 @@ export default function Page() {
                   </div>
 
                   <div className="mother-settings-card p-4">
-                    <div className="grid gap-3">
-                      <button
-                        type="button"
-                        onClick={handleCaptureTuningPoint}
-                        disabled={!isMicEnabled || !tuningLockedNote || tuningLockedFreq <= 0}
-                        className="mother-button-blue w-full px-4 py-3 text-base font-bold disabled:opacity-50"
-                      >
-                        この位置をきろくする
-                      </button>
+<div className="grid gap-3">
+  <button
+    type="button"
+    onClick={handleCaptureTuningPoint}
+    disabled={!isMicEnabled || !tuningLockedNote || tuningLockedFreq <= 0}
+    className="mother-button-blue w-full px-4 py-3 text-base font-bold disabled:opacity-50"
+  >
+    この位置をきろくする
+  </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isMicEnabled) {
-                            stopMic()
-                          } else {
-                            void startMic()
-                          }
-                        }}
-                        className="mother-button-light w-full px-4 py-3 text-sm font-bold"
-                      >
-                        {isMicPreparing
-                          ? "マイク準備中…"
-                          : isMicEnabled
-                          ? "マイクをとめる"
-                          : "マイクをつかう"}
-                      </button>
+  {/* 👇 ここを追加 */}
+  {tuningGuardMessage && (
+    <p className="text-xs font-bold text-red-500 text-center">
+      {tuningGuardMessage}
+    </p>
+  )}
 
-                      <button
-                        type="button"
-                        onClick={handleResetTuning}
-                        className="mother-button-light w-full px-4 py-3 text-sm font-bold"
-                      >
-                        最初からやりなおす
-                      </button>
-                    </div>
+  <button
+    type="button"
+    onClick={() => {
+      if (isMicEnabled) {
+        stopMic()
+      } else {
+        void startMic()
+      }
+    }}
+    className="mother-button-light w-full px-4 py-3 text-sm font-bold"
+  >
+    {isMicPreparing
+      ? "マイク準備中…"
+      : isMicEnabled
+      ? "マイクをとめる"
+      : "マイクをつかう"}
+  </button>
+
+  <button
+    type="button"
+    onClick={handleResetTuning}
+    className="mother-button-light w-full px-4 py-3 text-sm font-bold"
+  >
+    最初からやりなおす
+  </button>
+</div>
 
                     <div className="mt-4 rounded-[18px] bg-white/70 px-4 py-3 text-center">
                       <p className="text-xs font-bold leading-relaxed text-slate-500">
