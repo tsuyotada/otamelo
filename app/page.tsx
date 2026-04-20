@@ -719,7 +719,7 @@ function PreviewLane({
                 {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
               </p>
 
-              <p className="mt-1 flex min-h-[38px] items-center justify-center text-[17px] font-black leading-tight">
+              <p className="mt-1 flex min-h-[38px] items-center justify-center text-[19px] font-black leading-tight">
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
@@ -827,7 +827,7 @@ function PreviewLaneSix({
                 {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
               </p>
 
-              <p className="mt-1 flex min-h-[34px] items-center justify-center text-[15px] font-black leading-tight">
+              <p className="mt-1 flex min-h-[38px] items-center justify-center text-[18px] font-black leading-tight">
                 {item.isPlaceholder ? "" : item.note}
               </p>
 
@@ -3395,110 +3395,118 @@ if (selectedStage === 6) {
                 onToggleNotation={setShowNotation}
               />
 
-              <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-blue-300">
-                    マイクはいっています　スコアをきろくします
-                  </p>
+{/* スコアエリア */}
+<div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+  
+  {/* テキスト + MIC */}
+  <div className="mb-2 flex items-center justify-between gap-2">
+    <p className="text-sm font-bold text-[#FFB4B4]">
+      マイクはいっています　スコアをきろくします
+    </p>
 
-                  {isMicEnabled && (
-                    <div className="flex items-center gap-2 rounded-full border border-red-400 bg-red-500/20 px-3 py-1 text-xs font-bold text-red-300">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-                      MIC ON
-                    </div>
-                  )}
-                </div>
+    {isMicEnabled && (
+      <div className="flex items-center gap-2 rounded-full border border-red-500 bg-red-500/25 px-3 py-1 text-xs font-bold text-[#FFD0D0]">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+        MIC ON
+      </div>
+    )}
+  </div>
 
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                  <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
-                    <p className="mb-1 text-xs font-bold text-slate-300">
-                      入力音
-                    </p>
-                    <p className="min-h-[32px] text-2xl font-black text-white">
-                      {detectedNote || "-"}
-                    </p>
-                  </div>
+  {/* スコア表示 */}
+  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+    
+    <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+      <p className="mb-1 text-xs font-bold text-slate-300">入力音</p>
+      <p className="min-h-[32px] text-2xl font-black text-white">
+        {detectedNote || "-"}
+      </p>
+    </div>
 
-                  <div
-                    className={`rounded-[20px] px-3 py-3 text-center ${
-                      judgeState === "ok"
-                        ? "bg-[#DFF7DF] text-[#1B6B2C]"
-                        : judgeState === "miss"
-                        ? "bg-[#FFE2E2] text-[#B33737]"
-                        : "bg-[#3A4050] text-slate-300"
-                    }`}
-                  >
-                    <p className="mb-1 text-xs font-bold">判定</p>
-                    <p className="min-h-[32px] text-2xl font-black">
-                      {judgeState === "ok"
-                        ? "OK!"
-                        : judgeState === "miss"
-                        ? "MISS"
-                        : "-"}
-                    </p>
-                  </div>
+    <div
+      className={`rounded-[20px] px-3 py-3 text-center ${
+        judgeState === "ok"
+          ? "bg-[#DFF7DF] text-[#1B6B2C]"
+          : judgeState === "miss"
+          ? "bg-[#FFE2E2] text-[#B33737]"
+          : "bg-[#3A4050] text-slate-300"
+      }`}
+    >
+      <p className="mb-1 text-xs font-bold">判定</p>
+      <p className="min-h-[32px] text-2xl font-black">
+        {judgeState === "ok"
+          ? "OK!"
+          : judgeState === "miss"
+          ? "MISS"
+          : "-"}
+      </p>
+    </div>
 
-                  <div className="rounded-[20px] bg-[#162C63] px-3 py-3 text-center text-white shadow-[0_8px_20px_rgba(22,44,99,0.25)]">
-                    <p className="mb-1 text-xs font-bold text-white/70">
-                      スコア
-                    </p>
-                    <p className="min-h-[32px] text-3xl font-black">
-                      {stage6Score}
-                    </p>
-                  </div>
+    {/* 👇 赤系に統一 */}
+    <div className="rounded-[20px] bg-[#3A1F24] px-3 py-3 text-center text-white shadow-[0_8px_20px_rgba(255,80,80,0.25)]">
+      <p className="mb-1 text-xs font-bold text-[#FFB4B4]">スコア</p>
+      <p className="min-h-[32px] text-3xl font-black">
+        {stage6Score}
+      </p>
+    </div>
 
-                  <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
-                    <p className="mb-1 text-xs font-bold text-slate-300">
-                      成功数
-                    </p>
-                    <p className="min-h-[32px] text-2xl font-black text-white">
-                      {stage6Hits}
-                    </p>
-                  </div>
-                </div>
+    <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+      <p className="mb-1 text-xs font-bold text-slate-300">成功数</p>
+      <p className="min-h-[32px] text-2xl font-black text-white">
+        {stage6Hits}
+      </p>
+    </div>
+  </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isPlaying || countdown !== null) {
-                        clearPlaybackTimer()
-                        clearCountdownTimer()
-                        setCountdown(null)
-                        setIsPlaying(false)
-                      } else {
-                        void handleStage6Start()
-                      }
-                    }}
-                    className="mother-button-blue px-5 py-2.5 text-sm font-bold"
-                  >
-                    {countdown !== null
-                      ? `${countdown}`
-                      : isPlaying
-                      ? "中断する"
-                      : "本番スタート"}
-                  </button>
+  {/* ボタン */}
+  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+    
+    {/* 👇 本番ボタン（赤） */}
+    <button
+      type="button"
+      onClick={() => {
+        if (isPlaying || countdown !== null) {
+          clearPlaybackTimer()
+          clearCountdownTimer()
+          setCountdown(null)
+          setIsPlaying(false)
+        } else {
+          void handleStage6Start()
+        }
+      }}
+      className="px-5 py-2.5 text-sm font-bold rounded-full 
+      bg-gradient-to-b from-[#FF6B6B] to-[#C53030] 
+      text-white shadow-[0_6px_18px_rgba(255,80,80,0.4)] 
+      active:scale-95 transition"
+    >
+      {countdown !== null
+        ? `${countdown}`
+        : isPlaying
+        ? "中断する"
+        : "本番スタート"}
+    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearPlaybackTimer()
-                      clearCountdownTimer()
-                      setCountdown(null)
-                      setIsPlaying(false)
-                      resetStage6Result()
-                      setPhraseIndex(0)
-                      setNoteIndex(0)
-                      setJudgeState("idle")
-                      setDetectedNote("")
-                      setDetectedFreq(0)
-                    }}
-                    className="mother-button-light px-5 py-2.5 text-sm font-bold"
-                  >
-                    もういちど挑戦
-                  </button>
-                </div>
-              </div>
+    {/* 👇 リトライ（赤寄せ） */}
+    <button
+      type="button"
+      onClick={() => {
+        clearPlaybackTimer()
+        clearCountdownTimer()
+        setCountdown(null)
+        setIsPlaying(false)
+        resetStage6Result()
+        setPhraseIndex(0)
+        setNoteIndex(0)
+        setJudgeState("idle")
+        setDetectedNote("")
+        setDetectedFreq(0)
+      }}
+      className="px-5 py-2.5 text-sm font-bold rounded-full 
+      bg-[#3A1F24] text-[#FFB4B4] border border-[#FF6B6B]"
+    >
+      もういちど挑戦
+    </button>
+  </div>
+</div>
             </div>
           </div>
 
