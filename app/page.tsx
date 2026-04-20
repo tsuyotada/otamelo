@@ -620,9 +620,11 @@ function StaffPreview({
                   <p className={`text-[11px] font-black ${labelToneClass}`}>
                     {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
                   </p>
-                  <p className={isDark ? "mt-1 text-[10px] font-bold text-slate-400" : "mt-1 text-[10px] font-bold text-slate-500"}>
-                    長さ {getDurationLabel(item.length)}
-                  </p>
+{!showNotation && (
+  <p className={isDark ? "mt-1 text-[10px] font-bold text-slate-400" : "mt-1 text-[10px] font-bold text-slate-500"}>
+    長さ {getDurationLabel(item.length)}
+  </p>
+)}
                 </div>
               </div>
             )
@@ -703,9 +705,11 @@ function PreviewLane({
               <p className="mt-1 flex min-h-[48px] items-center justify-center text-[20px] font-black">
                 {item.isPlaceholder ? "" : item.note}
               </p>
-              <p className="mt-2 text-[11px] font-bold opacity-70">
-                {item.isPlaceholder ? "" : `長さ ${item.length}`}
-              </p>
+{!showNotation && (
+  <p className="mt-2 text-[11px] font-bold opacity-70">
+    {item.isPlaceholder ? "" : `長さ ${item.length}`}
+  </p>
+)}
             </button>
           )
         })}
