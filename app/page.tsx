@@ -732,12 +732,14 @@ function PreviewLane({
 
 function PreviewLaneSix({
   items,
+  staffItems,
   onSelect,
   variant = "light",
   showNotation,
   onToggleNotation,
 }: {
   items: PreviewItem[]
+  staffItems?: PreviewItem[]
   onSelect?: (item: PreviewItem) => void
   variant?: "light" | "dark"
   showNotation: boolean
@@ -748,7 +750,7 @@ function PreviewLaneSix({
   if (showNotation) {
     return (
       <StaffPreview
-        items={items}
+        items={staffItems ?? items}
         onSelect={onSelect}
         compact
         variant={variant}
@@ -1243,6 +1245,34 @@ const previewItems = useMemo<PreviewItem[]>(() => {
   playMode,
   flatPlayableNotes,
 ])
+
+const pairPreviewItems = useMemo<PreviewItem[]>(() => {
+  if (selectedStage !== 5 && selectedStage !== 6) return []
+
+  const pairStart = Math.floor(phraseIndex / 2) * 2
+  const items: PreviewItem[] = []
+
+  for (let pi = pairStart; pi <= pairStart + 1 && pi < safePhrases.length; pi++) {
+    const phrase = safePhrases[pi]
+    for (let ni = 0; ni < phrase.notes.length; ni++) {
+      const note = phrase.notes[ni]
+      if (note.note === "休符") continue
+      items.push({
+        id: `pair-${pi}-${ni}-${note.note}`,
+        note: note.note,
+        length: note.length,
+        isCurrent: pi === phraseIndex && ni === noteIndex,
+        isNext: false,
+        isPhraseStart: false,
+        melodyNumber: pi + 1,
+        phraseIndex: pi,
+        noteIndex: ni,
+      })
+    }
+  }
+
+  return items
+}, [selectedStage, safePhrases, phraseIndex, noteIndex])
 
   const currentIndicatorTop =
     getCalibratedTopPercentFromNote(current.note, tuningAnchors) ??
@@ -3247,6 +3277,7 @@ if (selectedStage === 5) {
             <div className="flex min-w-0 flex-col gap-2">
               <PreviewLaneSix
                 items={previewItems}
+                staffItems={pairPreviewItems}
                 onSelect={handlePreviewSelect}
                 variant="light"
                 showNotation={showNotation}
@@ -3431,6 +3462,7 @@ if (selectedStage === 6) {
             <div className="flex min-w-0 flex-col gap-2">
               <PreviewLaneSix
                 items={previewItems}
+                staffItems={pairPreviewItems}
                 variant="dark"
                 showNotation={showNotation}
                 onToggleNotation={setShowNotation}
