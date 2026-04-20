@@ -421,6 +421,41 @@ function PixelInventorFace() {
   )
 }
 
+function DisplayModeToggle({
+  checked,
+  onChange,
+  dark = false,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  dark?: boolean
+}) {
+  return (
+    <div className={`inline-flex items-center rounded-full p-1 ${dark ? "bg-[#3A4050]" : "bg-[#E9EEF5]"}`}>
+      <button
+        type="button"
+        onClick={() => onChange(false)}
+        className={`rounded-full px-3 py-1.5 text-xs font-black ${
+          checked ? "text-slate-400" : "bg-white text-[#1F325C] shadow"
+        }`}
+      >
+        ドレミ表示
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onChange(true)}
+        className={`rounded-full px-3 py-1.5 text-xs font-black ${
+          checked ? "bg-[#3F8CFF] text-white shadow" : "text-slate-400"
+        }`}
+      >
+        音符表示
+      </button>
+    </div>
+  )
+}
+
+
 function getNotationMidi(note: string): number | null {
   return japaneseNoteToMidi(note)
 }
@@ -496,21 +531,11 @@ function StaffPreview({
           これからの音
         </p>
 
-        <label
-          className={
-            isDark
-              ? "flex items-center gap-2 text-xs font-bold text-slate-400 select-none"
-              : "flex items-center gap-2 text-xs font-bold text-slate-500 select-none"
-          }
-        >
-          <input
-            type="checkbox"
-            checked
-            onChange={(e) => onToggleNotation(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300"
-          />
-          音符表示
-        </label>
+<DisplayModeToggle
+  checked={true}
+  onChange={onToggleNotation}
+  dark={isDark}
+/>
       </div>
 
       <div
@@ -657,15 +682,10 @@ function PreviewLane({
       <div className="mb-3 flex items-center justify-between">
         <p className="mother-text-main text-sm font-bold">これからの音</p>
 
-        <label className="flex items-center gap-2 text-xs font-bold text-slate-500 select-none">
-          <input
-            type="checkbox"
-            checked={showNotation}
-            onChange={(e) => onToggleNotation(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300"
-          />
-          音符表示
-        </label>
+<DisplayModeToggle
+  checked={showNotation}
+  onChange={onToggleNotation}
+/>
       </div>
 
       <div className="grid grid-cols-5 gap-3">
@@ -753,21 +773,11 @@ function PreviewLaneSix({
           これからの音
         </p>
 
-        <label
-          className={
-            isDark
-              ? "flex items-center gap-2 text-xs font-bold text-slate-400 select-none"
-              : "flex items-center gap-2 text-xs font-bold text-slate-500 select-none"
-          }
-        >
-          <input
-            type="checkbox"
-            checked={showNotation}
-            onChange={(e) => onToggleNotation(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300"
-          />
-          音符表示
-        </label>
+<DisplayModeToggle
+  checked={showNotation}
+  onChange={onToggleNotation}
+  dark={isDark}
+/>
       </div>
 
       <div className="grid grid-cols-6 gap-2">
