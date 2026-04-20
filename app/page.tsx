@@ -872,21 +872,23 @@ function getNeighborCapturedAnchors(
     return { lower: null, higher: null }
   }
 
-  let lower: TuningAnchor | null = null
-  for (let i = index - 1; i >= 0; i -= 1) {
-    if (sorted[i].capturedFreq && sorted[i].capturedFreq > 0) {
-      lower = sorted[i]
-      break
-    }
+let lower: TuningAnchor | null = null
+for (let i = index - 1; i >= 0; i -= 1) {
+  const candidate = sorted[i]
+  if (candidate && candidate.capturedFreq && candidate.capturedFreq > 0) {
+    lower = candidate
+    break
   }
+}
 
-  let higher: TuningAnchor | null = null
-  for (let i = index + 1; i < sorted.length; i += 1) {
-    if (sorted[i].capturedFreq && sorted[i].capturedFreq > 0) {
-      higher = sorted[i]
-      break
-    }
+let higher: TuningAnchor | null = null
+for (let i = index + 1; i < sorted.length; i += 1) {
+  const candidate = sorted[i]
+  if (candidate && candidate.capturedFreq && candidate.capturedFreq > 0) {
+    higher = candidate
+    break
   }
+}
 
   return { lower, higher }
 }
