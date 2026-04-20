@@ -3539,7 +3539,7 @@ if (selectedStage === 6) {
             </div>
           )}
 
-          <div className="mt-2 rounded-[24px] bg-[#2A2F3A] px-4 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="mt-2 rounded-[24px] bg-[#11141B] px-4 py-3 text-center">
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-3">
                 <PixelInventorFace />
