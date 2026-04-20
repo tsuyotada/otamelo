@@ -77,7 +77,13 @@ type TuningAnchor = {
   capturedNote: string
 }
 
+type TuningSample = {
+  freq: number
+  at: number
+}
+
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
+const TUNING_AVERAGE_WINDOW_MS = 800
 
 const defaultTuningAnchors: TuningAnchor[] = [
   {
@@ -605,7 +611,10 @@ export default function Page() {
 
   const [tuningAnchors, setTuningAnchors] =
     useState<TuningAnchor[]>(defaultTuningAnchors)
-  const [selectedTuningId, setSelectedTuningId] = useState<string>("far")
+  const [tuningStepIndex, setTuningStepIndex] = useState(0)
+  const [tuningCompleted, setTuningCompleted] = useState(false)
+  const [tuningAverageFreq, setTuningAverageFreq] = useState(0)
+  const [tuningAverageNote, setTuningAverageNote] = useState("")
 
   const [stage6Score, setStage6Score] = useState(0)
   const [stage6Hits, setStage6Hits] = useState(0)
@@ -621,6 +630,7 @@ export default function Page() {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const micAnimationRef = useRef<number | null>(null)
+  const tuningSamplesRef = useRef<TuningSample[]>([])
 
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
@@ -666,6 +676,8 @@ export default function Page() {
   const hasCustomTuning = tuningAnchors.some(
     (item) => item.capturedFreq !== null
   )
+
+  const currentTuningAnchor = tuningAnchors[tuningStepIndex] ?? null
 
   const stage1IndicatorTop =
     isMicEnabled && detectedFreq > 0
@@ -1290,9 +1302,12 @@ export default function Page() {
 
     analyserRef.current = null
     micSourceRef.current = null
+    tuningSamplesRef.current = []
     setIsMicEnabled(false)
     setDetectedNote("")
     setDetectedFreq(0)
+    setTuningAverageFreq(0)
+    setTuningAverageNote("")
     setJudgeState("idle")
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
@@ -1359,23 +1374,40 @@ export default function Page() {
   }
 
   const handleCaptureTuningPoint = () => {
-    if (!detectedNote || detectedFreq <= 0) return
+    if (!currentTuningAnchor) return
+    if (!tuningAverageNote || tuningAverageFreq <= 0) return
 
     setTuningAnchors((prev) =>
-      prev.map((item) =>
-        item.id === selectedTuningId
+      prev.map((item, index) =>
+        index === tuningStepIndex
           ? {
               ...item,
-              capturedFreq: Number(detectedFreq.toFixed(2)),
-              capturedNote: detectedNote,
+              capturedFreq: Number(tuningAverageFreq.toFixed(2)),
+              capturedNote: tuningAverageNote,
             }
           : item
       )
     )
+
+    tuningSamplesRef.current = []
+    setTuningAverageFreq(0)
+    setTuningAverageNote("")
+
+    if (tuningStepIndex < tuningAnchors.length - 1) {
+      setTuningStepIndex((prev) => prev + 1)
+    } else {
+      setTuningCompleted(true)
+    }
   }
 
   const handleResetTuning = () => {
+    tuningSamplesRef.current = []
     setTuningAnchors(defaultTuningAnchors)
+    setTuningStepIndex(0)
+    setTuningCompleted(false)
+    setTuningAverageFreq(0)
+    setTuningAverageNote("")
+
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(TUNING_STORAGE_KEY)
     }
@@ -1391,24 +1423,36 @@ export default function Page() {
       const parsed = JSON.parse(raw) as TuningAnchor[]
       if (!Array.isArray(parsed)) return
 
-      setTuningAnchors(
-        defaultTuningAnchors.map((base) => {
-          const saved = parsed.find((item) => item.id === base.id)
-          return saved
-            ? {
-                ...base,
-                capturedFreq:
-                  typeof saved.capturedFreq === "number"
-                    ? saved.capturedFreq
-                    : null,
-                capturedNote:
-                  typeof saved.capturedNote === "string"
-                    ? saved.capturedNote
-                    : "",
-              }
-            : base
-        })
+      const restored = defaultTuningAnchors.map((base) => {
+        const saved = parsed.find((item) => item.id === base.id)
+        return saved
+          ? {
+              ...base,
+              capturedFreq:
+                typeof saved.capturedFreq === "number"
+                  ? saved.capturedFreq
+                  : null,
+              capturedNote:
+                typeof saved.capturedNote === "string"
+                  ? saved.capturedNote
+                  : "",
+            }
+          : base
+      })
+
+      setTuningAnchors(restored)
+
+      const firstUncapturedIndex = restored.findIndex(
+        (item) => item.capturedFreq === null
       )
+
+      if (firstUncapturedIndex === -1) {
+        setTuningStepIndex(restored.length - 1)
+        setTuningCompleted(true)
+      } else {
+        setTuningStepIndex(firstUncapturedIndex)
+        setTuningCompleted(false)
+      }
     } catch {}
   }, [])
 
@@ -1480,6 +1524,20 @@ export default function Page() {
   }, [screen, selectedStage, isMicEnabled, isMicPreparing])
 
   useEffect(() => {
+    if (screen !== "tune") return
+    if (isMicEnabled || isMicPreparing) return
+
+    void startMic()
+  }, [screen, isMicEnabled, isMicPreparing])
+
+  useEffect(() => {
+    if (screen !== "tune") return
+    tuningSamplesRef.current = []
+    setTuningAverageFreq(0)
+    setTuningAverageNote("")
+  }, [screen, tuningStepIndex])
+
+  useEffect(() => {
     clearPlaybackTimer()
 
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
@@ -1521,6 +1579,34 @@ export default function Page() {
 
       setDetectedFreq(safeFreq)
       setDetectedNote(note)
+
+      if (screen === "tune") {
+        const now = performance.now()
+
+        if (safeFreq > 0) {
+          tuningSamplesRef.current = [
+            ...tuningSamplesRef.current.filter(
+              (item) => now - item.at <= TUNING_AVERAGE_WINDOW_MS
+            ),
+            { freq: safeFreq, at: now },
+          ]
+        } else {
+          tuningSamplesRef.current = tuningSamplesRef.current.filter(
+            (item) => now - item.at <= TUNING_AVERAGE_WINDOW_MS
+          )
+        }
+
+        if (tuningSamplesRef.current.length > 0) {
+          const average =
+            tuningSamplesRef.current.reduce((sum, item) => sum + item.freq, 0) /
+            tuningSamplesRef.current.length
+          setTuningAverageFreq(average)
+          setTuningAverageNote(closestNoteFromFrequency(average))
+        } else {
+          setTuningAverageFreq(0)
+          setTuningAverageNote("")
+        }
+      }
 
       if (selectedStage === 1 || screen === "tune") {
         setJudgeState("idle")
@@ -1738,13 +1824,9 @@ export default function Page() {
   }
 
   if (screen === "tune") {
-    const selectedAnchor = tuningAnchors.find(
-      (item) => item.id === selectedTuningId
-    )
-
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-6 text-white">
-        <div className="mx-auto flex max-w-[980px] flex-col gap-4">
+        <div className="mx-auto flex max-w-[900px] flex-col gap-4">
           <section className="mother-panel px-6 py-6 text-slate-900">
             <div className="flex items-center gap-3">
               <PixelInventorFace />
@@ -1760,140 +1842,194 @@ export default function Page() {
 
             <div className="mother-subpanel mt-5 px-5 py-5 text-center">
               <p className="mother-text-main text-sm font-bold">
-                5か所を押さえて、いま鳴っている音を記録します
+                1か所ずつ音の位置を記録していきます
               </p>
               <p className="mt-2 text-xs font-bold leading-relaxed text-slate-500">
-                同じ位置でも個体差があります。
+                マイクは自動でONになります。
                 <br />
-                記録した値にあわせて、以後のガイド位置を補正します。
+                指示された位置を押さえて音を出し、「この位置をきろくする」を押してください。
               </p>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-3">
-                  {tuningAnchors.map((anchor, index) => {
-                    const isSelected = anchor.id === selectedTuningId
-
-                    return (
-                      <button
-                        key={anchor.id}
-                        type="button"
-                        onClick={() => setSelectedTuningId(anchor.id)}
-                        className={`mother-white-panel flex items-center justify-between gap-4 px-4 py-4 text-left transition ${
-                          isSelected
-                            ? "ring-4 ring-[#3F8CFF]/35"
-                            : "hover:-translate-y-[1px]"
-                        }`}
-                      >
-                        <div>
-                          <p className="text-[11px] font-black tracking-wide text-[#3F8CFF]">
-                            POINT {index + 1}
-                          </p>
-                          <p className="mt-1 text-sm font-black text-slate-800">
-                            {anchor.label}
-                          </p>
-                        </div>
-
-                        <div className="min-w-[120px] text-right">
-                          <p className="text-xs font-bold text-slate-500">
-                            記録された音
-                          </p>
-                          <p className="mt-1 text-lg font-black text-slate-900">
-                            {anchor.capturedNote || "-"}
-                          </p>
-                          <p className="text-xs font-bold text-slate-500">
-                            {anchor.capturedFreq
-                              ? `${anchor.capturedFreq.toFixed(2)} Hz`
-                              : "未記録"}
-                          </p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
+            <div className="mt-5 rounded-[20px] bg-white/70 px-4 py-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-black text-slate-700">進みぐあい</p>
+                <p className="text-xs font-bold text-slate-500">
+                  {tuningCompleted
+                    ? `${tuningAnchors.length} / ${tuningAnchors.length}`
+                    : `${Math.min(tuningStepIndex + 1, tuningAnchors.length)} / ${tuningAnchors.length}`}
+                </p>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
-                  <p className="text-sm font-bold text-slate-600">
-                    いまの入力音
+              <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-[#3F8CFF] transition-all"
+                  style={{
+                    width: `${tuningCompleted ? 100 : ((tuningStepIndex + 1) / tuningAnchors.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {!tuningCompleted && currentTuningAnchor && (
+              <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr]">
+                <div className="mother-white-panel flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
+                  <p className="text-[11px] font-black tracking-wide text-[#3F8CFF]">
+                    STEP {tuningStepIndex + 1}
                   </p>
-                  <p className="mt-3 min-h-[64px] text-5xl font-black leading-none text-slate-900">
-                    {detectedNote || "-"}
+
+                  <p className="mt-3 text-base font-black text-slate-800">
+                    つぎはここです
                   </p>
-                  <p className="mt-3 text-sm font-bold text-slate-600">
-                    {detectedFreq > 0 ? `${detectedFreq.toFixed(2)} Hz` : ""}
+
+                  <p className="mt-4 text-2xl font-black leading-relaxed text-slate-900">
+                    {currentTuningAnchor.label}
+                  </p>
+
+                  <p className="mt-4 text-xs font-bold leading-relaxed text-slate-500">
+                    その位置を押さえて、
+                    <br />
+                    安定した音を少し出してください
                   </p>
                 </div>
 
-                <div className="mother-settings-card p-4">
-                  <p className="mother-text-main mb-2 text-base font-bold">
-                    いま選んでいる位置
-                  </p>
-                  <p className="text-sm font-black text-[#3F8CFF]">
-                    {selectedAnchor?.label ?? ""}
-                  </p>
+                <div className="flex flex-col gap-4">
+                  <div className="mother-display-blue flex min-h-[180px] flex-col items-center justify-center px-5 py-6 text-center">
+                    <p className="text-sm font-bold text-slate-600">最新の入力音</p>
+                    <p className="mt-3 min-h-[52px] text-4xl font-black leading-none text-slate-900">
+                      {detectedNote || "-"}
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-slate-600">
+                      {detectedFreq > 0 ? `${detectedFreq.toFixed(2)} Hz` : ""}
+                    </p>
 
-                  <div className="mt-4 grid gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (isMicEnabled) {
-                          stopMic()
-                        } else {
-                          void startMic()
-                        }
-                      }}
-                      className="mother-button-blue w-full px-4 py-3 text-base font-bold"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        {isMicPreparing && <Spinner />}
+                    <div className="mt-4 h-px w-24 bg-slate-300" />
+
+                    <p className="mt-4 text-sm font-bold text-slate-600">
+                      約0.8秒の平均
+                    </p>
+                    <p className="mt-3 min-h-[52px] text-4xl font-black leading-none text-[#1F325C]">
+                      {tuningAverageNote || "-"}
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-slate-600">
+                      {tuningAverageFreq > 0
+                        ? `${tuningAverageFreq.toFixed(2)} Hz`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="mother-settings-card p-4">
+                    <div className="grid gap-3">
+                      <button
+                        type="button"
+                        onClick={handleCaptureTuningPoint}
+                        disabled={!isMicEnabled || !tuningAverageNote || tuningAverageFreq <= 0}
+                        className="mother-button-blue w-full px-4 py-3 text-base font-bold disabled:opacity-50"
+                      >
+                        この位置をきろくする
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isMicEnabled) {
+                            stopMic()
+                          } else {
+                            void startMic()
+                          }
+                        }}
+                        className="mother-button-light w-full px-4 py-3 text-sm font-bold"
+                      >
                         {isMicPreparing
-                          ? "準備中…"
+                          ? "マイク準備中…"
                           : isMicEnabled
                           ? "マイクをとめる"
                           : "マイクをつかう"}
-                      </span>
-                    </button>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={handleCaptureTuningPoint}
-                      disabled={!isMicEnabled || !detectedNote || detectedFreq <= 0}
-                      className="mother-button-light w-full px-4 py-3 text-base font-bold disabled:opacity-50"
+                      <button
+                        type="button"
+                        onClick={handleResetTuning}
+                        className="mother-button-light w-full px-4 py-3 text-sm font-bold"
+                      >
+                        最初からやりなおす
+                      </button>
+                    </div>
+
+                    <div className="mt-4 rounded-[18px] bg-white/70 px-4 py-3 text-center">
+                      <p className="text-xs font-bold leading-relaxed text-slate-500">
+                        記録には平均値を使います。
+                        <br />
+                        音が少し安定してから押すと、ずれにくくなります。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tuningCompleted && (
+              <div className="mt-5 flex flex-col gap-4">
+                <div className="mother-display-blue flex min-h-[180px] flex-col items-center justify-center px-5 py-6 text-center">
+                  <p className="text-sm font-bold text-slate-600">
+                    チューニング完了
+                  </p>
+                  <p className="mt-3 text-3xl font-black leading-relaxed text-slate-900">
+                    5か所の記録ができました
+                  </p>
+                  <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
+                    この端末に保存されています
+                  </p>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-5">
+                  {tuningAnchors.map((anchor, index) => (
+                    <div
+                      key={anchor.id}
+                      className="mother-white-panel flex min-h-[130px] flex-col items-center justify-center px-3 py-4 text-center"
                     >
-                      この位置を記録する
-                    </button>
+                      <p className="text-[10px] font-black tracking-wide text-[#3F8CFF]">
+                        POINT {index + 1}
+                      </p>
+                      <p className="mt-2 text-xs font-black leading-relaxed text-slate-700">
+                        {anchor.label}
+                      </p>
+                      <p className="mt-2 text-base font-black text-slate-900">
+                        {anchor.capturedNote || "-"}
+                      </p>
+                      <p className="text-[11px] font-bold text-slate-500">
+                        {anchor.capturedFreq
+                          ? `${anchor.capturedFreq.toFixed(2)} Hz`
+                          : "未記録"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
 
+                <div className="mother-settings-card p-4">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <button
                       type="button"
                       onClick={handleResetTuning}
                       className="mother-button-light w-full px-4 py-3 text-sm font-bold"
                     >
-                      調整をリセット
+                      もう一度チューニングする
                     </button>
-                  </div>
 
-                  <div className="mt-4 rounded-[18px] bg-white/70 px-4 py-3 text-center">
-                    <p className="text-xs font-bold leading-relaxed text-slate-500">
-                      位置を選んでから、その場所を押さえて音を出し、
-                      <br />
-                      「この位置を記録する」を押してください。
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopMic()
+                        setScreen("stageSelect")
+                      }}
+                      className="mother-button-blue w-full px-4 py-3 text-sm font-bold"
+                    >
+                      ステージ選択へ
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="mother-subpanel mt-5 px-5 py-5 text-center">
-              <p className="mother-text-main text-sm font-bold">保存状態</p>
-              <p className="mt-2 text-xs font-bold text-slate-500">
-                {hasCustomTuning
-                  ? "この端末に調整内容を保存しています"
-                  : "まだ調整データは保存されていません"}
-              </p>
-            </div>
+            )}
           </section>
 
           <div className="flex justify-center gap-3">
