@@ -3353,13 +3353,15 @@ if (selectedStage === 5) {
                       >
                         はじめから再生
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleStage5Resume()}
-                        className="mother-button-light px-3 py-2 text-sm font-semibold"
-                      >
-                        とちゅうから再生
-                      </button>
+                      {!(phraseIndex === 0 && noteIndex === 0) && (
+                        <button
+                          type="button"
+                          onClick={() => void handleStage5Resume()}
+                          className="mother-button-light px-3 py-2 text-sm font-semibold"
+                        >
+                          とちゅうから再生
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
