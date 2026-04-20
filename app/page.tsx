@@ -914,6 +914,47 @@ function getTuningGuardErrorMessage(
   return ""
 }
 
+const TEMPO_OPTIONS = [
+  { label: "ゆっくり", value: 1 },
+  { label: "ふつう", value: 1.25 },
+  { label: "はやい", value: 1.5 },
+] as const
+type TempoMultiplier = (typeof TEMPO_OPTIONS)[number]["value"]
+
+function TempoSelector({
+  value,
+  onChange,
+  variant,
+}: {
+  value: TempoMultiplier
+  onChange: (v: TempoMultiplier) => void
+  variant: "blue" | "red"
+}) {
+  return (
+    <div className="flex gap-1">
+      {TEMPO_OPTIONS.map((opt) => {
+        const isActive = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
+              isActive
+                ? variant === "blue"
+                  ? "bg-[#3F8CFF] text-white shadow-[0_2px_8px_rgba(63,140,255,0.4)]"
+                  : "bg-[#FF6B6B] text-white shadow-[0_2px_8px_rgba(255,107,107,0.4)]"
+                : "bg-white/10 text-slate-300"
+            }`}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
@@ -922,6 +963,7 @@ export default function Page() {
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [noteIndex, setNoteIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [tempoMultiplier, setTempoMultiplier] = useState<TempoMultiplier>(1)
   const [tempo, setTempo] = useState(40)
   const [playMode, setPlayMode] = useState<PlayMode>("full")
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
@@ -1272,9 +1314,9 @@ const previewItems = useMemo<PreviewItem[]>(() => {
         : selectedStage === 4
         ? STAGE4_TEMPO
         : selectedStage === 5
-        ? STAGE5_TEMPO
+        ? STAGE5_TEMPO * tempoMultiplier
         : selectedStage === 6
-        ? STAGE6_TEMPO
+        ? STAGE6_TEMPO * tempoMultiplier
         : tempo
 
     const base = Math.round(60000 / effectiveTempo)
@@ -1453,6 +1495,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
     setSuccessCount(0)
     setShowNotation(false)
     resetStage6Result()
+    setTempoMultiplier(1)
 
     if (stageId === 1) {
       setPlayMode("phrase")
@@ -1860,6 +1903,7 @@ const handleResetTuning = () => {
     phraseIndex,
     noteIndex,
     tempo,
+    tempoMultiplier,
     current.note,
     current.length,
   ])
@@ -1912,6 +1956,7 @@ useEffect(() => {
     phraseIndex,
     noteIndex,
     tempo,
+    tempoMultiplier,
     current.length,
   ])
 
@@ -3117,7 +3162,7 @@ if (selectedStage === 5) {
         <section className="mother-panel flex flex-col p-3 text-slate-900">
           <div className="mb-2 flex items-center gap-3">
             <PixelInventorFace />
-            <div>
+            <div className="flex-1">
               <p className="mother-text-soft text-[11px] font-black tracking-wide">
                 STAGE {selectedStage}
               </p>
@@ -3125,6 +3170,7 @@ if (selectedStage === 5) {
                 エイトメロディーズを　とおしで　ひいてみて
               </p>
             </div>
+            <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="blue" />
           </div>
 
           <div className="mother-subpanel px-3 py-2">
@@ -3298,7 +3344,7 @@ if (selectedStage === 6) {
         <section className="rounded-[36px] border border-white/10 bg-[#171A22] p-3 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
           <div className="mb-2 flex items-center gap-3">
             <PixelInventorFace />
-            <div>
+            <div className="flex-1">
               <p className="text-[11px] font-black tracking-wide text-[#6B7280]">
                 STAGE {selectedStage}
               </p>
@@ -3306,6 +3352,7 @@ if (selectedStage === 6) {
                 本番だ　全体とおして　自分だけでひいてみて
               </p>
             </div>
+            <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
           </div>
 
           <div className="rounded-[24px] bg-[#2A2F3A] px-3 py-2">
