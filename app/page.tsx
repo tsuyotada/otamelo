@@ -1048,307 +1048,165 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
     safePhrases,
   ])
 
-  const previewItems = useMemo<PreviewItem[]>(() => {
-    if (selectedStage === 3) {
-      const visible = safePhrases[0].notes
-        .filter((item) => item.note !== "休符")
-        .slice(0, 5)
-        .map((item, index) => ({
-          id: `stage3-${index}-${item.note}`,
-          note: item.note,
-          length: item.length,
-          isCurrent: index === noteIndex,
-          isNext: index === noteIndex + 1,
-          isPhraseStart: false,
-          melodyNumber: 1,
-          phraseIndex: 0,
-          noteIndex: index,
-        }))
+const previewItems = useMemo<PreviewItem[]>(() => {
+  if (selectedStage === 3) {
+    const visible = safePhrases[0].notes
+      .filter((item) => item.note !== "休符")
+      .slice(0, 5)
+      .map((item, index) => ({
+        id: `stage3-${index}-${item.note}`,
+        note: item.note,
+        length: item.length,
+        isCurrent: index === noteIndex,
+        isNext: index === noteIndex + 1,
+        isPhraseStart: false,
+        melodyNumber: 1,
+        phraseIndex: 0,
+        noteIndex: index,
+      }))
 
-      return [
-        ...visible,
-        ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3"),
-      ]
-    }
+    return [
+      ...visible,
+      ...makePlaceholders(Math.max(0, 5 - visible.length), "stage3"),
+    ]
+  }
 
-if (selectedStage === 4) {
-  return (
-    <main className="min-h-screen bg-[#10234d] px-3 py-3 text-white">
-      <div className="mx-auto flex max-w-[1240px] flex-col gap-2">
-        <section className="mother-panel flex flex-col p-3 text-slate-900">
-          <div className="mb-2 flex items-center gap-3">
-            <PixelInventorFace />
-            <div>
-              <p className="mother-text-soft text-[11px] font-black tracking-wide">
-                STAGE {selectedStage}
-              </p>
-              <p className="mother-text-main text-base font-bold">
-                ほかのメロディーもひいてみてよ
-              </p>
-            </div>
-          </div>
-
-          <div className="mother-subpanel px-3 py-2">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="mother-text-main text-sm font-bold">メロディーをえらぶ</p>
-              <p className="mother-text-soft text-xs font-bold">
-                いまは {phraseIndex + 1} 番
-              </p>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 md:grid-cols-8">
-              {safePhrases.map((_, index) => {
-                const isCurrent = index === phraseIndex
-
-                return (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => {
-                      clearPlaybackTimer()
-                      clearCountdownTimer()
-                      setCountdown(null)
-                      setIsPlaying(false)
-                      setPlayMode("phrase")
-                      setPhraseIndex(index)
-                      setNoteIndex(0)
-                      setJudgeState("idle")
-                    }}
-                    className={`rounded-[16px] px-2 py-2 text-center font-black transition ${
-                      isCurrent
-                        ? "mother-step-card is-active"
-                        : "mother-step-card text-slate-600"
-                    }`}
-                  >
-                    <p className="text-[9px] font-bold">MELODY</p>
-                    <p className="mt-1 text-lg">{index + 1}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="mt-2 grid gap-2 md:grid-cols-[320px_1fr]">
-            <div className="mother-subpanel flex items-center justify-center p-3">
-              <div className="relative flex h-[360px] w-[140px] items-end justify-center rounded-full bg-[#f3ead1] px-3 py-3">
-                <div className="mother-neck relative h-full w-9 rounded-full">
-                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <div key={i} className="h-px w-full bg-white/10" />
-                    ))}
-                  </div>
-
-                  {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
-                    <div
-                      className="mother-indicator-next absolute left-1/2 h-2.5 w-10 -translate-x-1/2 rounded-full"
-                      style={{
-                        top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
-                        marginLeft: indicatorsAreClose ? "24px" : "0px",
-                      }}
-                    />
-                  )}
-
-                  {current.note !== "休符" && currentIndicatorTop !== null && (
-                    <div
-                      className="mother-indicator-current absolute left-1/2 h-3 w-12 -translate-x-1/2 rounded-full"
-                      style={{
-                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="absolute bottom-0 left-1/2 h-[74px] w-[88px] -translate-x-1/2 translate-y-5 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
-                  <div className="absolute left-[24px] top-[22px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute right-[24px] top-[22px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                  <div className="absolute left-0 top-[39px] h-[2px] w-full bg-slate-700" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-2">
-              <PreviewLane
-                items={previewItems}
-                onSelect={handlePreviewSelect}
-                showNotation={showNotation}
-                onToggleNotation={setShowNotation}
-              />
-
-              <div className="mother-subpanel flex min-h-[104px] flex-col gap-2 px-3 py-3">
-                <p className="mother-text-soft text-center text-sm font-bold">
-                  メロディー{phraseIndex + 1} をれんしゅう中
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleBack}
-                      className="mother-button-light px-3 py-2 text-sm font-semibold"
-                    >
-                      1音戻る
-                    </button>
-
-                    <button
-                      onClick={handleNext}
-                      className="mother-button-light px-3 py-2 text-sm font-semibold"
-                    >
-                      1音進む
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => void playCurrentNote()}
-                    className="mother-button-blue px-3 py-2 text-sm font-semibold"
-                  >
-                    お手本
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (isPlaying) {
-                        clearPlaybackTimer()
-                        clearCountdownTimer()
-                        setCountdown(null)
-                        setIsPlaying(false)
-                      } else {
-                        void handleStage4PlayMelody()
-                      }
-                    }}
-                    className="mother-button-blue px-3 py-2 text-sm font-semibold"
-                  >
-                    {isPlaying ? "とめる" : "このメロディーを再生"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mother-subpanel mt-2 flex flex-col items-center gap-2 px-4 py-3 text-center">
-            <div className="flex items-center gap-3">
-              <PixelInventorFace />
-              <p className="mother-text-main text-sm font-bold">
-                いろいろひいたら　ステージ選択にもどってよ
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                clearPlaybackTimer()
-                clearCountdownTimer()
-                setCountdown(null)
-                setIsPlaying(false)
-                setScreen("stageSelect")
-              }}
-              className="mother-button-light px-5 py-2.5 text-sm font-bold"
-            >
-              ステージ選択へ
-            </button>
-          </div>
-        </section>
-      </div>
-    </main>
-  )
-}
-
-    if (selectedStage === 5 || selectedStage === 6) {
-      const safeFlatIndex = Math.max(
-        0,
-        getFlatPlayableIndex(phraseIndex, noteIndex)
-      )
-
-      let windowStart = 0
-      if (safeFlatIndex >= 5) {
-        const candidateStart = 5 * Math.floor((safeFlatIndex - 5) / 5) + 5
-        const hasMoreAfterCurrentWindow =
-          flatPlayableNotes.length > candidateStart + 1
-        windowStart = hasMoreAfterCurrentWindow
-          ? candidateStart
-          : Math.max(0, flatPlayableNotes.length - 6)
-      }
-
-      const visible = flatPlayableNotes
-        .slice(windowStart, windowStart + 6)
-        .map((item, index) => {
-          const originalIndex = windowStart + index
-          return {
-            id: `stage56-${originalIndex}-${item.note}`,
-            note: item.note,
-            length: item.length,
-            isCurrent: originalIndex === safeFlatIndex,
-            isNext: originalIndex === safeFlatIndex + 1,
-            isPhraseStart: false,
-            melodyNumber: item.phraseIndex + 1,
-            phraseIndex: item.phraseIndex,
-            noteIndex: item.noteIndex,
-          }
-        })
-
-      return [
-        ...visible,
-        ...makePlaceholders(Math.max(0, 6 - visible.length), "stage56"),
-      ]
-    }
-
-    const items: PreviewItem[] = []
-    let p = phraseIndex
-    let n = noteIndex
-    let safety = 0
-
-    while (items.length < 5 && safety < 200) {
-      safety += 1
-      if (p >= safePhrases.length) break
-
-      const targetPhrase = safePhrases[p]
-      if (!targetPhrase) break
-
-      if (n >= targetPhrase.notes.length) {
-        if (playMode === "phrase") break
-        p += 1
-        n = 0
-        continue
-      }
-
-      const target = targetPhrase.notes[n]
-      const isCurrent = p === phraseIndex && n === noteIndex
-
-      if (target.note !== "休符") {
-        items.push({
-          id: `${p}-${n}-${target.note}`,
-          note: target.note,
-          length: target.length,
-          isCurrent,
-          isNext: false,
-          isPhraseStart: p !== phraseIndex && n === 0,
-          melodyNumber: p + 1,
-          phraseIndex: p,
-          noteIndex: n,
-        })
-      }
-
-      n += 1
-    }
-
-    const firstPreviewIndex = items.findIndex(
-      (item) => !item.isCurrent && !item.isPlaceholder
+  if (selectedStage === 4) {
+    const usableNotes = safePhrases[phraseIndex].notes.filter(
+      (item) => item.note !== "休符"
     )
 
-    if (firstPreviewIndex !== -1) {
-      items[firstPreviewIndex] = {
-        ...items[firstPreviewIndex],
-        isNext: true,
-      }
+    let windowStart = 0
+    if (noteIndex >= 4) {
+      const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
+      const hasMoreAfterCurrentWindow =
+        usableNotes.length > candidateStart + 1
+      windowStart = hasMoreAfterCurrentWindow
+        ? candidateStart
+        : Math.max(0, usableNotes.length - 5)
     }
 
-    return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "d")]
-  }, [
-    selectedStage,
-    safePhrases,
-    phraseIndex,
-    noteIndex,
-    playMode,
-    flatPlayableNotes,
-  ])
+    const visible = usableNotes
+      .slice(windowStart, windowStart + 5)
+      .map((item, index) => {
+        const originalIndex = windowStart + index
+        return {
+          id: `stage4-${phraseIndex}-${originalIndex}-${item.note}`,
+          note: item.note,
+          length: item.length,
+          isCurrent: originalIndex === noteIndex,
+          isNext: originalIndex === noteIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: phraseIndex + 1,
+          phraseIndex: phraseIndex,
+          noteIndex: originalIndex,
+        }
+      })
+
+    return [
+      ...visible,
+      ...makePlaceholders(Math.max(0, 5 - visible.length), "stage4"),
+    ]
+  }
+
+  if (selectedStage === 5 || selectedStage === 6) {
+    const safeFlatIndex = Math.max(
+      0,
+      getFlatPlayableIndex(phraseIndex, noteIndex)
+    )
+
+    let windowStart = 0
+    if (safeFlatIndex >= 5) {
+      const candidateStart = 5 * Math.floor((safeFlatIndex - 5) / 5) + 5
+      const hasMoreAfterCurrentWindow =
+        flatPlayableNotes.length > candidateStart + 1
+      windowStart = hasMoreAfterCurrentWindow
+        ? candidateStart
+        : Math.max(0, flatPlayableNotes.length - 6)
+    }
+
+    const visible = flatPlayableNotes
+      .slice(windowStart, windowStart + 6)
+      .map((item, index) => {
+        const originalIndex = windowStart + index
+        return {
+          id: `stage56-${originalIndex}-${item.note}`,
+          note: item.note,
+          length: item.length,
+          isCurrent: originalIndex === safeFlatIndex,
+          isNext: originalIndex === safeFlatIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: item.phraseIndex + 1,
+          phraseIndex: item.phraseIndex,
+          noteIndex: item.noteIndex,
+        }
+      })
+
+    return [
+      ...visible,
+      ...makePlaceholders(Math.max(0, 6 - visible.length), "stage56"),
+    ]
+  }
+
+  const items: PreviewItem[] = []
+  let p = phraseIndex
+  let n = noteIndex
+  let safety = 0
+
+  while (items.length < 5 && safety < 200) {
+    safety += 1
+    if (p >= safePhrases.length) break
+
+    const targetPhrase = safePhrases[p]
+    if (!targetPhrase) break
+
+    if (n >= targetPhrase.notes.length) {
+      if (playMode === "phrase") break
+      p += 1
+      n = 0
+      continue
+    }
+
+    const target = targetPhrase.notes[n]
+    const isCurrent = p === phraseIndex && n === noteIndex
+
+    if (target.note !== "休符") {
+      items.push({
+        id: `${p}-${n}-${target.note}`,
+        note: target.note,
+        length: target.length,
+        isCurrent,
+        isNext: false,
+        isPhraseStart: p !== phraseIndex && n === 0,
+        melodyNumber: p + 1,
+        phraseIndex: p,
+        noteIndex: n,
+      })
+    }
+
+    n += 1
+  }
+
+  const firstPreviewIndex = items.findIndex(
+    (item) => !item.isCurrent && !item.isPlaceholder
+  )
+
+  if (firstPreviewIndex !== -1) {
+    items[firstPreviewIndex] = {
+      ...items[firstPreviewIndex],
+      isNext: true,
+    }
+  }
+
+  return [...items, ...makePlaceholders(Math.max(0, 5 - items.length), "d")]
+}, [
+  selectedStage,
+  safePhrases,
+  phraseIndex,
+  noteIndex,
+  playMode,
+  flatPlayableNotes,
+])
 
   const currentIndicatorTop =
     getCalibratedTopPercentFromNote(current.note, tuningAnchors) ??
