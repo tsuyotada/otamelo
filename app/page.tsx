@@ -582,7 +582,7 @@ const minWidth = Math.max(460, leftStart * 2 + Math.max(visibleItems.length - 1,
             const labelToneClass = item.isCurrent
               ? "text-[#B38700]"
               : item.isNext
-              ? "text-[#2563EB]"
+              ? isDark ? "text-[#9CA3AF]" : "text-[#2563EB]"
               : isDark
               ? "text-slate-300"
               : "text-slate-500"
@@ -3360,7 +3360,7 @@ if (selectedStage === 6) {
 
                     {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
                       <div
-                        className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full bg-[#63A7FF] shadow-[0_0_0_2px_rgba(99,167,255,0.3)]"
+                        className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full bg-[#9CA3AF] shadow-[0_0_0_2px_rgba(156,163,175,0.25)]"
                         style={{
                           top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
                           marginLeft: indicatorsAreClose ? "26px" : "0px",
