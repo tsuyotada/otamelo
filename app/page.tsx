@@ -426,8 +426,9 @@ function getNotationMidi(note: string): number | null {
 }
 
 function getStaffPositionFromMidi(midi: number): number {
-  // E4 を五線の最下線とみなす簡易配置
-  return midi - 64
+  // 高音が見切れにくいように、基準を少し上げる
+  // もともと E4 基準だったものを A4 基準寄りにする
+  return midi - 69
 }
 
 function getDurationLabel(length: number) {
@@ -471,13 +472,13 @@ function StaffPreview({
   const visibleItems = items.filter((item) => !item.isPlaceholder)
 
   const lineGap = compact ? 10 : 12
-  const topBase = compact ? 28 : 32
+  const topBase = compact ? 40 : 44
   const noteWidth = compact ? 18 : 20
   const noteHeight = compact ? 12 : 14
   const stemHeight = compact ? 24 : 28
   const leftStart = compact ? 28 : 34
   const stepX = compact ? 72 : 84
-  const boxHeight = compact ? 164 : 182
+  const boxHeight = compact ? 180 : 200
   const minWidth = Math.max(520, leftStart * 2 + Math.max(visibleItems.length - 1, 0) * stepX + 90)
   const staffTop = topBase
   const staffBottom = topBase + lineGap * 4
