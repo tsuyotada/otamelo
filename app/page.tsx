@@ -79,11 +79,21 @@ type TuningAnchor = {
 
 type TuningSample = {
   freq: number
+  note: string
   at: number
 }
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
 const TUNING_AVERAGE_WINDOW_MS = 800
+const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
+const TUNING_MIN_RMS = 0.02
+const TUNING_MIN_FREQ = 180
+const TUNING_MAX_FREQ = 1100
+
+// 見える範囲の上限。
+// 1.0 をそのまま使うと顔に隠れるので、見えるギリギリを最高音として扱う。
+const OTAMATONE_VISIBLE_MIN = 0.0
+const OTAMATONE_VISIBLE_MAX = 0.84
 
 const defaultTuningAnchors: TuningAnchor[] = [
   {
@@ -211,6 +221,15 @@ function invLerp(a: number, b: number, value: number) {
   return (value - a) / (b - a)
 }
 
+function normalizeToVisiblePercent(normalized: number): number {
+  const visible = lerp(
+    OTAMATONE_VISIBLE_MIN,
+    OTAMATONE_VISIBLE_MAX,
+    clamp(normalized, 0, 1)
+  )
+  return visible * 100
+}
+
 function getOtamatoneNormalizedPosition(note: string): number | null {
   const anchors = [
     { note: "低いソ", pos: 0.0 },
@@ -249,7 +268,7 @@ function getOtamatoneNormalizedPosition(note: string): number | null {
 function getOtamatoneTopPercent(note: string): number | null {
   const normalized = getOtamatoneNormalizedPosition(note)
   if (normalized === null) return null
-  return normalized * 100
+  return normalizeToVisiblePercent(normalized)
 }
 
 function getCalibratedNormalizedPositionFromFrequency(
@@ -302,7 +321,7 @@ function getCalibratedTopPercentFromFrequency(
     tuningAnchors
   )
   if (normalized === null) return null
-  return normalized * 100
+  return normalizeToVisiblePercent(normalized)
 }
 
 function getCalibratedTopPercentFromNote(
@@ -1559,8 +1578,20 @@ export default function Page() {
 
     const tick = () => {
       analyser.getFloatTimeDomainData(buffer)
+
+      let rms = 0
+      for (let i = 0; i < buffer.length; i += 1) {
+        rms += buffer[i] * buffer[i]
+      }
+      rms = Math.sqrt(rms / buffer.length)
+
       const freq = getAutocorrelatedPitch(buffer, sampleRate)
-      const safeFreq = freq > 0 ? freq : 0
+      const isLoudEnough = rms >= TUNING_MIN_RMS
+      const isInOtamatoneRange =
+        freq >= TUNING_MIN_FREQ && freq <= TUNING_MAX_FREQ
+
+      const safeFreq =
+        isLoudEnough && isInOtamatoneRange && freq > 0 ? freq : 0
       const note = safeFreq > 0 ? closestNoteFromFrequency(safeFreq) : ""
 
       setDetectedFreq(safeFreq)
@@ -1569,12 +1600,12 @@ export default function Page() {
       if (screen === "tune") {
         const now = performance.now()
 
-        if (safeFreq > 0) {
+        if (safeFreq > 0 && note) {
           tuningSamplesRef.current = [
             ...tuningSamplesRef.current.filter(
               (item) => now - item.at <= TUNING_AVERAGE_WINDOW_MS
             ),
-            { freq: safeFreq, at: now },
+            { freq: safeFreq, note, at: now },
           ]
         } else {
           tuningSamplesRef.current = tuningSamplesRef.current.filter(
@@ -1586,12 +1617,33 @@ export default function Page() {
           const average =
             tuningSamplesRef.current.reduce((sum, item) => sum + item.freq, 0) /
             tuningSamplesRef.current.length
-          const averageNote = closestNoteFromFrequency(average)
+
+          const noteCountMap = new Map<string, number>()
+          for (const item of tuningSamplesRef.current) {
+            noteCountMap.set(item.note, (noteCountMap.get(item.note) ?? 0) + 1)
+          }
+
+          let dominantNote = ""
+          let dominantCount = 0
+          for (const [key, value] of noteCountMap.entries()) {
+            if (value > dominantCount) {
+              dominantNote = key
+              dominantCount = value
+            }
+          }
 
           setTuningAverageFreq(average)
-          setTuningAverageNote(averageNote)
-          setTuningLockedFreq(average)
-          setTuningLockedNote(averageNote)
+          setTuningAverageNote(dominantNote || closestNoteFromFrequency(average))
+
+          const isStableEnough =
+            tuningSamplesRef.current.length >= TUNING_LOCK_MIN_SAMPLE_COUNT &&
+            dominantNote !== "" &&
+            dominantCount / tuningSamplesRef.current.length >= 0.7
+
+          if (isStableEnough) {
+            setTuningLockedFreq(average)
+            setTuningLockedNote(dominantNote)
+          }
         } else {
           setTuningAverageFreq(0)
           setTuningAverageNote("")
@@ -1892,7 +1944,7 @@ export default function Page() {
                         <div
                           className="mother-indicator-current absolute left-1/2 h-3.5 w-16 -translate-x-1/2 rounded-full"
                           style={{
-                            top: `clamp(8px, calc(${currentTuningAnchor.pos * 100}% - 7px), calc(100% - 22px))`,
+                            top: `clamp(8px, calc(${normalizeToVisiblePercent(currentTuningAnchor.pos)}% - 7px), calc(100% - 22px))`,
                           }}
                         />
                       </div>
@@ -1925,6 +1977,20 @@ export default function Page() {
                     <div className="mt-4 h-px w-24 bg-slate-300" />
 
                     <p className="mt-4 text-sm font-bold text-slate-600">
+                      平均の候補
+                    </p>
+                    <p className="mt-3 min-h-[44px] text-4xl font-black leading-none text-[#1F325C]">
+                      {tuningAverageNote || "-"}
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-slate-600">
+                      {tuningAverageFreq > 0
+                        ? `${tuningAverageFreq.toFixed(2)} Hz`
+                        : ""}
+                    </p>
+
+                    <div className="mt-4 h-px w-24 bg-slate-300" />
+
+                    <p className="mt-4 text-sm font-bold text-slate-600">
                       記録する音
                     </p>
                     <p className="mt-3 min-h-[44px] text-4xl font-black leading-none text-[#1F325C]">
@@ -1937,7 +2003,7 @@ export default function Page() {
                     </p>
 
                     <p className="mt-3 text-[11px] font-bold text-slate-500">
-                      安定して取れた平均値を保持しています
+                      安定した平均音だけを保持します
                     </p>
                   </div>
 
@@ -1981,9 +2047,9 @@ export default function Page() {
 
                     <div className="mt-4 rounded-[18px] bg-white/70 px-4 py-3 text-center">
                       <p className="text-xs font-bold leading-relaxed text-slate-500">
-                        音が止まっても、最後に安定していた値を保持します。
+                        小さな生活音や音域外の音は無視します。
                         <br />
-                        よさそうならそのまま記録してください。
+                        安定した値だけを記録候補として保持します。
                       </p>
                     </div>
                   </div>
