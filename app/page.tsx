@@ -1629,6 +1629,16 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(true)
   }
 
+  const handleStage5Resume = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setPlayMode("full")
+    await ensureAudioReady()
+    setIsPlaying(true)
+  }
+
   const startMic = async () => {
     if (isMicEnabled) return true
 
@@ -3321,22 +3331,37 @@ if (selectedStage === 5) {
                     お手本
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isPlaying) {
+                  {isPlaying ? (
+                    <button
+                      type="button"
+                      onClick={() => {
                         clearPlaybackTimer()
                         clearCountdownTimer()
                         setCountdown(null)
                         setIsPlaying(false)
-                      } else {
-                        void handleStage5PlayAll()
-                      }
-                    }}
-                    className="mother-button-blue px-3 py-2 text-sm font-semibold"
-                  >
-                    {isPlaying ? "とめる" : "はじめから再生"}
-                  </button>
+                      }}
+                      className="mother-button-blue px-3 py-2 text-sm font-semibold"
+                    >
+                      とめる
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void handleStage5PlayAll()}
+                        className="mother-button-blue px-3 py-2 text-sm font-semibold"
+                      >
+                        はじめから再生
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleStage5Resume()}
+                        className="mother-button-light px-3 py-2 text-sm font-semibold"
+                      >
+                        とちゅうから再生
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
