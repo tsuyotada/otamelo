@@ -2245,14 +2245,16 @@ useEffect(() => {
                   key={stage.id}
                   type="button"
                   onClick={() => handleSelectStage(stage.id)}
-                  className="relative w-full rounded-[20px] bg-[#fffdf8] px-5 py-4 text-left border-2 border-[#d8d0bc] shadow-[0_4px_0_#c4bbab,0_2px_12px_rgba(0,0,0,0.08)] transition hover:-translate-y-[2px] hover:border-[#3F8CFF] hover:shadow-[0_8px_20px_rgba(63,140,255,0.18)]"
+                  className="relative w-full rounded-[20px] bg-[#fffdf8] px-5 py-3.5 text-left border-2 border-[#d8d0bc] shadow-[0_4px_0_#c4bbab,0_2px_12px_rgba(0,0,0,0.08)] transition hover:-translate-y-[2px] hover:border-[#3F8CFF] hover:shadow-[0_8px_20px_rgba(63,140,255,0.18)]"
                 >
-                  <div className="mb-1.5 inline-flex items-center rounded-full bg-[#3F8CFF] px-2.5 py-0.5">
-                    <span className="text-[10px] font-black tracking-widest text-white">STAGE {stage.id}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="shrink-0 inline-flex items-center rounded-full bg-[#3F8CFF] px-2.5 py-0.5">
+                      <span className="text-[10px] font-black tracking-widest text-white">STAGE {stage.id}</span>
+                    </div>
+                    <p className="mother-text-main text-sm font-black leading-tight">
+                      {stage.title}
+                    </p>
                   </div>
-                  <p className="mother-text-main text-base font-black leading-tight">
-                    {stage.title}
-                  </p>
                 </button>
               ))}
             </div>
