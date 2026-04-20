@@ -565,24 +565,18 @@ const minWidth = Math.max(460, leftStart * 2 + Math.max(visibleItems.length - 1,
 
             const headToneClass = item.isCurrent
               ? "border-[#D4A300] bg-[#FFD54A]"
-              : item.isNext
-              ? "border-[#3F8CFF] bg-[#EAF4FF]"
               : isDark
               ? "border-slate-100 bg-slate-100"
               : "border-slate-800 bg-slate-800"
 
             const stemToneClass = item.isCurrent
               ? "bg-[#D4A300]"
-              : item.isNext
-              ? "bg-[#3F8CFF]"
               : isDark
               ? "bg-slate-100"
               : "bg-slate-800"
 
             const labelToneClass = item.isCurrent
               ? "text-[#B38700]"
-              : item.isNext
-              ? isDark ? "text-[#9CA3AF]" : "text-[#2563EB]"
               : isDark
               ? "text-slate-300"
               : "text-slate-500"
@@ -643,7 +637,7 @@ const minWidth = Math.max(460, leftStart * 2 + Math.max(visibleItems.length - 1,
   }}
 >
   <p className={`text-[11px] font-black ${labelToneClass}`}>
-    {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
+    {item.isCurrent ? "いま" : ""}
   </p>
 </div>
               </div>
