@@ -2153,6 +2153,14 @@ useEffect(() => {
                 FOR OTAMATONE
               </p>
 
+              <img
+                src="/otamatone-logo.svg"
+                alt="Otamatone"
+                width={80}
+                height={80}
+                className="mt-3 opacity-70"
+              />
+
               <div className="mt-4 h-[3px] w-[min(48vw,300px)] rounded-full bg-white/70" />
             </div>
 
