@@ -3296,8 +3296,6 @@ if (selectedStage === 6) {
     <main className="min-h-screen bg-[#05070D] px-3 py-3 text-white">
       <div className="mx-auto flex max-w-[1240px] flex-col gap-2">
         <section className="rounded-[36px] border border-white/10 bg-[#171A22] p-3 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
-          
-          {/* タイトル */}
           <div className="mb-2 flex items-center gap-3">
             <PixelInventorFace />
             <div>
@@ -3310,7 +3308,6 @@ if (selectedStage === 6) {
             </div>
           </div>
 
-          {/* 進行 */}
           <div className="rounded-[24px] bg-[#2A2F3A] px-3 py-2">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-bold text-white">ぜんたいの進行</p>
@@ -3327,7 +3324,7 @@ if (selectedStage === 6) {
                 return (
                   <div
                     key={index}
-                    className={`rounded-[14px] px-2 py-2 text-center font-black ${
+                    className={`rounded-[16px] px-2 py-2 text-center font-black ${
                       isCurrent
                         ? "bg-[#FFD54A] text-[#1F325C]"
                         : isDone
@@ -3335,132 +3332,228 @@ if (selectedStage === 6) {
                         : "bg-[#3A4050] text-slate-300"
                     }`}
                   >
-                    <p className="text-[9px]">MELODY</p>
-                    <p className="text-lg">{index + 1}</p>
+                    <p className="text-[9px] font-bold">MELODY</p>
+                    <p className="mt-1 text-lg font-black">{index + 1}</p>
                   </div>
                 )
               })}
             </div>
 
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#3A4050]">
+            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-[#3A4050]">
               <div
-                className="h-full bg-[#FF6B6B]"
+                className="h-full rounded-full bg-[#FF6B6B] transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
 
-          {/* メイン */}
-          <div className="mt-2 grid gap-2 md:grid-cols-[360px_1fr]">
-            
-            {/* オタマトーン */}
-            <div className="rounded-[28px] bg-[#11141B] p-3">
+          <div className="mt-2 grid gap-2 md:grid-cols-[0.34fr_0.66fr]">
+            <div className="rounded-[28px] bg-[#11141B] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <div className="flex items-center justify-center">
-                <div className="relative flex h-[360px] w-[180px] items-end justify-center rounded-full bg-[#1a1f2b] px-4 py-4">
-                  
+                <div className="relative flex h-[360px] w-[180px] items-end justify-center rounded-full bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.26),rgba(255,255,255,0.10)_34%,rgba(255,255,255,0.03)_56%,transparent_74%)] px-4 py-4">
                   <div className="mother-neck relative h-full w-10 rounded-full">
-                    
-                    {current.note !== "休符" && currentIndicatorTop !== null && (
+                    <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                      {Array.from({ length: 9 }).map((_, i) => (
+                        <div key={i} className="h-px w-full bg-white/10" />
+                      ))}
+                    </div>
+
+                    {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
                       <div
-                        className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#FFD54A]"
-                        style={{ top: `${currentIndicatorTop}%` }}
+                        className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full bg-[#63A7FF] shadow-[0_0_0_2px_rgba(99,167,255,0.3)]"
+                        style={{
+                          top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                          marginLeft: indicatorsAreClose ? "26px" : "0px",
+                        }}
                       />
                     )}
+
+                    {current.note !== "休符" && currentIndicatorTop !== null && (
+                      <div
+                        className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#FFD54A] shadow-[0_0_0_4px_rgba(255,213,74,0.22)]"
+                        style={{
+                          top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                    <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                    <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 右 */}
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-2">
+              <PreviewLaneSix
+                items={previewItems}
+                variant="dark"
+                showNotation={showNotation}
+                onToggleNotation={setShowNotation}
+              />
 
-              {/* 音（横スクロール） */}
-              <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-2">
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {previewItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`min-w-[80px] min-h-[110px] rounded-[18px] border-2 px-2 py-2 text-center ${
-                        item.isCurrent
-                          ? "bg-[#FFD54A] text-black"
-                          : item.isNext
-                          ? "bg-[#DCEBFF] text-black"
-                          : "bg-[#343A4D]"
-                      }`}
-                    >
-                      <p className="text-xs">
-                        {item.isCurrent ? "いま" : item.isNext ? "つぎ" : ""}
-                      </p>
-                      <p className="text-lg font-bold">{item.note}</p>
-                      <p className="text-[10px] opacity-70">
-                        長さ {item.length}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* スコア */}
-              <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3">
-
-                {/* 👇 修正済み */}
-                <div className="flex items-center justify-between mb-2">
+              <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="text-sm font-bold text-blue-300">
                     マイクはいっています　スコアをきろくします
                   </p>
 
                   {isMicEnabled && (
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-400 text-red-300 text-xs font-bold">
-                      <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+                    <div className="flex items-center gap-2 rounded-full border border-red-400 bg-red-500/20 px-3 py-1 text-xs font-bold text-red-300">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
                       MIC ON
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <div className="bg-[#3A4050] rounded-[16px] p-2 text-center">
-                    <p className="text-xs">入力音</p>
-                    <p className="text-xl">{detectedNote || "-"}</p>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+                    <p className="mb-1 text-xs font-bold text-slate-300">
+                      入力音
+                    </p>
+                    <p className="min-h-[32px] text-2xl font-black text-white">
+                      {detectedNote || "-"}
+                    </p>
                   </div>
 
-                  <div className="bg-[#3A4050] rounded-[16px] p-2 text-center">
-                    <p className="text-xs">判定</p>
-                    <p className="text-xl">
+                  <div
+                    className={`rounded-[20px] px-3 py-3 text-center ${
+                      judgeState === "ok"
+                        ? "bg-[#DFF7DF] text-[#1B6B2C]"
+                        : judgeState === "miss"
+                        ? "bg-[#FFE2E2] text-[#B33737]"
+                        : "bg-[#3A4050] text-slate-300"
+                    }`}
+                  >
+                    <p className="mb-1 text-xs font-bold">判定</p>
+                    <p className="min-h-[32px] text-2xl font-black">
                       {judgeState === "ok"
-                        ? "OK"
+                        ? "OK!"
                         : judgeState === "miss"
                         ? "MISS"
                         : "-"}
                     </p>
                   </div>
 
-                  <div className="bg-[#162C63] rounded-[16px] p-2 text-center">
-                    <p className="text-xs">スコア</p>
-                    <p className="text-2xl">{stage6Score}</p>
+                  <div className="rounded-[20px] bg-[#162C63] px-3 py-3 text-center text-white shadow-[0_8px_20px_rgba(22,44,99,0.25)]">
+                    <p className="mb-1 text-xs font-bold text-white/70">
+                      スコア
+                    </p>
+                    <p className="min-h-[32px] text-3xl font-black">
+                      {stage6Score}
+                    </p>
                   </div>
 
-                  <div className="bg-[#3A4050] rounded-[16px] p-2 text-center">
-                    <p className="text-xs">成功数</p>
-                    <p className="text-xl">{stage6Hits}</p>
+                  <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+                    <p className="mb-1 text-xs font-bold text-slate-300">
+                      成功数
+                    </p>
+                    <p className="min-h-[32px] text-2xl font-black text-white">
+                      {stage6Hits}
+                    </p>
                   </div>
                 </div>
 
-                <div className="mt-3 flex gap-2 justify-center">
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                   <button
-                    onClick={handleStage6Start}
-                    className="mother-button-blue px-4 py-2 text-sm"
+                    type="button"
+                    onClick={() => {
+                      if (isPlaying || countdown !== null) {
+                        clearPlaybackTimer()
+                        clearCountdownTimer()
+                        setCountdown(null)
+                        setIsPlaying(false)
+                      } else {
+                        void handleStage6Start()
+                      }
+                    }}
+                    className="mother-button-blue px-5 py-2.5 text-sm font-bold"
                   >
-                    本番スタート
+                    {countdown !== null
+                      ? `${countdown}`
+                      : isPlaying
+                      ? "中断する"
+                      : "本番スタート"}
                   </button>
 
                   <button
-                    onClick={() => setScreen("stageSelect")}
-                    className="mother-button-light px-4 py-2 text-sm"
+                    type="button"
+                    onClick={() => {
+                      clearPlaybackTimer()
+                      clearCountdownTimer()
+                      setCountdown(null)
+                      setIsPlaying(false)
+                      resetStage6Result()
+                      setPhraseIndex(0)
+                      setNoteIndex(0)
+                      setJudgeState("idle")
+                      setDetectedNote("")
+                      setDetectedFreq(0)
+                    }}
+                    className="mother-button-light px-5 py-2.5 text-sm font-bold"
                   >
-                    戻る
+                    もういちど挑戦
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {stage6ResultOpen && (
+            <div className="mt-2 rounded-[24px] bg-[#2A2F3A] px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <p className="text-base font-black text-white">けっか</p>
+
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">スコア</p>
+                  <p className="mt-2 text-3xl font-black text-white">
+                    {stage6Score}
+                  </p>
+                </div>
+
+                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">成功数</p>
+                  <p className="mt-2 text-3xl font-black text-white">
+                    {stage6Hits} / {totalPlayableNotes}
+                  </p>
+                </div>
+
+                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
+                  <p className="text-xs font-bold text-slate-400">正答率</p>
+                  <p className="mt-2 text-3xl font-black text-white">
+                    {stage6Accuracy}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-2 rounded-[24px] bg-[#2A2F3A] px-4 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="text-sm font-bold text-white">
+                  うまくいかなかったら　もどって　練習だ
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  stopMic()
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-2.5 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
             </div>
           </div>
         </section>
