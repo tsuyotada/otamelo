@@ -2234,37 +2234,43 @@ useEffect(() => {
         >
           <section className="mother-panel px-6 py-6 text-slate-900">
             <div className="flex flex-col items-center text-center">
-              <p className="mother-text-soft text-sm font-black tracking-[0.18em]">
-                STAGE SELECT
-              </p>
-              <h1 className="mother-text-main mt-2 text-2xl font-black md:text-3xl">
+              <h1 className="mother-text-main text-2xl font-black md:text-3xl">
                 どこからやってみる？
               </h1>
             </div>
 
-            <div className="mt-8 flex flex-col gap-4">
+            <div className="mt-8 flex flex-col">
               {stages.map((stage, index) => {
                 const isCurrent = selectedStage === stage.id
+                const isLeft = index % 2 === 0
 
                 return (
-                  <div key={stage.id} className="relative">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectStage(stage.id)}
-                      className={`mother-white-panel relative w-full px-6 py-5 text-left transition hover:-translate-y-[2px] hover:shadow-lg ${
-                        isCurrent ? "ring-4 ring-[#3F8CFF]/35" : ""
-                      }`}
-                    >
-                      <p className="text-lg font-black text-[#3F8CFF]">
-                        STAGE {stage.id}
-                      </p>
-                      <p className="mother-text-main mt-1 text-lg font-black leading-tight">
-                        {stage.title}
-                      </p>
-                    </button>
+                  <div key={stage.id}>
+                    <div className={`w-[85%] sm:w-[72%] ${isLeft ? "mr-auto" : "ml-auto"}`}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectStage(stage.id)}
+                        className={`mother-white-panel relative w-full px-6 py-5 text-left transition hover:-translate-y-[2px] hover:shadow-lg ${
+                          isCurrent ? "ring-4 ring-[#3F8CFF]/35" : ""
+                        }`}
+                      >
+                        <p className="text-lg font-black text-[#3F8CFF]">
+                          STAGE {stage.id}
+                        </p>
+                        <p className="mother-text-main mt-1 text-lg font-black leading-tight">
+                          {stage.title}
+                        </p>
+                      </button>
+                    </div>
 
                     {index < stages.length - 1 && (
-                      <div className="pointer-events-none mx-auto h-6 w-1 rounded-full bg-[#FFD54A]" />
+                      <div className="pointer-events-none my-3 flex justify-center">
+                        <div
+                          className={`h-8 w-[3px] rounded-full bg-[#FFD54A]/80 ${
+                            isLeft ? "rotate-[20deg]" : "-rotate-[20deg]"
+                          }`}
+                        />
+                      </div>
                     )}
                   </div>
                 )
