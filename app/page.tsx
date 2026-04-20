@@ -943,7 +943,7 @@ function TempoSelector({
               isActive
                 ? variant === "blue"
                   ? "bg-[#3F8CFF] text-white shadow-[0_2px_8px_rgba(63,140,255,0.4)]"
-                  : "bg-[#FF6B6B] text-white shadow-[0_2px_8px_rgba(255,107,107,0.4)]"
+                  : "bg-white text-[#11141B] shadow-[0_2px_8px_rgba(255,255,255,0.2)]"
                 : "bg-white/10 text-slate-300"
             }`}
           >
