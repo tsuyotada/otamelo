@@ -765,6 +765,9 @@ function StaffPreview({
             const inBeam = beamedNoteIds.has(nd.item.id)
             const sx = stemX(nd)
             const clickable = !!onSelect
+            const isSharp = nd.item.note.includes("#")
+            const accidentalFontSize = compact ? lineGap * 1.8 : lineGap * 2
+            const accidentalX = nd.cx - noteRx - (compact ? 10 : 12)
 
             return (
               <g
@@ -776,7 +779,7 @@ function StaffPreview({
                 {ledgerYs.map((ly, li) => (
                   <line
                     key={li}
-                    x1={nd.cx - noteRx - 4}
+                    x1={nd.cx - noteRx - (isSharp ? 18 : 4)}
                     y1={ly}
                     x2={nd.cx + noteRx + 4}
                     y2={ly}
@@ -784,6 +787,21 @@ function StaffPreview({
                     strokeWidth={1.5}
                   />
                 ))}
+
+                {/* 臨時記号（#） */}
+                {isSharp && (
+                  <text
+                    x={accidentalX}
+                    y={nd.cy + accidentalFontSize * 0.38}
+                    textAnchor="middle"
+                    fontSize={accidentalFontSize}
+                    fontWeight="bold"
+                    fontFamily="serif"
+                    fill={color}
+                  >
+                    ♯
+                  </text>
+                )}
 
                 {/* 音符の玉 */}
                 <ellipse
