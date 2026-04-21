@@ -513,10 +513,10 @@ function StaffPreview({
 
   // レイアウト：ト音記号 → 拍子記号 → 音符
   const clefX = 14
-  const clefW = compact ? 26 : 30
-  const timeSigX = clefX + clefW + 2
-  const timeSigW = compact ? 16 : 18
-  const notesStart = timeSigX + timeSigW + (compact ? 10 : 12)
+  const clefW = compact ? 32 : 38          // ト音記号の描画幅
+  const timeSigX = clefX + clefW + 4       // ト音記号との間隔
+  const timeSigW = compact ? 20 : 24       // 拍子記号の幅
+  const notesStart = timeSigX + timeSigW + (compact ? 26 : 30)  // 音符開始位置（臨時記号が拍子記号と重ならない余白）
   // 音符間隔：基本幅＋音価ボーナス（見やすさ優先）
   const baseStep = compact ? 58 : 70        // 8分音符の基本間隔
   const extraPxPerBeat = compact ? 18 : 22  // 0.5拍を超えた分の追加幅
