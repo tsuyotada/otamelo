@@ -3494,18 +3494,12 @@ if (selectedStage === 6) {
 {/* スコアエリア */}
 <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
   
-  {/* テキスト + MIC */}
-  <div className="mb-2 flex items-center justify-between gap-2">
-    <p className="text-sm font-bold text-[#FFB4B4]">
-      マイクはいっています　スコアをきろくします
-    </p>
-
-    {isMicEnabled && (
-      <div className="flex items-center gap-2 rounded-full border border-red-500 bg-red-500/25 px-3 py-1 text-xs font-bold text-[#FFD0D0]">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-        MIC ON
-      </div>
-    )}
+  {/* MIC ON バッジ */}
+  <div className="mb-2 flex items-center justify-end gap-2">
+    <div className="flex items-center gap-2 rounded-full border border-red-500 bg-red-500/25 px-3 py-1 text-xs font-bold text-[#FFD0D0]">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+      MIC ON
+    </div>
   </div>
 
   {/* スコア表示 */}
@@ -3537,10 +3531,9 @@ if (selectedStage === 6) {
       </p>
     </div>
 
-    {/* 👇 赤系に統一 */}
-    <div className="rounded-[20px] bg-[#3A1F24] px-3 py-3 text-center text-white shadow-[0_8px_20px_rgba(255,80,80,0.25)]">
-      <p className="mb-1 text-xs font-bold text-[#FFB4B4]">スコア</p>
-      <p className="min-h-[32px] text-3xl font-black">
+    <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+      <p className="mb-1 text-xs font-bold text-slate-300">スコア</p>
+      <p className="min-h-[32px] text-3xl font-black text-white">
         {stage6Score}
       </p>
     </div>
