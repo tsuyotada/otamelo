@@ -517,8 +517,8 @@ function StaffPreview({
   const timeSigX = clefX + clefW + 2
   const timeSigW = compact ? 16 : 18
   const notesStart = timeSigX + timeSigW + (compact ? 8 : 10)
-  const noteStepX = compact ? 52 : 62
-  const svgWidth = Math.max(460, notesStart + Math.max(0, visibleItems.length - 1) * noteStepX + 56)
+  // 音価に比例した横間隔（1拍あたりのピクセル数）
+  const pxPerBeat = compact ? 30 : 36
 
   // MIDI → Y座標（ダイアトニックステップ基準）
   function getNoteY(midi: number): number {
@@ -527,8 +527,8 @@ function StaffPreview({
     return staffBottom - stepsAboveE4 * (lineGap / 2)
   }
 
-  // B4(中間線)のY座標：E4から4ダイアトニックステップ上
-  const B4_Y = staffBottom - 4 * (lineGap / 2) // = staffTop + 2 * lineGap
+  // B4(中間線)のY座標
+  const B4_Y = staffBottom - 4 * (lineGap / 2)
 
   // 音符種別の判定
   type NoteType = "whole" | "half" | "quarter" | "eighth"
@@ -549,16 +549,36 @@ function StaffPreview({
     noteType: NoteType
   }
 
-  const noteDataList: NoteData[] = visibleItems.flatMap((item, index) => {
+  // 音符データ：音価ベースのX座標で配置
+  const noteDataList: NoteData[] = []
+  let cumBeats = 0
+  for (const item of visibleItems) {
     const midi = getNotationMidi(item.note)
-    if (midi === null) return []
-    const cy = getNoteY(midi)
-    const cx = notesStart + index * noteStepX
-    // 中間線(B4)より下の音は符尾を上に、上の音は下に
-    const stemUp = cy > B4_Y
-    const noteType = getNoteType(item.length)
-    return [{ item, index, midi, cy, cx, stemUp, noteType }]
-  })
+    if (midi !== null) {
+      const cy = getNoteY(midi)
+      const cx = notesStart + cumBeats * pxPerBeat
+      const stemUp = cy > B4_Y
+      const noteType = getNoteType(item.length)
+      noteDataList.push({ item, index: noteDataList.length, midi, cy, cx, stemUp, noteType })
+    }
+    cumBeats += item.length
+  }
+
+  const totalBeats = visibleItems.reduce((s, it) => s + it.length, 0)
+  const svgWidth = Math.max(460, notesStart + totalBeats * pxPerBeat + 60)
+
+  // 小節線のX座標（4拍ごと、最後は除く）
+  const barlineXs: number[] = []
+  {
+    let bt = 0
+    for (const item of visibleItems) {
+      bt += item.length
+      if (bt > 0 && Math.abs(bt % 4) < 0.001) {
+        const x = notesStart + bt * pxPerBeat
+        if (x < svgWidth - 20) barlineXs.push(x)
+      }
+    }
+  }
 
   // 符尾のX座標（stem-up: 右端、stem-down: 左端）
   function stemX(nd: NoteData, up?: boolean): number {
@@ -571,28 +591,32 @@ function StaffPreview({
     return nd.stemUp ? nd.cy - stemLen : nd.cy + stemLen
   }
 
-  // ビームグループの型：グループ全体でstem方向・beam端点を決定
+  // ビームグループの型
   type BeamGroupData = {
     notes: NoteData[]
     groupStemUp: boolean
-    beamLeftY: number
-    beamRightY: number
+    beamLeftY: number  // 最初のstem先端Y
+    beamRightY: number // 最後のstem先端Y
+    beamFSX: number    // 最初のstem X
+    beamLSX: number    // 最後のstem X
   }
 
   // グループ全体のbeam計算
   function buildBeamGroup(notes: NoteData[]): BeamGroupData {
-    // 平均Y座標でstem方向を決定（B4中間線より下＝stem上向き）
+    // 平均Y座標でstem方向を一括決定
     const avgCy = notes.reduce((s, n) => s + n.cy, 0) / notes.length
     const groupStemUp = avgCy > B4_Y
 
     const first = notes[0]
     const last = notes[notes.length - 1]
+    const fsx = groupStemUp ? first.cx + noteRx : first.cx - noteRx
+    const lsx = groupStemUp ? last.cx + noteRx : last.cx - noteRx
 
-    // 標準符尾長からbeam端点を計算
+    // 各stem先端Y（標準符尾長）
     let beamLeftY = groupStemUp ? first.cy - stemLen : first.cy + stemLen
     let beamRightY = groupStemUp ? last.cy - stemLen : last.cy + stemLen
 
-    // 傾きを最大 1.5 線間隔に制限（視認性確保）
+    // 傾きを最大1.5線間隔に制限
     const maxTilt = lineGap * 1.5
     const tilt = Math.abs(beamRightY - beamLeftY)
     if (tilt > maxTilt) {
@@ -602,11 +626,12 @@ function StaffPreview({
       beamRightY = center + (dir * maxTilt) / 2
     }
 
-    // 全音符の最短符尾長を保証（2.5 線間隔）
+    // 全音符の最短符尾長を保証（2.5線間隔）
     const minStem = lineGap * 2.5
     for (let i = 0; i < notes.length; i++) {
       const nd = notes[i]
-      const t = notes.length > 1 ? i / (notes.length - 1) : 0
+      const sx = groupStemUp ? nd.cx + noteRx : nd.cx - noteRx
+      const t = fsx === lsx ? 0 : (sx - fsx) / (lsx - fsx)
       const beamY = beamLeftY + t * (beamRightY - beamLeftY)
       const actualLen = groupStemUp ? nd.cy - beamY : beamY - nd.cy
       if (actualLen < minStem) {
@@ -621,30 +646,42 @@ function StaffPreview({
       }
     }
 
-    return { notes, groupStemUp, beamLeftY, beamRightY }
+    return { notes, groupStemUp, beamLeftY, beamRightY, beamFSX: fsx, beamLSX: lsx }
   }
 
-  // beam上の任意X位置でのY座標（線形補間）
-  function beamYAtX(cx: number, group: BeamGroupData): number {
-    const first = group.notes[0]
-    const last = group.notes[group.notes.length - 1]
-    if (first.cx === last.cx) return group.beamLeftY
-    const t = (cx - first.cx) / (last.cx - first.cx)
+  // stem X位置でのbeam Y（線形補間）
+  function beamYAtStemX(sx: number, group: BeamGroupData): number {
+    if (group.beamFSX === group.beamLSX) return group.beamLeftY
+    const t = (sx - group.beamFSX) / (group.beamLSX - group.beamFSX)
     return group.beamLeftY + t * (group.beamRightY - group.beamLeftY)
   }
 
-  // 8分音符をグループ化
+  // 8分音符を4/4拍子ルールでグループ化（前半2拍・後半2拍）
   const beamGroupsData: BeamGroupData[] = []
-  let currentGroup: NoteData[] = []
-  for (const nd of noteDataList) {
-    if (nd.noteType === "eighth") {
-      currentGroup.push(nd)
-    } else {
-      if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
-      currentGroup = []
+  {
+    let currentGroup: NoteData[] = []
+    let groupBeats = 0
+    const MAX_BEATS = 2.0 // 8分音符4つ = 2拍
+
+    for (const nd of noteDataList) {
+      if (nd.noteType === "eighth") {
+        const dur = nd.item.length
+        if (groupBeats + dur > MAX_BEATS + 0.001) {
+          if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
+          currentGroup = [nd]
+          groupBeats = dur
+        } else {
+          currentGroup.push(nd)
+          groupBeats += dur
+        }
+      } else {
+        if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
+        currentGroup = []
+        groupBeats = 0
+      }
     }
+    if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
   }
-  if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
   const beamedNoteIds = new Set(beamGroupsData.flatMap((g) => g.notes.map((n) => n.item.id)))
 
   // 色
@@ -742,6 +779,19 @@ function StaffPreview({
             strokeWidth={1.5}
           />
 
+          {/* 小節線（4拍ごと） */}
+          {barlineXs.map((x, i) => (
+            <line
+              key={`barline-${i}`}
+              x1={x}
+              y1={staffTop}
+              x2={x}
+              y2={staffBottom}
+              stroke={staffColor}
+              strokeWidth={1.5}
+            />
+          ))}
+
           {/* 音符・加線・ラベル */}
           {noteDataList.map((nd) => {
             const color = getColor(nd)
@@ -826,24 +876,22 @@ function StaffPreview({
 
           {/* ビーム（8分音符グループ） */}
           {beamGroupsData.map((group, gi) => {
-            const { groupStemUp, beamLeftY, beamRightY } = group
+            const { groupStemUp, beamLeftY, beamRightY, beamFSX, beamLSX } = group
             const first = group.notes[0]
-            const last = group.notes[group.notes.length - 1]
-            const fsx = stemX(first, groupStemUp)
-            const lsx = stemX(last, groupStemUp)
-            // stem-up: beam上辺が符尾先端、stem-down: beam下辺が符尾先端
-            const halfBeam = beamThickness / 2
-            const topL = groupStemUp ? beamLeftY - halfBeam : beamLeftY + halfBeam
-            const botL = groupStemUp ? beamLeftY + halfBeam : beamLeftY - halfBeam
-            const topR = groupStemUp ? beamRightY - halfBeam : beamRightY + halfBeam
-            const botR = groupStemUp ? beamRightY + halfBeam : beamRightY - halfBeam
+            // stem-up: beamは上（小さいY）、beam下辺がstem先端
+            // stem-down: beamは下（大きいY）、beam上辺がstem先端
+            const fTopY = groupStemUp ? beamLeftY - beamThickness : beamLeftY
+            const fBotY = groupStemUp ? beamLeftY : beamLeftY + beamThickness
+            const lTopY = groupStemUp ? beamRightY - beamThickness : beamRightY
+            const lBotY = groupStemUp ? beamRightY : beamRightY + beamThickness
 
             return (
               <g key={gi}>
-                {/* 各音符の符尾（グループ全体で統一した方向） */}
+                {/* 各音符の符尾（グループ全体で統一した方向、beam先端まで延伸） */}
                 {group.notes.map((nd) => {
                   const sx = stemX(nd, groupStemUp)
-                  const tipY = beamYAtX(nd.cx, group)
+                  // stem先端 = beam近辺（stem-up: beam下辺、stem-down: beam上辺）
+                  const tipY = beamYAtStemX(sx, group)
                   return (
                     <line
                       key={nd.item.id}
@@ -857,9 +905,9 @@ function StaffPreview({
                   )
                 })}
 
-                {/* ビーム線（台形ポリゴンで傾きを再現） */}
+                {/* ビーム線（台形ポリゴン：stem先端同士を結ぶ） */}
                 <polygon
-                  points={`${fsx},${topL} ${lsx},${topR} ${lsx},${botR} ${fsx},${botL}`}
+                  points={`${beamFSX},${fTopY} ${beamLSX},${lTopY} ${beamLSX},${lBotY} ${beamFSX},${fBotY}`}
                   fill={getColor(first)}
                 />
               </g>
