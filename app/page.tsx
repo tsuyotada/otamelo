@@ -560,41 +560,92 @@ function StaffPreview({
     return [{ item, index, midi, cy, cx, stemUp, noteType }]
   })
 
-  // 8分音符をグループ化してビームを描画
-  type BeamGroup = { notes: NoteData[] }
-  const beamGroups: BeamGroup[] = []
+  // 符尾のX座標（stem-up: 右端、stem-down: 左端）
+  function stemX(nd: NoteData, up?: boolean): number {
+    const dir = up !== undefined ? up : nd.stemUp
+    return dir ? nd.cx + noteRx : nd.cx - noteRx
+  }
+
+  // 符尾先端のY座標（単独音符・ビームなし時）
+  function stemTipY(nd: NoteData): number {
+    return nd.stemUp ? nd.cy - stemLen : nd.cy + stemLen
+  }
+
+  // ビームグループの型：グループ全体でstem方向・beam端点を決定
+  type BeamGroupData = {
+    notes: NoteData[]
+    groupStemUp: boolean
+    beamLeftY: number
+    beamRightY: number
+  }
+
+  // グループ全体のbeam計算
+  function buildBeamGroup(notes: NoteData[]): BeamGroupData {
+    // 平均Y座標でstem方向を決定（B4中間線より下＝stem上向き）
+    const avgCy = notes.reduce((s, n) => s + n.cy, 0) / notes.length
+    const groupStemUp = avgCy > B4_Y
+
+    const first = notes[0]
+    const last = notes[notes.length - 1]
+
+    // 標準符尾長からbeam端点を計算
+    let beamLeftY = groupStemUp ? first.cy - stemLen : first.cy + stemLen
+    let beamRightY = groupStemUp ? last.cy - stemLen : last.cy + stemLen
+
+    // 傾きを最大 1.5 線間隔に制限（視認性確保）
+    const maxTilt = lineGap * 1.5
+    const tilt = Math.abs(beamRightY - beamLeftY)
+    if (tilt > maxTilt) {
+      const center = (beamLeftY + beamRightY) / 2
+      const dir = beamRightY > beamLeftY ? 1 : -1
+      beamLeftY = center - (dir * maxTilt) / 2
+      beamRightY = center + (dir * maxTilt) / 2
+    }
+
+    // 全音符の最短符尾長を保証（2.5 線間隔）
+    const minStem = lineGap * 2.5
+    for (let i = 0; i < notes.length; i++) {
+      const nd = notes[i]
+      const t = notes.length > 1 ? i / (notes.length - 1) : 0
+      const beamY = beamLeftY + t * (beamRightY - beamLeftY)
+      const actualLen = groupStemUp ? nd.cy - beamY : beamY - nd.cy
+      if (actualLen < minStem) {
+        const deficit = minStem - actualLen
+        if (groupStemUp) {
+          beamLeftY -= deficit
+          beamRightY -= deficit
+        } else {
+          beamLeftY += deficit
+          beamRightY += deficit
+        }
+      }
+    }
+
+    return { notes, groupStemUp, beamLeftY, beamRightY }
+  }
+
+  // beam上の任意X位置でのY座標（線形補間）
+  function beamYAtX(cx: number, group: BeamGroupData): number {
+    const first = group.notes[0]
+    const last = group.notes[group.notes.length - 1]
+    if (first.cx === last.cx) return group.beamLeftY
+    const t = (cx - first.cx) / (last.cx - first.cx)
+    return group.beamLeftY + t * (group.beamRightY - group.beamLeftY)
+  }
+
+  // 8分音符をグループ化
+  const beamGroupsData: BeamGroupData[] = []
   let currentGroup: NoteData[] = []
   for (const nd of noteDataList) {
     if (nd.noteType === "eighth") {
       currentGroup.push(nd)
     } else {
-      if (currentGroup.length >= 2) beamGroups.push({ notes: currentGroup })
+      if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
       currentGroup = []
     }
   }
-  if (currentGroup.length >= 2) beamGroups.push({ notes: currentGroup })
-  const beamedNoteIds = new Set(beamGroups.flatMap((g) => g.notes.map((n) => n.item.id)))
-
-  // 符尾のX座標（stem-up: 右端、stem-down: 左端）
-  function stemX(nd: NoteData): number {
-    return nd.stemUp ? nd.cx + noteRx : nd.cx - noteRx
-  }
-
-  // 符尾先端のY座標（ビームなし時）
-  function stemTipY(nd: NoteData): number {
-    return nd.stemUp ? nd.cy - stemLen : nd.cy + stemLen
-  }
-
-  // ビームグループ内での各音符の符尾先端Y（ビームライン上の位置）
-  function beamStemTipY(nd: NoteData, group: BeamGroup): number {
-    const first = group.notes[0]
-    const last = group.notes[group.notes.length - 1]
-    const firstTip = stemTipY(first)
-    const lastTip = stemTipY(last)
-    if (first.cx === last.cx) return firstTip
-    const t = (nd.cx - first.cx) / (last.cx - first.cx)
-    return firstTip + t * (lastTip - firstTip)
-  }
+  if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
+  const beamedNoteIds = new Set(beamGroupsData.flatMap((g) => g.notes.map((n) => n.item.id)))
 
   // 色
   const staffColor = isDark ? "#667085" : "#94a3b8"
@@ -774,16 +825,25 @@ function StaffPreview({
           })}
 
           {/* ビーム（8分音符グループ） */}
-          {beamGroups.map((group, gi) => {
+          {beamGroupsData.map((group, gi) => {
+            const { groupStemUp, beamLeftY, beamRightY } = group
             const first = group.notes[0]
-            const beamColor = getColor(first)
+            const last = group.notes[group.notes.length - 1]
+            const fsx = stemX(first, groupStemUp)
+            const lsx = stemX(last, groupStemUp)
+            // stem-up: beam上辺が符尾先端、stem-down: beam下辺が符尾先端
+            const halfBeam = beamThickness / 2
+            const topL = groupStemUp ? beamLeftY - halfBeam : beamLeftY + halfBeam
+            const botL = groupStemUp ? beamLeftY + halfBeam : beamLeftY - halfBeam
+            const topR = groupStemUp ? beamRightY - halfBeam : beamRightY + halfBeam
+            const botR = groupStemUp ? beamRightY + halfBeam : beamRightY - halfBeam
 
             return (
               <g key={gi}>
-                {/* 各音符の符尾 */}
+                {/* 各音符の符尾（グループ全体で統一した方向） */}
                 {group.notes.map((nd) => {
-                  const sx = stemX(nd)
-                  const tipY = beamStemTipY(nd, group)
+                  const sx = stemX(nd, groupStemUp)
+                  const tipY = beamYAtX(nd.cx, group)
                   return (
                     <line
                       key={nd.item.id}
@@ -797,22 +857,11 @@ function StaffPreview({
                   )
                 })}
 
-                {/* ビーム線 */}
-                {(() => {
-                  const f = group.notes[0]
-                  const l = group.notes[group.notes.length - 1]
-                  const fsx = stemX(f)
-                  const lsx = stemX(l)
-                  const fty = beamStemTipY(f, group)
-                  const lty = beamStemTipY(l, group)
-                  const offset = f.stemUp ? beamThickness / 2 : -beamThickness / 2
-                  return (
-                    <polygon
-                      points={`${fsx},${fty - offset} ${lsx},${lty - offset} ${lsx},${lty + offset} ${fsx},${fty + offset}`}
-                      fill={beamColor}
-                    />
-                  )
-                })()}
+                {/* ビーム線（台形ポリゴンで傾きを再現） */}
+                <polygon
+                  points={`${fsx},${topL} ${lsx},${topR} ${lsx},${botR} ${fsx},${botL}`}
+                  fill={getColor(first)}
+                />
               </g>
             )
           })}
