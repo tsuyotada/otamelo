@@ -516,9 +516,10 @@ function StaffPreview({
   const clefW = compact ? 26 : 30
   const timeSigX = clefX + clefW + 2
   const timeSigW = compact ? 16 : 18
-  const notesStart = timeSigX + timeSigW + (compact ? 8 : 10)
-  // 音価に比例した横間隔（1拍あたりのピクセル数）
-  const pxPerBeat = compact ? 30 : 36
+  const notesStart = timeSigX + timeSigW + (compact ? 10 : 12)
+  // 音符間隔：基本幅＋音価ボーナス（見やすさ優先）
+  const baseStep = compact ? 58 : 70        // 8分音符の基本間隔
+  const extraPxPerBeat = compact ? 18 : 22  // 0.5拍を超えた分の追加幅
 
   // MIDI → Y座標（ダイアトニックステップ基準）
   function getNoteY(midi: number): number {
@@ -549,36 +550,21 @@ function StaffPreview({
     noteType: NoteType
   }
 
-  // 音符データ：音価ベースのX座標で配置
+  // 音符データ：音価ベースの可変間隔で配置
   const noteDataList: NoteData[] = []
-  let cumBeats = 0
+  let noteX = notesStart
   for (const item of visibleItems) {
     const midi = getNotationMidi(item.note)
     if (midi !== null) {
       const cy = getNoteY(midi)
-      const cx = notesStart + cumBeats * pxPerBeat
       const stemUp = cy > B4_Y
       const noteType = getNoteType(item.length)
-      noteDataList.push({ item, index: noteDataList.length, midi, cy, cx, stemUp, noteType })
+      noteDataList.push({ item, index: noteDataList.length, midi, cy, cx: noteX, stemUp, noteType })
     }
-    cumBeats += item.length
+    noteX += baseStep + Math.max(0, item.length - 0.5) * extraPxPerBeat
   }
 
-  const totalBeats = visibleItems.reduce((s, it) => s + it.length, 0)
-  const svgWidth = Math.max(460, notesStart + totalBeats * pxPerBeat + 60)
-
-  // 小節線のX座標（4拍ごと、最後は除く）
-  const barlineXs: number[] = []
-  {
-    let bt = 0
-    for (const item of visibleItems) {
-      bt += item.length
-      if (bt > 0 && Math.abs(bt % 4) < 0.001) {
-        const x = notesStart + bt * pxPerBeat
-        if (x < svgWidth - 20) barlineXs.push(x)
-      }
-    }
-  }
+  const svgWidth = Math.max(460, noteX + 30)
 
   // 符尾のX座標（stem-up: 右端、stem-down: 左端）
   function stemX(nd: NoteData, up?: boolean): number {
@@ -734,11 +720,11 @@ function StaffPreview({
             />
           ))}
 
-          {/* ト音記号 */}
+          {/* ト音記号（ベースラインを第1線=E4に合わせる） */}
           <text
-            x={clefX - 2}
-            y={staffBottom + lineGap * 1.4}
-            fontSize={lineGap * 6.8}
+            x={clefX}
+            y={staffBottom + lineGap * 0.3}
+            fontSize={lineGap * 6}
             fontFamily="'Segoe UI Symbol', 'Apple Symbols', 'Arial Unicode MS', 'FreeSerif', serif"
             fill={clefColor}
           >
@@ -769,28 +755,6 @@ function StaffPreview({
             4
           </text>
 
-          {/* 小節線（開始） */}
-          <line
-            x1={notesStart - 6}
-            y1={staffTop}
-            x2={notesStart - 6}
-            y2={staffBottom}
-            stroke={staffColor}
-            strokeWidth={1.5}
-          />
-
-          {/* 小節線（4拍ごと） */}
-          {barlineXs.map((x, i) => (
-            <line
-              key={`barline-${i}`}
-              x1={x}
-              y1={staffTop}
-              x2={x}
-              y2={staffBottom}
-              stroke={staffColor}
-              strokeWidth={1.5}
-            />
-          ))}
 
           {/* 音符・加線・ラベル */}
           {noteDataList.map((nd) => {
