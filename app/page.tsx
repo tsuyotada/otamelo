@@ -460,34 +460,28 @@ function getNotationMidi(note: string): number | null {
   return japaneseNoteToMidi(note)
 }
 
-function getStaffPositionFromMidi(midi: number): number {
-  // 高音が見切れにくいように、基準を少し上げる
-  // もともと E4 基準だったものを A4 基準寄りにする
-  return midi - 69
+// MIDI番号を音名のダイアトニックステップに変換（半音は自然音として扱う）
+function midiToDiatonicStep(midi: number): number {
+  // C=0, D=1, E=2, F=3, G=4, A=5, B=6（半音は下の自然音に丸める）
+  const chromaToDiatonic = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6]
+  const pitchClass = midi % 12
+  const octave = Math.floor(midi / 12) - 1
+  return octave * 7 + chromaToDiatonic[pitchClass]
 }
 
-function getDurationLabel(length: number) {
-  if (length >= 2) return "2"
-  if (length >= 1) return "1"
-  return "0.5"
-}
+// E4(MIDI 64)のダイアトニックステップ = 4*7+2 = 30
+// トレブル譜の第1線(下)がE4
+const E4_DIATONIC = 30
 
-function getLedgerOffsets(noteCenterY: number, staffTop: number, staffBottom: number, lineGap: number) {
-  const offsets: number[] = []
-
-  if (noteCenterY < staffTop) {
-    for (let y = staffTop - lineGap; y >= noteCenterY - 1; y -= lineGap) {
-      offsets.push(y)
-    }
+function getLedgerLineYs(noteCenterY: number, staffTop: number, staffBottom: number, lineGap: number): number[] {
+  const lines: number[] = []
+  if (noteCenterY < staffTop - 1) {
+    for (let y = staffTop - lineGap; y >= noteCenterY - 1; y -= lineGap) lines.push(y)
   }
-
-  if (noteCenterY > staffBottom) {
-    for (let y = staffBottom + lineGap; y <= noteCenterY + 1; y += lineGap) {
-      offsets.push(y)
-    }
+  if (noteCenterY > staffBottom + 1) {
+    for (let y = staffBottom + lineGap; y <= noteCenterY + 1; y += lineGap) lines.push(y)
   }
-
-  return offsets
+  return lines
 }
 
 function StaffPreview({
@@ -506,17 +500,112 @@ function StaffPreview({
   const isDark = variant === "dark"
   const visibleItems = items.filter((item) => !item.isPlaceholder)
 
-const lineGap = compact ? 9 : 11
-const topBase = compact ? 34 : 40
-  const noteWidth = compact ? 18 : 20
-  const noteHeight = compact ? 12 : 14
-  const stemHeight = compact ? 24 : 28
-  const leftStart = compact ? 28 : 34
-const stepX = compact ? 62 : 74
-const boxHeight = compact ? 156 : 176
-const minWidth = Math.max(460, leftStart * 2 + Math.max(visibleItems.length - 1, 0) * stepX + 80)
-  const staffTop = topBase
-  const staffBottom = topBase + lineGap * 4
+  // 五線の寸法
+  const lineGap = compact ? 10 : 12
+  const staffTop = compact ? 38 : 46
+  const staffBottom = staffTop + lineGap * 4
+  const svgHeight = compact ? 148 : 172
+
+  // 音符の形状
+  const noteRx = compact ? 6.5 : 7.5
+  const noteRy = compact ? 4.2 : 4.8
+  const stemLen = lineGap * 3.5
+
+  // レイアウト：ト音記号 → 拍子記号 → 音符
+  const clefX = 14
+  const clefW = compact ? 26 : 30
+  const timeSigX = clefX + clefW + 2
+  const timeSigW = compact ? 16 : 18
+  const notesStart = timeSigX + timeSigW + (compact ? 8 : 10)
+  const noteStepX = compact ? 52 : 62
+  const svgWidth = Math.max(460, notesStart + Math.max(0, visibleItems.length - 1) * noteStepX + 56)
+
+  // MIDI → Y座標（ダイアトニックステップ基準）
+  function getNoteY(midi: number): number {
+    const diatonic = midiToDiatonicStep(midi)
+    const stepsAboveE4 = diatonic - E4_DIATONIC
+    return staffBottom - stepsAboveE4 * (lineGap / 2)
+  }
+
+  // B4(中間線)のY座標：E4から4ダイアトニックステップ上
+  const B4_Y = staffBottom - 4 * (lineGap / 2) // = staffTop + 2 * lineGap
+
+  // 音符種別の判定
+  type NoteType = "whole" | "half" | "quarter" | "eighth"
+  function getNoteType(length: number): NoteType {
+    if (length >= 4) return "whole"
+    if (length >= 2) return "half"
+    if (length >= 1) return "quarter"
+    return "eighth"
+  }
+
+  type NoteData = {
+    item: PreviewItem
+    index: number
+    midi: number
+    cy: number
+    cx: number
+    stemUp: boolean
+    noteType: NoteType
+  }
+
+  const noteDataList: NoteData[] = visibleItems.flatMap((item, index) => {
+    const midi = getNotationMidi(item.note)
+    if (midi === null) return []
+    const cy = getNoteY(midi)
+    const cx = notesStart + index * noteStepX
+    // 中間線(B4)より下の音は符尾を上に、上の音は下に
+    const stemUp = cy > B4_Y
+    const noteType = getNoteType(item.length)
+    return [{ item, index, midi, cy, cx, stemUp, noteType }]
+  })
+
+  // 8分音符をグループ化してビームを描画
+  type BeamGroup = { notes: NoteData[] }
+  const beamGroups: BeamGroup[] = []
+  let currentGroup: NoteData[] = []
+  for (const nd of noteDataList) {
+    if (nd.noteType === "eighth") {
+      currentGroup.push(nd)
+    } else {
+      if (currentGroup.length >= 2) beamGroups.push({ notes: currentGroup })
+      currentGroup = []
+    }
+  }
+  if (currentGroup.length >= 2) beamGroups.push({ notes: currentGroup })
+  const beamedNoteIds = new Set(beamGroups.flatMap((g) => g.notes.map((n) => n.item.id)))
+
+  // 符尾のX座標（stem-up: 右端、stem-down: 左端）
+  function stemX(nd: NoteData): number {
+    return nd.stemUp ? nd.cx + noteRx : nd.cx - noteRx
+  }
+
+  // 符尾先端のY座標（ビームなし時）
+  function stemTipY(nd: NoteData): number {
+    return nd.stemUp ? nd.cy - stemLen : nd.cy + stemLen
+  }
+
+  // ビームグループ内での各音符の符尾先端Y（ビームライン上の位置）
+  function beamStemTipY(nd: NoteData, group: BeamGroup): number {
+    const first = group.notes[0]
+    const last = group.notes[group.notes.length - 1]
+    const firstTip = stemTipY(first)
+    const lastTip = stemTipY(last)
+    if (first.cx === last.cx) return firstTip
+    const t = (nd.cx - first.cx) / (last.cx - first.cx)
+    return firstTip + t * (lastTip - firstTip)
+  }
+
+  // 色
+  const staffColor = isDark ? "#667085" : "#94a3b8"
+  const clefColor = isDark ? "#94a3b8" : "#475569"
+  const boxBg = isDark ? "#202530" : "#FCFCFD"
+  const getColor = (nd: NoteData) =>
+    nd.item.isCurrent ? "#D4A300" : isDark ? "#e2e8f0" : "#1e293b"
+  const getLabelColor = (nd: NoteData) =>
+    nd.item.isCurrent ? "#B38700" : isDark ? "#94a3b8" : "#64748b"
+
+  const beamThickness = compact ? 4 : 5
 
   return (
     <div
@@ -530,120 +619,204 @@ const minWidth = Math.max(460, leftStart * 2 + Math.max(visibleItems.length - 1,
         <p className={isDark ? "text-sm font-bold text-white" : "mother-text-main text-sm font-bold"}>
           これからの音
         </p>
-
-<DisplayModeToggle
-  checked={true}
-  onChange={onToggleNotation}
-  dark={isDark}
-/>
+        <DisplayModeToggle checked={true} onChange={onToggleNotation} dark={isDark} />
       </div>
 
       <div
         className={`relative overflow-x-auto rounded-[20px] border ${
-          isDark ? "border-[#485066] bg-[#202530]" : "border-slate-200 bg-[#FCFCFD]"
+          isDark ? "border-[#485066]" : "border-slate-200"
         }`}
-        style={{ height: `${boxHeight}px` }}
+        style={{ height: `${svgHeight}px`, background: boxBg }}
       >
-        <div className="relative" style={{ height: `${boxHeight}px`, minWidth: `${minWidth}px` }}>
+        <svg
+          width={svgWidth}
+          height={svgHeight}
+          style={{ display: "block", minWidth: `${svgWidth}px` }}
+        >
+          {/* 五線 */}
           {[0, 1, 2, 3, 4].map((i) => (
-            <div
+            <line
               key={i}
-              className={`absolute left-4 right-4 h-[1.5px] ${isDark ? "bg-[#667085]" : "bg-slate-400"}`}
-              style={{ top: `${staffTop + i * lineGap}px` }}
+              x1={clefX - 2}
+              y1={staffTop + i * lineGap}
+              x2={svgWidth - 10}
+              y2={staffTop + i * lineGap}
+              stroke={staffColor}
+              strokeWidth={1.5}
             />
           ))}
 
-          {visibleItems.map((item, index) => {
-            const midi = getNotationMidi(item.note)
-            if (midi === null) return null
+          {/* ト音記号 */}
+          <text
+            x={clefX - 2}
+            y={staffBottom + lineGap * 1.4}
+            fontSize={lineGap * 6.8}
+            fontFamily="'Segoe UI Symbol', 'Apple Symbols', 'Arial Unicode MS', 'FreeSerif', serif"
+            fill={clefColor}
+          >
+            {"𝄞"}
+          </text>
 
-            const staffStep = getStaffPositionFromMidi(midi)
-            const noteCenterY = staffBottom - staffStep * (lineGap / 2)
-            const left = leftStart + index * stepX
-            const ledgerYs = getLedgerOffsets(noteCenterY, staffTop, staffBottom, lineGap)
+          {/* 拍子記号 4/4 */}
+          <text
+            x={timeSigX + timeSigW / 2}
+            y={staffTop + lineGap * 1.85}
+            textAnchor="middle"
+            fontSize={lineGap * 2}
+            fontWeight="bold"
+            fontFamily="serif"
+            fill={clefColor}
+          >
+            4
+          </text>
+          <text
+            x={timeSigX + timeSigW / 2}
+            y={staffTop + lineGap * 3.85}
+            textAnchor="middle"
+            fontSize={lineGap * 2}
+            fontWeight="bold"
+            fontFamily="serif"
+            fill={clefColor}
+          >
+            4
+          </text>
+
+          {/* 小節線（開始） */}
+          <line
+            x1={notesStart - 6}
+            y1={staffTop}
+            x2={notesStart - 6}
+            y2={staffBottom}
+            stroke={staffColor}
+            strokeWidth={1.5}
+          />
+
+          {/* 音符・加線・ラベル */}
+          {noteDataList.map((nd) => {
+            const color = getColor(nd)
+            const ledgerYs = getLedgerLineYs(nd.cy, staffTop, staffBottom, lineGap)
+            const isHalf = nd.noteType === "half" || nd.noteType === "whole"
+            const isWhole = nd.noteType === "whole"
+            const inBeam = beamedNoteIds.has(nd.item.id)
+            const sx = stemX(nd)
             const clickable = !!onSelect
 
-            const headToneClass = item.isCurrent
-              ? "border-[#D4A300] bg-[#FFD54A]"
-              : isDark
-              ? "border-slate-100 bg-slate-100"
-              : "border-slate-800 bg-slate-800"
-
-            const stemToneClass = item.isCurrent
-              ? "bg-[#D4A300]"
-              : isDark
-              ? "bg-slate-100"
-              : "bg-slate-800"
-
-            const labelToneClass = item.isCurrent
-              ? "text-[#B38700]"
-              : isDark
-              ? "text-slate-300"
-              : "text-slate-500"
-
             return (
-              <div key={item.id}>
-                {ledgerYs.map((ledgerY, ledgerIndex) => (
-                  <div
-                    key={`${item.id}-ledger-${ledgerIndex}`}
-                    className={`absolute h-[1.5px] ${isDark ? "bg-slate-300" : "bg-slate-500"}`}
-                    style={{
-                      top: `${ledgerY}px`,
-                      left: `${left - 8}px`,
-                      width: `${noteWidth + 16}px`,
-                    }}
+              <g
+                key={nd.item.id}
+                onClick={() => clickable && onSelect(nd.item)}
+                style={{ cursor: clickable ? "pointer" : "default" }}
+              >
+                {/* 加線 */}
+                {ledgerYs.map((ly, li) => (
+                  <line
+                    key={li}
+                    x1={nd.cx - noteRx - 4}
+                    y1={ly}
+                    x2={nd.cx + noteRx + 4}
+                    y2={ly}
+                    stroke={staffColor}
+                    strokeWidth={1.5}
                   />
                 ))}
 
-                <button
-                  type="button"
-                  disabled={!clickable}
-                  onClick={() => clickable && onSelect(item)}
-                  className={clickable ? "absolute cursor-pointer" : "absolute cursor-default"}
-                  style={{
-                    left: `${left - 6}px`,
-                    top: `${noteCenterY - stemHeight - 8}px`,
-                    width: `${noteWidth + 18}px`,
-                    height: `${stemHeight + noteHeight + 18}px`,
-                  }}
+                {/* 音符の玉 */}
+                <ellipse
+                  cx={nd.cx}
+                  cy={nd.cy}
+                  rx={noteRx}
+                  ry={noteRy}
+                  fill={isHalf ? boxBg : color}
+                  stroke={color}
+                  strokeWidth={isHalf ? 1.8 : 0}
+                  transform={isWhole ? undefined : `rotate(-18, ${nd.cx}, ${nd.cy})`}
+                />
+
+                {/* 符尾（全音符以外） */}
+                {!isWhole && !inBeam && (
+                  <line
+                    x1={sx}
+                    y1={nd.cy}
+                    x2={sx}
+                    y2={stemTipY(nd)}
+                    stroke={color}
+                    strokeWidth={1.5}
+                  />
+                )}
+
+                {/* 旗（単独8分音符） */}
+                {nd.noteType === "eighth" && !inBeam && (
+                  <path
+                    d={
+                      nd.stemUp
+                        ? `M ${sx} ${stemTipY(nd)} C ${sx + 12} ${stemTipY(nd) + 6}, ${sx + 14} ${stemTipY(nd) + 14}, ${sx + 7} ${stemTipY(nd) + lineGap * 2}`
+                        : `M ${sx} ${stemTipY(nd)} C ${sx + 12} ${stemTipY(nd) - 6}, ${sx + 14} ${stemTipY(nd) - 14}, ${sx + 7} ${stemTipY(nd) - lineGap * 2}`
+                    }
+                    stroke={color}
+                    strokeWidth={1.5}
+                    fill="none"
+                  />
+                )}
+
+                {/* ラベル */}
+                <text
+                  x={nd.cx}
+                  y={staffBottom + (compact ? 26 : 30)}
+                  textAnchor="middle"
+                  fontSize={11}
+                  fontWeight="900"
+                  fill={getLabelColor(nd)}
                 >
-                  <span
-                    className={`absolute rounded-full border-2 ${headToneClass}`}
-                    style={{
-                      width: `${noteWidth}px`,
-                      height: `${noteHeight}px`,
-                      left: "6px",
-                      top: `${stemHeight}px`,
-                      transform: "rotate(-18deg)",
-                    }}
-                  />
-
-                  <span
-                    className={`absolute w-[2px] ${stemToneClass}`}
-                    style={{
-                      left: `${noteWidth + 5}px`,
-                      top: "0px",
-                      height: `${stemHeight + 1}px`,
-                    }}
-                  />
-                </button>
-
-<div
-  className="absolute -translate-x-1/2 text-center"
-  style={{
-    left: `${left + noteWidth / 2}px`,
-    top: `${staffBottom + 28}px`,
-    width: compact ? "54px" : "60px",
-  }}
->
-  <p className={`text-[11px] font-black ${labelToneClass}`}>
-    {item.isCurrent ? "いま" : ""}
-  </p>
-</div>
-              </div>
+                  {nd.item.isCurrent ? "いま" : ""}
+                </text>
+              </g>
             )
           })}
-        </div>
+
+          {/* ビーム（8分音符グループ） */}
+          {beamGroups.map((group, gi) => {
+            const first = group.notes[0]
+            const beamColor = getColor(first)
+
+            return (
+              <g key={gi}>
+                {/* 各音符の符尾 */}
+                {group.notes.map((nd) => {
+                  const sx = stemX(nd)
+                  const tipY = beamStemTipY(nd, group)
+                  return (
+                    <line
+                      key={nd.item.id}
+                      x1={sx}
+                      y1={nd.cy}
+                      x2={sx}
+                      y2={tipY}
+                      stroke={getColor(nd)}
+                      strokeWidth={1.5}
+                    />
+                  )
+                })}
+
+                {/* ビーム線 */}
+                {(() => {
+                  const f = group.notes[0]
+                  const l = group.notes[group.notes.length - 1]
+                  const fsx = stemX(f)
+                  const lsx = stemX(l)
+                  const fty = beamStemTipY(f, group)
+                  const lty = beamStemTipY(l, group)
+                  const offset = f.stemUp ? beamThickness / 2 : -beamThickness / 2
+                  return (
+                    <polygon
+                      points={`${fsx},${fty - offset} ${lsx},${lty - offset} ${lsx},${lty + offset} ${fsx},${fty + offset}`}
+                      fill={beamColor}
+                    />
+                  )
+                })()}
+              </g>
+            )
+          })}
+        </svg>
       </div>
     </div>
   )
