@@ -1366,6 +1366,22 @@ const previewItems = useMemo<PreviewItem[]>(() => {
       (item) => item.note !== "休符"
     )
 
+    // 楽譜表示時はメロディー全音符を一覧表示
+    if (showNotation) {
+      return usableNotes.map((item, index) => ({
+        id: `stage4-full-${phraseIndex}-${index}-${item.note}`,
+        note: item.note,
+        length: item.length,
+        isCurrent: index === noteIndex,
+        isNext: index === noteIndex + 1,
+        isPhraseStart: false,
+        melodyNumber: phraseIndex + 1,
+        phraseIndex: phraseIndex,
+        noteIndex: index,
+      }))
+    }
+
+    // 通常表示は5音ウィンドウ
     let windowStart = 0
     if (noteIndex >= 4) {
       const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
@@ -1496,6 +1512,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
   noteIndex,
   playMode,
   flatPlayableNotes,
+  showNotation,
 ])
 
 const pairPreviewItems = useMemo<PreviewItem[]>(() => {
@@ -1875,6 +1892,19 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(false)
     setPlayMode("full")
     setPhraseIndex(0)
+    setNoteIndex(0)
+    setJudgeState("idle")
+    await ensureAudioReady()
+    setIsPlaying(true)
+  }
+
+  const handleStage5JumpToMelody = async (index: number) => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setPlayMode("full")
+    setPhraseIndex(index)
     setNoteIndex(0)
     setJudgeState("idle")
     await ensureAudioReady()
@@ -3469,9 +3499,11 @@ if (selectedStage === 5) {
                 const isDone = index < phraseIndex
 
                 return (
-                  <div
+                  <button
                     key={index}
-                    className={`mother-step-card px-2 py-2 text-center ${
+                    type="button"
+                    onClick={() => handleStage5JumpToMelody(index)}
+                    className={`mother-step-card cursor-pointer px-2 py-2 text-center transition hover:opacity-70 active:scale-95 ${
                       isCurrent
                         ? "is-active"
                         : isDone
@@ -3481,7 +3513,7 @@ if (selectedStage === 5) {
                   >
                     <p className="text-[9px] font-bold">MELODY</p>
                     <p className="mt-1 text-lg font-black">{index + 1}</p>
-                  </div>
+                  </button>
                 )
               })}
             </div>
