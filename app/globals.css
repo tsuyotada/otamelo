@@ -342,3 +342,244 @@ input[type="range"] {
 .delay-700 {
   animation-delay: 0.7s;
 }
+
+/* ==============================
+   SFCモード
+============================== */
+
+/* フォント: DotGothic16 (Latin) + MS Gothic / Osaka (Japanese) */
+html.sfc-mode body {
+  font-family: var(--font-dot-gothic16, "Courier New"), "ＭＳ ゴシック",
+    "MS Gothic", "Osaka", monospace;
+  letter-spacing: 0.03em;
+}
+
+/* パネル類 */
+html.sfc-mode .mother-panel {
+  border-radius: 6px;
+  border: 2px solid rgba(26, 58, 122, 0.55);
+  box-shadow: 4px 4px 0 rgba(26, 58, 122, 0.35);
+  background: #f0ecdf;
+}
+
+html.sfc-mode .mother-subpanel {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.22);
+  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.15);
+  background: #e8e2cd;
+}
+
+html.sfc-mode .mother-white-panel {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.16);
+  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.12);
+}
+
+html.sfc-mode .mother-display-navy {
+  border-radius: 6px;
+  border: 2px solid #1a3d7f;
+  box-shadow: 4px 4px 0 #0f2654;
+}
+
+html.sfc-mode .mother-display-blue {
+  border-radius: 6px;
+  border: 3px solid var(--mother-blue);
+  box-shadow: 4px 4px 0 rgba(63, 140, 255, 0.32);
+}
+
+html.sfc-mode .mother-info-card {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.12);
+  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.08);
+}
+
+/* ボタン */
+html.sfc-mode .mother-button-blue {
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 4px 0 #1a5acc,
+    3px 3px 0 #0e3580;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+html.sfc-mode .mother-button-blue:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 0 #1a5acc;
+}
+
+html.sfc-mode .mother-button-yellow {
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 4px 0 #c49b18,
+    3px 3px 0 #8a6d10;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+html.sfc-mode .mother-button-yellow:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 0 #c49b18;
+}
+
+html.sfc-mode .mother-button-light {
+  border-radius: 6px;
+  border: 2px solid #8e9db8;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 4px 0 #8e9db8,
+    3px 3px 0 #6b7a90;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+html.sfc-mode .mother-button-light:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 0 #8e9db8;
+}
+
+/* メロディータブ */
+html.sfc-mode .mother-step-card {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.2);
+  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.14);
+}
+
+html.sfc-mode .mother-step-card.is-active {
+  border-radius: 6px;
+  box-shadow:
+    0 4px 0 #c49b18,
+    3px 3px 0 #8a6d10;
+}
+
+/* 設定カード */
+html.sfc-mode .mother-settings-card {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.16);
+  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.12);
+}
+
+html.sfc-mode .mother-option {
+  border-radius: 6px;
+  border: 2px solid rgba(34, 58, 104, 0.12);
+  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.08);
+}
+
+/* 進捗バー */
+html.sfc-mode .mother-progress-track {
+  border-radius: 2px;
+  border: 1px solid rgba(34, 58, 104, 0.18);
+  box-shadow: none;
+}
+
+html.sfc-mode .mother-progress-fill {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ネック・インジケータ */
+html.sfc-mode .mother-neck {
+  border-radius: 6px;
+}
+
+html.sfc-mode .mother-indicator-current {
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 3px rgba(255, 213, 74, 0.22),
+    2px 2px 0 rgba(180, 130, 20, 0.45);
+}
+
+html.sfc-mode .mother-indicator-next {
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 rgba(63, 140, 255, 0.28);
+}
+
+/* 任意値 border-radius をシャープに（[Xpx] 形式のみ対象） */
+html.sfc-mode [class*="rounded-["] {
+  border-radius: 6px !important;
+}
+
+/* スピナーは円を維持 */
+html.sfc-mode .animate-spin {
+  border-radius: 9999px !important;
+}
+
+/* 画像にピクセルレンダリング */
+html.sfc-mode img {
+  image-rendering: pixelated;
+}
+
+/* SFCモード トグルボタン */
+.sfc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.sfc-toggle.dark-off {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.sfc-toggle.dark-off:hover {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sfc-toggle.dark-on {
+  border-color: rgba(255, 213, 74, 0.5);
+  background: rgba(255, 213, 74, 0.1);
+  color: #ffd54a;
+}
+
+.sfc-toggle.light-off {
+  border-color: #c8d3e0;
+  background: #f0f4f8;
+  color: #94a3b8;
+}
+
+.sfc-toggle.light-off:hover {
+  color: #64748b;
+}
+
+.sfc-toggle.light-on {
+  border-color: rgba(63, 140, 255, 0.45);
+  background: rgba(63, 140, 255, 0.08);
+  color: #1a4a9e;
+}
+
+.sfc-toggle-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sfc-toggle-led.on-dark {
+  background: #ffd54a;
+  box-shadow: 0 0 5px rgba(255, 213, 74, 0.7);
+}
+
+.sfc-toggle-led.off-dark {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.sfc-toggle-led.on-light {
+  background: #3f8cff;
+  box-shadow: 0 0 4px rgba(63, 140, 255, 0.5);
+}
+
+.sfc-toggle-led.off-light {
+  background: #cbd5e1;
+}

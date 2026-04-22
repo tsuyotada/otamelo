@@ -84,6 +84,7 @@ type TuningSample = {
 }
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
+const SFC_MODE_KEY = "otamelo_sfc_mode"
 const TUNING_AVERAGE_WINDOW_MS = 800
 const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
 const TUNING_MIN_RMS = 0.02
@@ -1162,6 +1163,40 @@ function getTuningGuardErrorMessage(
   return ""
 }
 
+function SfcModeToggle({
+  isOn,
+  onToggle,
+  variant = "dark",
+}: {
+  isOn: boolean
+  onToggle: () => void
+  variant?: "dark" | "light"
+}) {
+  const toggleClass = isOn
+    ? variant === "dark"
+      ? "sfc-toggle dark-on"
+      : "sfc-toggle light-on"
+    : variant === "dark"
+    ? "sfc-toggle dark-off"
+    : "sfc-toggle light-off"
+
+  const ledClass = isOn
+    ? variant === "dark"
+      ? "sfc-toggle-led on-dark"
+      : "sfc-toggle-led on-light"
+    : variant === "dark"
+    ? "sfc-toggle-led off-dark"
+    : "sfc-toggle-led off-light"
+
+  return (
+    <button type="button" onClick={onToggle} className={toggleClass}>
+      <span className={ledClass} />
+      SFCモード
+      <span style={{ opacity: 0.65 }}>{isOn ? "ON" : "OFF"}</span>
+    </button>
+  )
+}
+
 const TEMPO_OPTIONS = [
   { label: "ゆっくり", value: 1 },
   { label: "ふつう", value: 1.25 },
@@ -1238,6 +1273,8 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage6Hits, setStage6Hits] = useState(0)
   const [stage6JudgedCount, setStage6JudgedCount] = useState(0)
   const [stage6ResultOpen, setStage6ResultOpen] = useState(false)
+
+  const [isSfcMode, setIsSfcMode] = useState(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -2427,6 +2464,20 @@ useEffect(() => {
     }
   }, [])
 
+  useEffect(() => {
+    const stored = window.localStorage.getItem(SFC_MODE_KEY)
+    if (stored === "true") setIsSfcMode(true)
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem(SFC_MODE_KEY, String(isSfcMode))
+    if (isSfcMode) {
+      document.documentElement.classList.add("sfc-mode")
+    } else {
+      document.documentElement.classList.remove("sfc-mode")
+    }
+  }, [isSfcMode])
+
   if (screen === "home") {
     return (
       <main className="relative flex min-h-screen items-center justify-center bg-[#0A1F52] px-6 py-8 text-white">
@@ -2494,6 +2545,14 @@ useEffect(() => {
             <p className="mt-6 text-[11px] font-bold tracking-[0.12em] text-white/45">
               UNOFFICIAL PRACTICE APP
             </p>
+
+            <div className="mt-5">
+              <SfcModeToggle
+                isOn={isSfcMode}
+                onToggle={() => setIsSfcMode((v) => !v)}
+                variant="dark"
+              />
+            </div>
           </div>
         </div>
 
@@ -2556,13 +2615,20 @@ useEffect(() => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setScreen("tune")}
-                className="mother-button-light px-5 py-3 text-sm font-bold"
-              >
-                調整してみる
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScreen("tune")}
+                  className="mother-button-light px-5 py-3 text-sm font-bold"
+                >
+                  調整してみる
+                </button>
+                <SfcModeToggle
+                  isOn={isSfcMode}
+                  onToggle={() => setIsSfcMode((v) => !v)}
+                  variant="light"
+                />
+              </div>
             </div>
           </section>
         </div>
