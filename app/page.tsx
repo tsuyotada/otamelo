@@ -1398,6 +1398,8 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const noteSolvedRef = useRef(false)
   const stage1AutoMicTriedRef = useRef(false)
   const metronomeBeatRef = useRef<number | null>(null)
+  const playbackStartRef = useRef<number>(0)
+  const elapsedBeatsRef = useRef<number>(0)
 
   const safePhrases = useMemo(
     () =>
@@ -2166,6 +2168,8 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
       if (value === 0) {
         setCountdown(null)
+        playbackStartRef.current = performance.now()
+        elapsedBeatsRef.current = 0
         setIsPlaying(true)
         return
       }
@@ -2380,15 +2384,22 @@ const handleResetTuning = () => {
       return
     }
 
-    const beatMs = Math.round(60000 / (STAGE6_TEMPO * tempoMultiplier))
+    const beatMs = 60000 / (STAGE6_TEMPO * tempoMultiplier)
+    const startTime = playbackStartRef.current
+    let beatCount = 0
 
-    const tick = () => {
-      void playClick()
-      metronomeBeatRef.current = window.setTimeout(tick, beatMs)
+    const schedule = () => {
+      beatCount++
+      const targetTime = startTime + beatCount * beatMs
+      const delay = Math.max(0, targetTime - performance.now())
+      metronomeBeatRef.current = window.setTimeout(() => {
+        void playClick()
+        schedule()
+      }, delay)
     }
 
     void playClick()
-    metronomeBeatRef.current = window.setTimeout(tick, beatMs)
+    schedule()
 
     return () => stopMetronome()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2425,11 +2436,22 @@ useEffect(() => {
 
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
 
-    const stepMs = getStepMs(current.length)
+    let delay: number
+    if (selectedStage === 6) {
+      const base = 60000 / (STAGE6_TEMPO * tempoMultiplier)
+      const targetTime = playbackStartRef.current + (elapsedBeatsRef.current + current.length) * base
+      delay = Math.max(0, targetTime - performance.now())
+    } else {
+      delay = getStepMs(current.length)
+    }
 
+    const capturedLength = current.length
     timerRef.current = window.setTimeout(() => {
+      if (selectedStage === 6) {
+        elapsedBeatsRef.current += capturedLength
+      }
       moveToNextNote()
-    }, stepMs)
+    }, delay)
 
     return () => {
       clearPlaybackTimer()
