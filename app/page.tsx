@@ -746,15 +746,15 @@ function StaffPreview({
       </div>
 
       <div
-        className={`relative w-full overflow-x-auto rounded-[20px] border ${
+        className={`relative w-full overflow-hidden rounded-[20px] border ${
           isDark ? "border-[#485066]" : "border-slate-200"
         }`}
-        style={{ height: `${svgHeight}px`, background: boxBg }}
+        style={{ background: boxBg }}
       >
         <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: "block", minWidth: `${svgWidth}px` }}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          width="100%"
+          style={{ display: "block" }}
         >
           {/* 五線 */}
           {[0, 1, 2, 3, 4].map((i) => (
