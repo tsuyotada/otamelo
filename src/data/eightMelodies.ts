@@ -315,7 +315,9 @@ export const phrases: Phrase[] = [
       makeNote("高いミ"),
       makeNote("高いファ"),
       makeNote("高いド", 1),
-      makeNote("ファ", 1.5),
+      makeNote("ファ", 1),
+      makeNote("休符", 0.5),
+
     ],
   },
   {
