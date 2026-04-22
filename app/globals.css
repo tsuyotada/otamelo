@@ -354,6 +354,29 @@ html.sfc-mode body {
   letter-spacing: 0.03em;
 }
 
+/* 本文テキストの過剰なboldを抑制 */
+/* DotGothic16 / MS Gothicはweight:400が基本のため、
+   font-black/boldの合成はビットマップ感が強くなりすぎる。
+   長文・説明文はweight:400で読みやすさを優先する。 */
+html.sfc-mode p,
+html.sfc-mode label {
+  font-weight: 400 !important;
+}
+
+/* ホームタイトルのレトロゲーム演出 */
+/* .bg-clip-text はこのアプリでHOMEの大見出しにのみ使用 */
+html.sfc-mode .bg-clip-text {
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  background-image: none !important;
+  color: #ffd54a !important;
+  -webkit-text-fill-color: #ffd54a !important;
+  text-shadow:
+    2px 2px 0 #071940,
+    4px 4px 0 rgba(0, 0, 0, 0.22);
+  letter-spacing: 0.12em;
+}
+
 /* パネル類 */
 html.sfc-mode .mother-panel {
   border-radius: 6px;
@@ -479,36 +502,39 @@ html.sfc-mode .mother-progress-fill {
   box-shadow: none;
 }
 
-/* ネック・インジケータ */
+/* ネック：丸みを維持しつつSFCらしい輪郭を追加 */
+/* border-radiusは上書きしない（rounded-fullを保持してオタマトーンの丸さを維持） */
 html.sfc-mode .mother-neck {
-  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(8, 18, 50, 0.4);
 }
 
+/* インジケータ：丸みを維持（オタマトーン本体の要素） */
 html.sfc-mode .mother-indicator-current {
-  border-radius: 2px;
   box-shadow:
     0 0 0 3px rgba(255, 213, 74, 0.22),
-    2px 2px 0 rgba(180, 130, 20, 0.45);
+    2px 2px 0 rgba(180, 130, 20, 0.5);
 }
 
 html.sfc-mode .mother-indicator-next {
-  border-radius: 2px;
-  box-shadow: 2px 2px 0 rgba(63, 140, 255, 0.28);
+  border: 1px solid rgba(63, 140, 255, 0.7);
+  box-shadow: 2px 2px 0 rgba(63, 140, 255, 0.3);
 }
 
-/* 任意値 border-radius をシャープに（[Xpx] 形式のみ対象） */
+/* 任意値 border-radius をシャープに（カード・パネル系） */
 html.sfc-mode [class*="rounded-["] {
   border-radius: 6px !important;
+}
+
+/* オタマトーン本体の顔（楕円）は丸みを維持 */
+html.sfc-mode .rounded-\[46\%\] {
+  border-radius: 46% !important;
 }
 
 /* スピナーは円を維持 */
 html.sfc-mode .animate-spin {
   border-radius: 9999px !important;
-}
-
-/* 画像にピクセルレンダリング */
-html.sfc-mode img {
-  image-rendering: pixelated;
 }
 
 /* SFCモード トグルボタン */
