@@ -316,7 +316,7 @@ export const phrases: Phrase[] = [
       makeNote("高いファ"),
       makeNote("高いド", 1),
       makeNote("ファ", 1),
-      makeNote("休符", 0.1),
+      makeNote("休符", 0.5),
     ],
   },
   {
@@ -325,8 +325,8 @@ export const phrases: Phrase[] = [
       makeNote("ラ#"),
       makeNote("ラ"),
       makeNote("ファ"),
-      makeNote("ド", 2),
-      makeNote("休符", 0.2),
+      makeNote("ド", 1.5),
+      makeNote("休符", 1),
     ],
   },
   {
@@ -368,7 +368,8 @@ export const phrases: Phrase[] = [
       makeNote("ファ", 1),
       makeNote("ド"),
       makeNote("ソ"),
-      makeNote("ファ", 2),
+      makeNote("ファ", 1),
+      makeNote("休符", 1),
     ],
   },
 ]
