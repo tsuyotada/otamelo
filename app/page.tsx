@@ -2945,8 +2945,7 @@ useEffect(() => {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="mother-subpanel flex items-center justify-center p-4">
-                <div className="flex h-full w-full items-center justify-center">
+              <div className="flex items-center justify-center py-4">
                   <div className="relative flex h-[min(62vh,620px)] w-[200px] items-end justify-center rounded-full bg-[#f3ead1] px-5 py-6">
                     <div className="mother-neck relative h-full w-12 rounded-full">
                       <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -2971,7 +2970,6 @@ useEffect(() => {
                       <div className="absolute left-0 top-[48px] h-[2px] w-full bg-slate-700" />
                     </div>
                   </div>
-                </div>
               </div>
 
               <div className="flex flex-col gap-4">
@@ -3111,7 +3109,7 @@ if (selectedStage === 2) {
           </div>
 
           <div className="grid gap-3 md:grid-cols-[0.95fr_1.05fr]">
-            <div className="mother-subpanel flex items-center justify-center p-3">
+            <div className="flex items-center justify-center py-3">
               <div className="relative flex h-[min(48vh,400px)] w-[140px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">
                 <div className="mother-neck relative h-full w-10 rounded-full">
                   <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -3231,7 +3229,7 @@ if (selectedStage === 2) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[0.38fr_0.62fr]">
-              <div className="mother-subpanel flex items-center justify-center p-4">
+              <div className="flex items-center justify-center py-4">
                 <div className="relative flex h-[min(56vh,500px)] w-[160px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-5">
                   <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -3411,7 +3409,7 @@ if (selectedStage === 2) {
             </div>
 
             <div className="mt-3 grid gap-3 md:grid-cols-[0.38fr_0.62fr]">
-              <div className="mother-subpanel flex items-center justify-center p-4">
+              <div className="flex items-center justify-center py-4">
                 <div className="relative flex h-[min(50vh,440px)] w-[150px] items-end justify-center rounded-full bg-[#f3ead1] px-4 py-4">
                   <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -3538,15 +3536,17 @@ if (selectedStage === 5) {
     <main className="min-h-screen bg-[#10234d] px-3 py-3 text-white">
       <div className="mx-auto flex max-w-[1240px] flex-col gap-2">
         <section className="mother-panel flex flex-col p-3 text-slate-900">
-          <div className="mb-2 flex items-center gap-3">
-            <PixelInventorFace />
-            <div className="flex-1">
-              <p className="mother-text-soft text-[11px] font-black tracking-wide">
-                STAGE {selectedStage}
-              </p>
-              <p className="mother-text-main text-base font-bold">
-                エイトメロディーズを　とおしで　ひいてみて
-              </p>
+          <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <PixelInventorFace />
+              <div className="min-w-0">
+                <p className="mother-text-soft text-[11px] font-black tracking-wide">
+                  STAGE {selectedStage}
+                </p>
+                <p className="mother-text-main text-base font-bold">
+                  エイトメロディーズを　とおしで　ひいてみて
+                </p>
+              </div>
             </div>
             <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="blue" />
           </div>
@@ -3577,7 +3577,7 @@ if (selectedStage === 5) {
                         : "text-slate-500"
                     }`}
                   >
-                    <p className="text-[9px] font-bold">MELODY</p>
+                    <p className="hidden text-[9px] font-bold md:block">MELODY</p>
                     <p className="mt-1 text-lg font-black">{index + 1}</p>
                   </button>
                 )
@@ -3593,7 +3593,7 @@ if (selectedStage === 5) {
           </div>
 
           <div className="mt-2 grid gap-2 md:grid-cols-[320px_1fr]">
-            <div className="mother-subpanel flex items-center justify-center p-3">
+            <div className="flex items-center justify-center py-3">
               <div className="relative flex h-[360px] w-[140px] items-end justify-center rounded-full bg-[#f3ead1] px-3 py-3">
                 <div className="mother-neck relative h-full w-9 rounded-full">
                   <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -3740,15 +3740,17 @@ if (selectedStage === 6) {
     <main className="min-h-screen bg-[#05070D] px-3 py-3 text-white">
       <div className="mx-auto flex max-w-[1240px] flex-col gap-2">
         <section className="rounded-[36px] border border-white/10 bg-[#171A22] p-3 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
-          <div className="mb-2 flex items-center gap-3">
-            <PixelInventorFace />
-            <div className="flex-1">
-              <p className="text-[11px] font-black tracking-wide text-[#6B7280]">
-                STAGE {selectedStage}
-              </p>
-              <p className="text-base font-bold text-white">
-                本番だ　全体とおして　自分だけでひいてみて
-              </p>
+          <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <PixelInventorFace />
+              <div className="min-w-0">
+                <p className="text-[11px] font-black tracking-wide text-[#6B7280]">
+                  STAGE {selectedStage}
+                </p>
+                <p className="text-base font-bold text-white">
+                  本番だ　全体とおして　自分だけでひいてみて
+                </p>
+              </div>
             </div>
             <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
           </div>
@@ -3777,7 +3779,7 @@ if (selectedStage === 6) {
                         : "bg-[#3A4050] text-slate-300"
                     }`}
                   >
-                    <p className="text-[9px] font-bold">MELODY</p>
+                    <p className="hidden text-[9px] font-bold md:block">MELODY</p>
                     <p className="mt-1 text-lg font-black">{index + 1}</p>
                   </div>
                 )
@@ -3793,8 +3795,7 @@ if (selectedStage === 6) {
           </div>
 
           <div className="mt-2 grid gap-2 md:grid-cols-[0.34fr_0.66fr]">
-            <div className="rounded-[28px] bg-[#11141B] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center py-3">
                 <div className="relative flex h-[360px] w-[180px] items-end justify-center rounded-full bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.26),rgba(255,255,255,0.10)_34%,rgba(255,255,255,0.03)_56%,transparent_74%)] px-4 py-4">
                   <div className="mother-neck relative h-full w-10 rounded-full">
                     <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
@@ -3829,7 +3830,6 @@ if (selectedStage === 6) {
                     <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
                   </div>
                 </div>
-              </div>
             </div>
 
             <div className="flex min-w-0 flex-col gap-2">
