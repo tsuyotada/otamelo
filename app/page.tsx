@@ -3227,7 +3227,7 @@ if (selectedStage === 2) {
                         : "text-slate-500"
                     }`}
                   >
-                    <p className="text-[9px] font-bold">MELODY</p>
+                    <p className="hidden text-[9px] font-bold md:block">MELODY</p>
                     <p className="mt-1 text-xl font-black">{index + 1}</p>
                   </div>
                 )
@@ -3534,7 +3534,7 @@ if (selectedStage === 2) {
                           : "mother-step-card text-slate-600"
                       }`}
                     >
-                      <p className="text-[10px] font-bold">MELODY</p>
+                      <p className="hidden text-[10px] font-bold md:block">MELODY</p>
                       <p className="mt-1 text-xl">{index + 1}</p>
                     </button>
                   )
