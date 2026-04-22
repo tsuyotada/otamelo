@@ -368,8 +368,7 @@ export const phrases: Phrase[] = [
       makeNote("ファ", 1),
       makeNote("ド"),
       makeNote("ソ"),
-      makeNote("ファ", 1),
-      makeNote("休符", 1),
+      makeNote("ファ", 2),
     ],
   },
 ]
