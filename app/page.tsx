@@ -826,15 +826,72 @@ function StaffPreview({
             const accidentalX = nd.cx - noteRx - (compact ? 10 : 12)
 
             if (nd.isRest) {
+              const restLabel = nd.item.isCurrent ? "いま" : "休"
+              const labelY = staffBottom + (compact ? 26 : 30)
+              const musicFont =
+                "'Segoe UI Symbol', 'Apple Symbols', 'Arial Unicode MS', 'FreeSerif', serif"
+              const gProps = {
+                key: nd.item.id,
+                onClick: () => clickable && onSelect(nd.item),
+                style: { cursor: clickable ? "pointer" : "default" } as React.CSSProperties,
+              }
+              const labelEl = (
+                <text
+                  x={nd.cx}
+                  y={labelY}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fontWeight="900"
+                  fill={getLabelColor(nd)}
+                >
+                  {restLabel}
+                </text>
+              )
+
+              // 八分休符 (length 0.5)
+              if (nd.noteType === "eighth") {
+                return (
+                  <g {...gProps}>
+                    <text
+                      x={nd.cx}
+                      y={staffBottom - lineGap * 0.3}
+                      textAnchor="middle"
+                      fontSize={lineGap * 4}
+                      fontFamily={musicFont}
+                      fill={color}
+                    >
+                      {"𝄾"}
+                    </text>
+                    {labelEl}
+                  </g>
+                )
+              }
+
+              // 四分休符 (length 1)
+              if (nd.noteType === "quarter") {
+                return (
+                  <g {...gProps}>
+                    <text
+                      x={nd.cx}
+                      y={staffBottom - lineGap * 0.3}
+                      textAnchor="middle"
+                      fontSize={lineGap * 4}
+                      fontFamily={musicFont}
+                      fill={color}
+                    >
+                      {"𝄽"}
+                    </text>
+                    {labelEl}
+                  </g>
+                )
+              }
+
+              // フォールバック（二分・全休符など）
               const restW = 7
               const restH = lineGap * 1.8
               const restY = staffTop + lineGap * 1.2
               return (
-                <g
-                  key={nd.item.id}
-                  onClick={() => clickable && onSelect(nd.item)}
-                  style={{ cursor: clickable ? "pointer" : "default" }}
-                >
+                <g {...gProps}>
                   <rect
                     x={nd.cx - restW / 2}
                     y={restY}
@@ -844,16 +901,7 @@ function StaffPreview({
                     fill={color}
                     opacity={0.7}
                   />
-                  <text
-                    x={nd.cx}
-                    y={staffBottom + (compact ? 26 : 30)}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fontWeight="900"
-                    fill={getLabelColor(nd)}
-                  >
-                    {nd.item.isCurrent ? "いま" : "休"}
-                  </text>
+                  {labelEl}
                 </g>
               )
             }
