@@ -544,23 +544,33 @@ function StaffPreview({
   type NoteData = {
     item: PreviewItem
     index: number
-    midi: number
+    midi: number | null
     cy: number
     cx: number
     stemUp: boolean
     noteType: NoteType
+    isRest: boolean
   }
 
-  // 音符データ：音価ベースの可変間隔で配置
+  // 音符データ：音価ベースの可変間隔で配置（休符を含む）
   const noteDataList: NoteData[] = []
   let noteX = notesStart
   for (const item of visibleItems) {
-    const midi = getNotationMidi(item.note)
-    if (midi !== null) {
-      const cy = getNoteY(midi)
-      const stemUp = cy > B4_Y
-      const noteType = getNoteType(item.length)
-      noteDataList.push({ item, index: noteDataList.length, midi, cy, cx: noteX, stemUp, noteType })
+    const isRest = item.note === "休符"
+    if (isRest) {
+      noteDataList.push({
+        item, index: noteDataList.length,
+        midi: null, cy: B4_Y, cx: noteX,
+        stemUp: false, noteType: getNoteType(item.length), isRest: true,
+      })
+    } else {
+      const midi = getNotationMidi(item.note)
+      if (midi !== null) {
+        const cy = getNoteY(midi)
+        const stemUp = cy > B4_Y
+        const noteType = getNoteType(item.length)
+        noteDataList.push({ item, index: noteDataList.length, midi, cy, cx: noteX, stemUp, noteType, isRest: false })
+      }
     }
     noteX += baseStep + Math.max(0, item.length - 0.5) * extraPxPerBeat
   }
@@ -651,6 +661,12 @@ function StaffPreview({
     const MAX_BEATS = 2.0 // 8分音符4つ = 2拍
 
     for (const nd of noteDataList) {
+      if (nd.isRest) {
+        if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
+        currentGroup = []
+        groupBeats = 0
+        continue
+      }
       if (nd.noteType === "eighth") {
         const dur = nd.item.length
         if (groupBeats + dur > MAX_BEATS + 0.001) {
@@ -670,6 +686,38 @@ function StaffPreview({
     if (currentGroup.length >= 2) beamGroupsData.push(buildBeamGroup(currentGroup))
   }
   const beamedNoteIds = new Set(beamGroupsData.flatMap((g) => g.notes.map((n) => n.item.id)))
+
+  // 臨時記号の種類を事前計算（同一メロディー内で♯→自然音なら♮を表示）
+  type AccidentalKind = "sharp" | "natural" | "none"
+  const accidentalKinds = new Map<string, AccidentalKind>()
+  {
+    const sharpedPerMelody = new Map<number, Set<string>>()
+    for (const nd of noteDataList) {
+      if (nd.isRest) { accidentalKinds.set(nd.item.id, "none"); continue }
+      const melodyNum = nd.item.melodyNumber
+      if (!sharpedPerMelody.has(melodyNum)) sharpedPerMelody.set(melodyNum, new Set())
+      const sharped = sharpedPerMelody.get(melodyNum)!
+      const isSharpNote = nd.item.note.endsWith("#")
+      const baseName = isSharpNote ? nd.item.note.slice(0, -1) : nd.item.note
+      if (isSharpNote) {
+        sharped.add(baseName)
+        accidentalKinds.set(nd.item.id, "sharp")
+      } else if (sharped.has(baseName)) {
+        sharped.delete(baseName)
+        accidentalKinds.set(nd.item.id, "natural")
+      } else {
+        accidentalKinds.set(nd.item.id, "none")
+      }
+    }
+  }
+
+  // メロディー間の小節線X座標
+  const barLineXs: number[] = []
+  for (let i = 1; i < noteDataList.length; i++) {
+    if (noteDataList[i]!.item.melodyNumber !== noteDataList[i - 1]!.item.melodyNumber) {
+      barLineXs.push((noteDataList[i - 1]!.cx + noteDataList[i]!.cx) / 2)
+    }
+  }
 
   // 色
   const staffColor = isDark ? "#667085" : "#94a3b8"
@@ -698,7 +746,7 @@ function StaffPreview({
       </div>
 
       <div
-        className={`relative overflow-x-auto rounded-[20px] border ${
+        className={`relative w-full overflow-x-auto rounded-[20px] border ${
           isDark ? "border-[#485066]" : "border-slate-200"
         }`}
         style={{ height: `${svgHeight}px`, background: boxBg }}
@@ -757,18 +805,64 @@ function StaffPreview({
           </text>
 
 
-          {/* 音符・加線・ラベル */}
+          {/* 小節線（メロディー間の区切り） */}
+          {barLineXs.map((x, i) => (
+            <line
+              key={`bar-${i}`}
+              x1={x} y1={staffTop - 2}
+              x2={x} y2={staffBottom + 2}
+              stroke={staffColor}
+              strokeWidth={1.5}
+            />
+          ))}
+
+          {/* 音符・休符・加線・ラベル */}
           {noteDataList.map((nd) => {
             const color = getColor(nd)
+            const clickable = !!onSelect
+            const accidentalKind = accidentalKinds.get(nd.item.id) ?? "none"
+            const hasAccidental = accidentalKind !== "none"
+            const accidentalFontSize = compact ? lineGap * 1.8 : lineGap * 2
+            const accidentalX = nd.cx - noteRx - (compact ? 10 : 12)
+
+            if (nd.isRest) {
+              const restW = 7
+              const restH = lineGap * 1.8
+              const restY = staffTop + lineGap * 1.2
+              return (
+                <g
+                  key={nd.item.id}
+                  onClick={() => clickable && onSelect(nd.item)}
+                  style={{ cursor: clickable ? "pointer" : "default" }}
+                >
+                  <rect
+                    x={nd.cx - restW / 2}
+                    y={restY}
+                    width={restW}
+                    height={restH}
+                    rx={1}
+                    fill={color}
+                    opacity={0.7}
+                  />
+                  <text
+                    x={nd.cx}
+                    y={staffBottom + (compact ? 26 : 30)}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight="900"
+                    fill={getLabelColor(nd)}
+                  >
+                    {nd.item.isCurrent ? "いま" : "休"}
+                  </text>
+                </g>
+              )
+            }
+
             const ledgerYs = getLedgerLineYs(nd.cy, staffTop, staffBottom, lineGap)
             const isHalf = nd.noteType === "half" || nd.noteType === "whole"
             const isWhole = nd.noteType === "whole"
             const inBeam = beamedNoteIds.has(nd.item.id)
             const sx = stemX(nd)
-            const clickable = !!onSelect
-            const isSharp = nd.item.note.includes("#")
-            const accidentalFontSize = compact ? lineGap * 1.8 : lineGap * 2
-            const accidentalX = nd.cx - noteRx - (compact ? 10 : 12)
 
             return (
               <g
@@ -780,7 +874,7 @@ function StaffPreview({
                 {ledgerYs.map((ly, li) => (
                   <line
                     key={li}
-                    x1={nd.cx - noteRx - (isSharp ? 18 : 4)}
+                    x1={nd.cx - noteRx - (hasAccidental ? 18 : 4)}
                     y1={ly}
                     x2={nd.cx + noteRx + 4}
                     y2={ly}
@@ -789,8 +883,8 @@ function StaffPreview({
                   />
                 ))}
 
-                {/* 臨時記号（#） */}
-                {isSharp && (
+                {/* 臨時記号（♯ または ♮） */}
+                {accidentalKind === "sharp" && (
                   <text
                     x={accidentalX}
                     y={nd.cy + accidentalFontSize * 0.38}
@@ -801,6 +895,19 @@ function StaffPreview({
                     fill={color}
                   >
                     ♯
+                  </text>
+                )}
+                {accidentalKind === "natural" && (
+                  <text
+                    x={accidentalX}
+                    y={nd.cy + accidentalFontSize * 0.38}
+                    textAnchor="middle"
+                    fontSize={accidentalFontSize}
+                    fontWeight="bold"
+                    fontFamily="serif"
+                    fill={color}
+                  >
+                    ♮
                   </text>
                 )}
 
@@ -1290,6 +1397,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
   const stage1AutoMicTriedRef = useRef(false)
+  const metronomeBeatRef = useRef<number | null>(null)
 
   const safePhrases = useMemo(
     () =>
@@ -1403,9 +1511,9 @@ const previewItems = useMemo<PreviewItem[]>(() => {
       (item) => item.note !== "休符"
     )
 
-    // 楽譜表示時はメロディー全音符を一覧表示
+    // 楽譜表示時はメロディー全音符を一覧表示（休符含む）
     if (showNotation) {
-      return usableNotes.map((item, index) => ({
+      return safePhrases[phraseIndex].notes.map((item, index) => ({
         id: `stage4-full-${phraseIndex}-${index}-${item.note}`,
         note: item.note,
         length: item.length,
@@ -1562,7 +1670,6 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     const phrase = safePhrases[pi]
     for (let ni = 0; ni < phrase.notes.length; ni++) {
       const note = phrase.notes[ni]
-      if (note.note === "休符") continue
       items.push({
         id: `pair-${pi}-${ni}-${note.note}`,
         note: note.note,
@@ -1627,6 +1734,13 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     if (countdownTimerRef.current !== null) {
       window.clearTimeout(countdownTimerRef.current)
       countdownTimerRef.current = null
+    }
+  }
+
+  const stopMetronome = () => {
+    if (metronomeBeatRef.current !== null) {
+      window.clearTimeout(metronomeBeatRef.current)
+      metronomeBeatRef.current = null
     }
   }
 
@@ -2244,9 +2358,7 @@ const handleResetTuning = () => {
   useEffect(() => {
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
 
-    if (selectedStage === 6) {
-      void playClick()
-    } else {
+    if (selectedStage !== 6) {
       void playNote(current.note, getStepMs(current.length))
     }
   }, [
@@ -2260,6 +2372,27 @@ const handleResetTuning = () => {
     current.note,
     current.length,
   ])
+
+  // Stage6: 一定テンポでメトロノームを刻む
+  useEffect(() => {
+    if (screen !== "practice" || selectedStage !== 6 || !isPlaying) {
+      stopMetronome()
+      return
+    }
+
+    const beatMs = Math.round(60000 / (STAGE6_TEMPO * tempoMultiplier))
+
+    const tick = () => {
+      void playClick()
+      metronomeBeatRef.current = window.setTimeout(tick, beatMs)
+    }
+
+    void playClick()
+    metronomeBeatRef.current = window.setTimeout(tick, beatMs)
+
+    return () => stopMetronome()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, selectedStage, isPlaying, tempoMultiplier])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
@@ -2461,6 +2594,7 @@ useEffect(() => {
       stopMic()
       clearPlaybackTimer()
       clearCountdownTimer()
+      stopMetronome()
     }
   }, [])
 

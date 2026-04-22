@@ -50,6 +50,7 @@ html,
 body {
   background: var(--mother-navy);
   color: var(--mother-text);
+  overflow-x: hidden;
 }
 
 body {
