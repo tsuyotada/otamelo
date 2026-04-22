@@ -345,26 +345,35 @@ input[type="range"] {
 
 /* ==============================
    SFCモード
+   方針：「ベクターの滑らかさを消してピクセル構成に見せる」
+   - 角丸 2〜3px（曲線なし・削れた四角）
+   - 影はオフセットのみ（ぼかしゼロ）
+   - 枠線をはっきり
+   - グラデーションを使わず単色
+   - 本文は読みやすさ優先
+   - オタマトーンの丸さは維持
 ============================== */
 
-/* フォント: DotGothic16 (Latin) + MS Gothic / Osaka (Japanese) */
+/* ---- フォント ---- */
 html.sfc-mode body {
   font-family: var(--font-dot-gothic16, "Courier New"), "ＭＳ ゴシック",
     "MS Gothic", "Osaka", monospace;
   letter-spacing: 0.03em;
 }
 
-/* 本文テキストの過剰なboldを抑制 */
-/* DotGothic16 / MS Gothicはweight:400が基本のため、
-   font-black/boldの合成はビットマップ感が強くなりすぎる。
-   長文・説明文はweight:400で読みやすさを優先する。 */
+/* 本文テキストのbold合成を抑制（DotGothic16 / MS Gothicはweight:400が基本） */
 html.sfc-mode p,
 html.sfc-mode label {
   font-weight: 400 !important;
 }
 
-/* ホームタイトルのレトロゲーム演出 */
-/* .bg-clip-text はこのアプリでHOMEの大見出しにのみ使用 */
+/* 見出しに1方向シャドウでレトロ感 */
+html.sfc-mode h1,
+html.sfc-mode h2 {
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.22);
+}
+
+/* ---- ホームタイトル（bg-clip-textはこのアプリで大見出しにのみ使用） ---- */
 html.sfc-mode .bg-clip-text {
   -webkit-background-clip: initial !important;
   background-clip: initial !important;
@@ -377,154 +386,172 @@ html.sfc-mode .bg-clip-text {
   letter-spacing: 0.12em;
 }
 
-/* パネル類 */
+/* ---- パネル類：角丸3px・ぼかしなし段差影・単色・強い枠線 ---- */
 html.sfc-mode .mother-panel {
-  border-radius: 6px;
-  border: 2px solid rgba(26, 58, 122, 0.55);
-  box-shadow: 4px 4px 0 rgba(26, 58, 122, 0.35);
-  background: #f0ecdf;
+  border-radius: 3px;
+  background: #ede8d8;
+  border: 2px solid #8a9ab8;
+  box-shadow: 4px 4px 0 #1a3a7a;
 }
 
 html.sfc-mode .mother-subpanel {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.22);
-  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.15);
-  background: #e8e2cd;
+  border-radius: 3px;
+  background: #e2dbc8;
+  border: 2px solid #8090a8;
+  box-shadow: 3px 3px 0 #5a6a88;
 }
 
 html.sfc-mode .mother-white-panel {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.16);
-  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.12);
+  border-radius: 3px;
+  background: #f5f2e8;
+  border: 2px solid #9aabbc;
+  box-shadow: 2px 2px 0 #6878a0;
 }
 
 html.sfc-mode .mother-display-navy {
-  border-radius: 6px;
-  border: 2px solid #1a3d7f;
-  box-shadow: 4px 4px 0 #0f2654;
+  border-radius: 3px;
+  background: #152d6a;
+  border: 2px solid #4060a8;
+  box-shadow: 4px 4px 0 #0a1a40;
 }
 
 html.sfc-mode .mother-display-blue {
-  border-radius: 6px;
-  border: 3px solid var(--mother-blue);
-  box-shadow: 4px 4px 0 rgba(63, 140, 255, 0.32);
+  border-radius: 3px;
+  background: #ccdaf0;
+  border: 3px solid #3f8cff;
+  box-shadow: 4px 4px 0 #1a4abf;
 }
 
 html.sfc-mode .mother-info-card {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.12);
-  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.08);
+  border-radius: 3px;
+  background: #f2eedf;
+  border: 2px solid #9aabbc;
+  box-shadow: 2px 2px 0 #6878a0;
 }
 
-/* ボタン */
+/* ---- ボタン：角丸3px・グラデーションなし単色・ぼかしなし段差影 ---- */
 html.sfc-mode .mother-button-blue {
-  border-radius: 6px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    0 4px 0 #1a5acc,
-    3px 3px 0 #0e3580;
+  border-radius: 3px;
+  background: #3f8cff;
+  border: 2px solid #2060cc;
+  box-shadow: 3px 3px 0 #0e3580;
+  filter: none;
   transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+html.sfc-mode .mother-button-blue:hover {
+  filter: brightness(1.08);
 }
 
 html.sfc-mode .mother-button-blue:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 1px 0 #1a5acc;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #0e3580;
 }
 
 html.sfc-mode .mother-button-yellow {
-  border-radius: 6px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 4px 0 #c49b18,
-    3px 3px 0 #8a6d10;
+  border-radius: 3px;
+  background: #ffd54a;
+  border: 2px solid #c49b18;
+  box-shadow: 3px 3px 0 #8a6d10;
+  filter: none;
   transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+html.sfc-mode .mother-button-yellow:hover {
+  filter: brightness(1.08);
 }
 
 html.sfc-mode .mother-button-yellow:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 1px 0 #c49b18;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #8a6d10;
 }
 
 html.sfc-mode .mother-button-light {
-  border-radius: 6px;
-  border: 2px solid #8e9db8;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 4px 0 #8e9db8,
-    3px 3px 0 #6b7a90;
+  border-radius: 3px;
+  background: #e8edf4;
+  border: 2px solid #7890b0;
+  box-shadow: 3px 3px 0 #4a5870;
+  filter: none;
   transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 
-html.sfc-mode .mother-button-light:active {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 1px 0 #8e9db8;
+html.sfc-mode .mother-button-light:hover {
+  filter: brightness(1.05);
 }
 
-/* メロディータブ */
+html.sfc-mode .mother-button-light:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #4a5870;
+}
+
+/* ---- メロディータブ ---- */
 html.sfc-mode .mother-step-card {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.2);
-  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.14);
+  border-radius: 3px;
+  background: #cdd3de;
+  border: 2px solid #5a6a90;
+  box-shadow: 3px 3px 0 #3a4a68;
 }
 
 html.sfc-mode .mother-step-card.is-active {
-  border-radius: 6px;
-  box-shadow:
-    0 4px 0 #c49b18,
-    3px 3px 0 #8a6d10;
+  border-radius: 3px;
+  background: #ffd54a;
+  border-color: #c49b18;
+  box-shadow: 3px 3px 0 #8a6d10;
 }
 
-/* 設定カード */
+/* ---- 設定カード・オプション ---- */
 html.sfc-mode .mother-settings-card {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.16);
-  box-shadow: 3px 3px 0 rgba(34, 58, 104, 0.12);
+  border-radius: 3px;
+  background: #cdd3de;
+  border: 2px solid #7890a8;
+  box-shadow: 3px 3px 0 #4a5870;
 }
 
 html.sfc-mode .mother-option {
-  border-radius: 6px;
-  border: 2px solid rgba(34, 58, 104, 0.12);
-  box-shadow: 2px 2px 0 rgba(34, 58, 104, 0.08);
+  border-radius: 3px;
+  background: #f2eedf;
+  border: 2px solid #9aabbc;
+  box-shadow: 2px 2px 0 #6878a0;
 }
 
-/* 進捗バー */
+/* ---- 進捗バー ---- */
 html.sfc-mode .mother-progress-track {
-  border-radius: 2px;
-  border: 1px solid rgba(34, 58, 104, 0.18);
+  border-radius: 1px;
+  background: #b8c4d4;
+  border: 1px solid #7890a8;
   box-shadow: none;
 }
 
 html.sfc-mode .mother-progress-fill {
   border-radius: 0;
+  background: #3f8cff;
   box-shadow: none;
 }
 
-/* ネック：丸みを維持しつつSFCらしい輪郭を追加 */
+/* ---- ネック：丸みを維持・グラデーション→単色・輪郭を追加 ---- */
 /* border-radiusは上書きしない（rounded-fullを保持してオタマトーンの丸さを維持） */
 html.sfc-mode .mother-neck {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 0 0 1px rgba(8, 18, 50, 0.4);
+  background: #142c63;
+  box-shadow: 0 0 0 1px #0a1a3d;
 }
 
-/* インジケータ：丸みを維持（オタマトーン本体の要素） */
+/* ---- インジケータ：丸みを維持・単色・ぼかしなし段差 ---- */
 html.sfc-mode .mother-indicator-current {
+  background: #ffd54a;
   box-shadow:
-    0 0 0 3px rgba(255, 213, 74, 0.22),
-    2px 2px 0 rgba(180, 130, 20, 0.5);
+    0 0 0 2px rgba(255, 213, 74, 0.3),
+    2px 2px 0 #8a6d10;
 }
 
 html.sfc-mode .mother-indicator-next {
-  border: 1px solid rgba(63, 140, 255, 0.7);
-  box-shadow: 2px 2px 0 rgba(63, 140, 255, 0.3);
+  background: #5590e0;
+  border: 1px solid #3f8cff;
+  box-shadow: 2px 2px 0 #1a3a90;
 }
 
-/* 任意値 border-radius をシャープに（カード・パネル系） */
+/* ---- インラインTailwindの角丸をシャープに（3px＝削れた四角） ---- */
 html.sfc-mode [class*="rounded-["] {
-  border-radius: 6px !important;
+  border-radius: 3px !important;
 }
 
 /* オタマトーン本体の顔（楕円）は丸みを維持 */
@@ -535,6 +562,17 @@ html.sfc-mode .rounded-\[46\%\] {
 /* スピナーは円を維持 */
 html.sfc-mode .animate-spin {
   border-radius: 9999px !important;
+}
+
+/* ---- インラインTailwind shadow-[...]のぼかし影をオフセット影に置換 ---- */
+/* shadow-sm / shadow-md など非カスタムクラスは対象外 */
+html.sfc-mode [class*="shadow-["] {
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.22) !important;
+}
+
+/* ---- imgにのみpixelated（UI全体・SVGアイコンには適用しない） ---- */
+html.sfc-mode img {
+  image-rendering: pixelated;
 }
 
 /* SFCモード トグルボタン */
