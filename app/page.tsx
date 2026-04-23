@@ -1480,6 +1480,23 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
     )
   }
 
+  const flatTimingNotes = useMemo<FlatNoteItem[]>(() => {
+    return safePhrases.flatMap((phrase, pIndex) =>
+      phrase.notes.map((note, nIndex) => ({
+        phraseIndex: pIndex,
+        noteIndex: nIndex,
+        note: note.note,
+        length: note.length,
+      }))
+    )
+  }, [safePhrases])
+
+  const getFlatTimingIndex = (pIndex: number, nIndex: number) => {
+    return flatTimingNotes.findIndex(
+      (item) => item.phraseIndex === pIndex && item.noteIndex === nIndex
+    )
+  }
+
   const phrase = safePhrases[phraseIndex]
   const safeNotes = phrase.notes
   const current = safeNotes[noteIndex] ?? safeNotes[0]
@@ -1506,6 +1523,14 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
           note: flatPlayableNotes[flatIndex + 1].note,
           length: flatPlayableNotes[flatIndex + 1].length,
         }
+      }
+      if (flatIndex < 0) {
+        const nextPlayable = flatPlayableNotes.find(
+          (item) =>
+            item.phraseIndex > phraseIndex ||
+            (item.phraseIndex === phraseIndex && item.noteIndex > noteIndex)
+        )
+        if (nextPlayable) return { note: nextPlayable.note, length: nextPlayable.length }
       }
       return null
     }
@@ -1611,10 +1636,24 @@ const previewItems = useMemo<PreviewItem[]>(() => {
   }
 
   if (selectedStage === 5 || selectedStage === 6) {
-    const safeFlatIndex = Math.max(
-      0,
-      getFlatPlayableIndex(phraseIndex, noteIndex)
-    )
+    let safeFlatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+    if (safeFlatIndex < 0) {
+      let last = -1
+      for (let i = 0; i < flatPlayableNotes.length; i++) {
+        const item = flatPlayableNotes[i]
+        if (
+          item.phraseIndex < phraseIndex ||
+          (item.phraseIndex === phraseIndex && item.noteIndex < noteIndex)
+        ) {
+          last = i
+        } else {
+          break
+        }
+      }
+      safeFlatIndex = Math.max(0, last)
+    }
+
+    const isOnRest = safeNotes[noteIndex]?.note === "休符"
 
     let windowStart = 0
     if (safeFlatIndex >= 5) {
@@ -1634,7 +1673,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
           id: `stage56-${originalIndex}-${item.note}`,
           note: item.note,
           length: item.length,
-          isCurrent: originalIndex === safeFlatIndex,
+          isCurrent: !isOnRest && originalIndex === safeFlatIndex,
           isNext: originalIndex === safeFlatIndex + 1,
           isPhraseStart: false,
           melodyNumber: item.phraseIndex + 1,
@@ -1921,10 +1960,10 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
   const moveToNextNote = () => {
     if (selectedStage === 5 || selectedStage === 6) {
-      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
+      const flatIndex = getFlatTimingIndex(phraseIndex, noteIndex)
 
-      if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
-        const nextFlat = flatPlayableNotes[flatIndex + 1]
+      if (flatIndex >= 0 && flatIndex < flatTimingNotes.length - 1) {
+        const nextFlat = flatTimingNotes[flatIndex + 1]
         setPhraseIndex(nextFlat.phraseIndex)
         setNoteIndex(nextFlat.noteIndex)
         return
@@ -2041,12 +2080,14 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(false)
 
     if (selectedStage === 5 || selectedStage === 6) {
-      const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
-      if (flatIndex > 0) {
-        const prev = flatPlayableNotes[flatIndex - 1]
-        setPhraseIndex(prev.phraseIndex)
-        setNoteIndex(prev.noteIndex)
-        return
+      const timingIndex = getFlatTimingIndex(phraseIndex, noteIndex)
+      for (let i = timingIndex - 1; i >= 0; i--) {
+        if (flatTimingNotes[i].note !== "休符") {
+          const prev = flatTimingNotes[i]
+          setPhraseIndex(prev.phraseIndex)
+          setNoteIndex(prev.noteIndex)
+          return
+        }
       }
       setPhraseIndex(0)
       setNoteIndex(0)
@@ -2650,6 +2691,7 @@ useEffect(() => {
     if (selectedStage !== 6) return
     if (!isPlaying) return
     if (noteSolvedRef.current) return
+    if (current.note === "休符") return
 
     const stepMs = getStepMs(current.length)
     const missTimer = window.setTimeout(() => {
