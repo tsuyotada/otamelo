@@ -60,6 +60,7 @@ type PreviewItem = {
   isPlaceholder?: boolean
   phraseIndex?: number
   noteIndex?: number
+  tieToNext?: boolean
 }
 
 type FlatNoteItem = {
@@ -67,6 +68,7 @@ type FlatNoteItem = {
   noteIndex: number
   note: string
   length: number
+  tieToNext?: boolean
 }
 
 type TuningAnchor = {
@@ -533,10 +535,11 @@ function StaffPreview({
   const B4_Y = staffBottom - 4 * (lineGap / 2)
 
   // 音符種別の判定
-  type NoteType = "whole" | "half" | "quarter" | "eighth"
+  type NoteType = "whole" | "half" | "dotted-quarter" | "quarter" | "eighth"
   function getNoteType(length: number): NoteType {
     if (length >= 4) return "whole"
     if (length >= 2) return "half"
+    if (length >= 1.4) return "dotted-quarter"
     if (length >= 1) return "quarter"
     return "eighth"
   }
@@ -971,6 +974,16 @@ function StaffPreview({
                   transform={isWhole ? undefined : `rotate(-18, ${nd.cx}, ${nd.cy})`}
                 />
 
+                {/* 付点（付点4分音符） */}
+                {nd.noteType === "dotted-quarter" && (
+                  <circle
+                    cx={nd.cx + noteRx + (compact ? 5 : 6)}
+                    cy={nd.cy - 1}
+                    r={compact ? 2 : 2.5}
+                    fill={color}
+                  />
+                )}
+
                 {/* 符尾（全音符以外） */}
                 {!isWhole && !inBeam && (
                   <line
@@ -1051,6 +1064,30 @@ function StaffPreview({
               </g>
             )
           })}
+
+          {/* タイ（tieToNext がある音符から次の音符への弧線） */}
+          {noteDataList
+            .filter((nd) => !nd.isRest && nd.item.tieToNext)
+            .map((nd) => {
+              const nextNd = noteDataList[nd.index + 1]
+              if (!nextNd || nextNd.isRest) return null
+              const tieDir = nd.stemUp ? 1 : -1
+              const x1 = nd.cx + noteRx + 2
+              const x2 = nextNd.cx - noteRx - 2
+              const y1 = nd.cy + tieDir * noteRy
+              const y2 = nextNd.cy + tieDir * noteRy
+              const midX = (x1 + x2) / 2
+              const midY = (y1 + y2) / 2 + tieDir * (compact ? 7 : 9)
+              return (
+                <path
+                  key={`tie-${nd.item.id}`}
+                  d={`M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`}
+                  stroke={getColor(nd)}
+                  strokeWidth={compact ? 1.5 : 1.8}
+                  fill="none"
+                />
+              )
+            })}
         </svg>
       </div>
     </div>
@@ -1467,6 +1504,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
           noteIndex: nIndex,
           note: note.note,
           length: note.length,
+          tieToNext: note.tieToNext,
         }))
         .filter((item) => item.note !== "休符")
     )
@@ -1487,6 +1525,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
         noteIndex: nIndex,
         note: note.note,
         length: note.length,
+        tieToNext: note.tieToNext,
       }))
     )
   }, [safePhrases])
@@ -1573,6 +1612,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
         melodyNumber: 1,
         phraseIndex: 0,
         noteIndex: index,
+        tieToNext: item.tieToNext,
       }))
 
     return [
@@ -1598,6 +1638,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
         melodyNumber: phraseIndex + 1,
         phraseIndex: phraseIndex,
         noteIndex: index,
+        tieToNext: item.tieToNext,
       }))
     }
 
@@ -1626,6 +1667,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
           melodyNumber: phraseIndex + 1,
           phraseIndex: phraseIndex,
           noteIndex: originalIndex,
+          tieToNext: item.tieToNext,
         }
       })
 
@@ -1679,6 +1721,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
           melodyNumber: item.phraseIndex + 1,
           phraseIndex: item.phraseIndex,
           noteIndex: item.noteIndex,
+          tieToNext: item.tieToNext,
         }
       })
 
@@ -1721,6 +1764,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
         melodyNumber: p + 1,
         phraseIndex: p,
         noteIndex: n,
+        tieToNext: target.tieToNext,
       })
     }
 
@@ -1769,6 +1813,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
         melodyNumber: pi + 1,
         phraseIndex: pi,
         noteIndex: ni,
+        tieToNext: note.tieToNext,
       })
     }
   }
@@ -2450,9 +2495,22 @@ const handleResetTuning = () => {
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
+    if (current.note === "休符") return
 
     if (selectedStage !== 6) {
-      void playNote(current.note, getStepMs(current.length))
+      // 前の音符がタイでつながっている場合は再アタックしない
+      const prevNote = noteIndex > 0 ? safeNotes[noteIndex - 1] : undefined
+      const isTiedFrom = prevNote?.tieToNext === true && prevNote?.note === current.note
+      if (isTiedFrom) return
+
+      // tieToNext がある場合は次の音も含めた長さで再生する
+      const nextNote = noteIndex < safeNotes.length - 1 ? safeNotes[noteIndex + 1] : undefined
+      const playLength =
+        current.tieToNext && nextNote?.note === current.note
+          ? current.length + nextNote.length
+          : current.length
+
+      void playNote(current.note, getStepMs(playLength))
     }
   }, [
     screen,
@@ -2464,6 +2522,7 @@ const handleResetTuning = () => {
     tempoMultiplier,
     current.note,
     current.length,
+    current.tieToNext,
   ])
 
   // Stage6: 一定テンポでメトロノームを刻む

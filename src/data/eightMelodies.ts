@@ -49,6 +49,7 @@ export type NoteItem = {
   note: SolfegeNote
   pos: number
   length: number
+  tieToNext?: boolean
 }
 
 export type Phrase = {
@@ -281,10 +282,15 @@ export const posMap: Record<SolfegeNote, number> = {
   "休符": 50,
 }
 
-export const makeNote = (note: SolfegeNote, length = 0.5): NoteItem => ({
+export const makeNote = (
+  note: SolfegeNote,
+  length = 0.5,
+  options?: { tieToNext?: boolean }
+): NoteItem => ({
   note,
   pos: posMap[note],
   length,
+  ...(options?.tieToNext ? { tieToNext: true } : {}),
 })
 
 export const phrases: Phrase[] = [
@@ -314,10 +320,10 @@ export const phrases: Phrase[] = [
       makeNote("高いレ"),
       makeNote("高いミ"),
       makeNote("高いファ"),
-      makeNote("高いド", 1),
+      makeNote("高いド", 0.5, { tieToNext: true }),
+      makeNote("高いド", 0.5),
       makeNote("ファ", 1),
       makeNote("休符", 0.5),
-
     ],
   },
   {
@@ -326,7 +332,8 @@ export const phrases: Phrase[] = [
       makeNote("ラ#"),
       makeNote("ラ"),
       makeNote("ファ"),
-      makeNote("ド", 1.5),
+      makeNote("ド", 0.5, { tieToNext: true }),
+      makeNote("ド", 1),
       makeNote("休符", 1),
     ],
   },
