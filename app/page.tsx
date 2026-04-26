@@ -1472,6 +1472,8 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [aboutName, setAboutName] = useState("")
   const [aboutEmail, setAboutEmail] = useState("")
   const [aboutMessage, setAboutMessage] = useState("")
+  const [isSending, setIsSending] = useState(false)
+  const [contactStatus, setContactStatus] = useState<"idle" | "success" | "error">("idle")
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -2896,13 +2898,16 @@ useEffect(() => {
           <div
             className="fixed inset-0 z-50 overflow-y-auto bg-black/75 px-4 py-10"
             onClick={(e) => {
-              if (e.target === e.currentTarget) setShowAbout(false)
+              if (e.target === e.currentTarget) {
+                setShowAbout(false)
+                setContactStatus("idle")
+              }
             }}
           >
             <div className="relative mx-auto w-full max-w-[660px] rounded-[28px] border border-white/10 bg-[#0e2258] px-6 py-8 text-white shadow-[0_24px_64px_rgba(0,0,0,0.55)] md:px-10 md:py-10">
               <button
                 type="button"
-                onClick={() => setShowAbout(false)}
+                onClick={() => { setShowAbout(false); setContactStatus("idle") }}
                 aria-label="閉じる"
                 className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm text-white/50 transition hover:bg-white/20 hover:text-white/80"
               >
@@ -2960,11 +2965,34 @@ useEffect(() => {
                   className="mt-5 space-y-4"
                   onSubmit={(e) => {
                     e.preventDefault()
-                    const subject = encodeURIComponent("オタマトーン練習アプリへのお問い合わせ")
-                    const body = encodeURIComponent(
-                      `お名前：${aboutName || "（未入力）"}\nメールアドレス：${aboutEmail || "（未入力）"}\n\nメッセージ：\n${aboutMessage}`
-                    )
-                    window.location.href = `mailto:info@arti.llc?subject=${subject}&body=${body}`
+                    if (!aboutMessage.trim()) return
+                    setIsSending(true)
+                    setContactStatus("idle")
+                    void fetch("/api/contact", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: aboutName,
+                        email: aboutEmail,
+                        message: aboutMessage,
+                      }),
+                    })
+                      .then(async (res) => {
+                        if (res.ok) {
+                          setContactStatus("success")
+                          setAboutName("")
+                          setAboutEmail("")
+                          setAboutMessage("")
+                        } else {
+                          setContactStatus("error")
+                        }
+                      })
+                      .catch(() => {
+                        setContactStatus("error")
+                      })
+                      .finally(() => {
+                        setIsSending(false)
+                      })
                   }}
                 >
                   <div>
@@ -2975,8 +3003,9 @@ useEffect(() => {
                       type="text"
                       value={aboutName}
                       onChange={(e) => setAboutName(e.target.value)}
+                      disabled={isSending}
                       placeholder="山田 太郎"
-                      className="w-full rounded-[12px] border border-white/10 bg-white/8 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30 focus:ring-0"
+                      className="w-full rounded-[12px] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30 disabled:opacity-50"
                       style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                     />
                   </div>
@@ -2989,8 +3018,9 @@ useEffect(() => {
                       type="email"
                       value={aboutEmail}
                       onChange={(e) => setAboutEmail(e.target.value)}
+                      disabled={isSending}
                       placeholder="example@email.com"
-                      className="w-full rounded-[12px] border border-white/10 bg-white/8 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30"
+                      className="w-full rounded-[12px] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30 disabled:opacity-50"
                       style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                     />
                   </div>
@@ -3003,22 +3033,36 @@ useEffect(() => {
                       required
                       value={aboutMessage}
                       onChange={(e) => setAboutMessage(e.target.value)}
+                      disabled={isSending}
                       placeholder="感想や改善案など、なんでも"
                       rows={5}
-                      className="w-full resize-none rounded-[12px] border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-white/30"
+                      className="w-full resize-none rounded-[12px] border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-white/30 disabled:opacity-50"
                       style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="rounded-[16px] border-b-2 border-[#D6A800] bg-[#FFD54A] px-6 py-2.5 text-sm font-black text-[#1F325C] shadow-sm transition hover:translate-y-[1px] active:translate-y-[1px]"
-                  >
-                    メールアプリで送信する
-                  </button>
-                  <p className="text-[11px] text-white/30">
-                    クリックするとお使いのメールアプリが開きます
-                  </p>
+                  {contactStatus === "success" && (
+                    <p className="rounded-[12px] bg-white/8 px-4 py-3 text-sm font-bold text-[#7ede8a]"
+                       style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                      送信しました。ありがとうございます。
+                    </p>
+                  )}
+                  {contactStatus === "error" && (
+                    <p className="rounded-[12px] bg-white/8 px-4 py-3 text-sm font-bold text-[#f08080]"
+                       style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                      送信できませんでした。時間をおいて再度お試しください。
+                    </p>
+                  )}
+
+                  {contactStatus !== "success" && (
+                    <button
+                      type="submit"
+                      disabled={isSending || !aboutMessage.trim()}
+                      className="rounded-[16px] border-b-2 border-[#D6A800] bg-[#FFD54A] px-6 py-2.5 text-sm font-black text-[#1F325C] shadow-sm transition hover:translate-y-[1px] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isSending ? "送信中…" : "送信する"}
+                    </button>
+                  )}
                 </form>
               </div>
             </div>
