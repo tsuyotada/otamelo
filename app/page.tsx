@@ -1468,6 +1468,10 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage6ResultOpen, setStage6ResultOpen] = useState(false)
 
   const [isSfcMode, setIsSfcMode] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
+  const [aboutName, setAboutName] = useState("")
+  const [aboutEmail, setAboutEmail] = useState("")
+  const [aboutMessage, setAboutMessage] = useState("")
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -2877,8 +2881,149 @@ useEffect(() => {
                 variant="dark"
               />
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAbout(true)}
+              className="mt-5 text-[11px] font-bold tracking-wide text-white/30 underline underline-offset-2 transition hover:text-white/50"
+            >
+              このウェブアプリについて / お問い合わせ
+            </button>
           </div>
         </div>
+
+        {showAbout && (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/75 px-4 py-10"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowAbout(false)
+            }}
+          >
+            <div className="relative mx-auto w-full max-w-[660px] rounded-[28px] border border-white/10 bg-[#0e2258] px-6 py-8 text-white shadow-[0_24px_64px_rgba(0,0,0,0.55)] md:px-10 md:py-10">
+              <button
+                type="button"
+                onClick={() => setShowAbout(false)}
+                aria-label="閉じる"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm text-white/50 transition hover:bg-white/20 hover:text-white/80"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-lg font-black text-white">
+                このウェブアプリについて
+              </h2>
+
+              <div className="mt-6 space-y-5 text-sm leading-[1.9] text-white/80">
+                <p>わたしにとって、楽器は挫折の歴史そのものでした。</p>
+                <p>
+                  あこがれはあっても、どうにも続かない。<br />
+                  少し触って、その後は練習もしなくなる。<br />
+                  いろいろ試しても、その繰り返しでした。
+                </p>
+                <p>
+                  このかわいいオタマトーンについても同じです。<br />
+                  数回触って、うまくできず、そのまま電源を入れない時期が長くありました。
+                </p>
+                <p>
+                  なんでもそうだと思いますが、上達することはとても大変です。<br />
+                  なれない練習を何度も繰り返さないことには、前進がありません。<br />
+                  特に最初の、「できた」という感覚を得るまでは、ただつらい。
+                </p>
+                <p>
+                  できるだけ、その最初のつらい時期を乗り越えられないか。<br />
+                  やるなら好きな曲がいい。<br />
+                  「ああ、マザー2のエイトメロディーズはすごく好きだったな」と思い出して、<br />
+                  それで練習してみるか、というところからこのアプリを作ってみました。
+                </p>
+                <p>
+                  しかも8つのメロディーを分解するというのがいい。<br />
+                  アプリをジェフが作ったような雰囲気にする、というのも楽しいポイントでした。
+                </p>
+                <p className="text-white/60">
+                  また、本アプリはオタマトーンおよび「MOTHER2」に着想を得て制作した非公式のファンコンテンツです。<br />
+                  各作品および関連する名称・表現等の権利は、それぞれの権利者に帰属します。
+                </p>
+                <p>
+                  大好きな作品に触発され、このような形で表現させていただけたことを、とてもありがたく思っています。
+                </p>
+                <p>
+                  もし遊んでみて、<br />
+                  「ここが良かった」「ここはこうした方がいい」など、<br />
+                  どんな小さなことでも構いませんので、ぜひ教えてもらえるとうれしいです。
+                </p>
+              </div>
+
+              <div className="mt-10 border-t border-white/10 pt-8">
+                <h3 className="text-base font-black text-white">お問い合わせ</h3>
+
+                <form
+                  className="mt-5 space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    const subject = encodeURIComponent("オタマトーン練習アプリへのお問い合わせ")
+                    const body = encodeURIComponent(
+                      `お名前：${aboutName || "（未入力）"}\nメールアドレス：${aboutEmail || "（未入力）"}\n\nメッセージ：\n${aboutMessage}`
+                    )
+                    window.location.href = `mailto:info@arti.llc?subject=${subject}&body=${body}`
+                  }}
+                >
+                  <div>
+                    <label className="mb-1 block text-[12px] font-bold text-white/50">
+                      お名前（任意）
+                    </label>
+                    <input
+                      type="text"
+                      value={aboutName}
+                      onChange={(e) => setAboutName(e.target.value)}
+                      placeholder="山田 太郎"
+                      className="w-full rounded-[12px] border border-white/10 bg-white/8 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30 focus:ring-0"
+                      style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-[12px] font-bold text-white/50">
+                      メールアドレス（任意）
+                    </label>
+                    <input
+                      type="email"
+                      value={aboutEmail}
+                      onChange={(e) => setAboutEmail(e.target.value)}
+                      placeholder="example@email.com"
+                      className="w-full rounded-[12px] border border-white/10 bg-white/8 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-white/30"
+                      style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-[12px] font-bold text-white/50">
+                      メッセージ（必須）
+                    </label>
+                    <textarea
+                      required
+                      value={aboutMessage}
+                      onChange={(e) => setAboutMessage(e.target.value)}
+                      placeholder="感想や改善案など、なんでも"
+                      rows={5}
+                      className="w-full resize-none rounded-[12px] border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-white/30"
+                      style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="rounded-[16px] border-b-2 border-[#D6A800] bg-[#FFD54A] px-6 py-2.5 text-sm font-black text-[#1F325C] shadow-sm transition hover:translate-y-[1px] active:translate-y-[1px]"
+                  >
+                    メールアプリで送信する
+                  </button>
+                  <p className="text-[11px] text-white/30">
+                    クリックするとお使いのメールアプリが開きます
+                  </p>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div
           className={`fixed inset-0 bg-black pointer-events-none transition-opacity duration-300 ${
