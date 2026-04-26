@@ -87,7 +87,6 @@ type TuningSample = {
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
 const SFC_MODE_KEY = "otamelo_sfc_mode"
-const VIRTUAL_TAPE_KEY = "otamelo-show-virtual-tape"
 const TEMPO_KEY = "otamelo-tempo"
 const TUNING_AVERAGE_WINDOW_MS = 800
 const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
@@ -1391,73 +1390,6 @@ function SfcModeToggle({
   )
 }
 
-const TAPE_NOTES = [
-  { note: "低いラ", label: "ラ", sub: "低" },
-  { note: "低いシ", label: "シ", sub: "低" },
-  { note: "ド", label: "ド", sub: "" },
-  { note: "レ", label: "レ", sub: "" },
-  { note: "ミ", label: "ミ", sub: "" },
-  { note: "ファ", label: "ファ", sub: "" },
-  { note: "ソ", label: "ソ", sub: "" },
-  { note: "ラ", label: "ラ", sub: "" },
-  { note: "シ", label: "シ", sub: "" },
-  { note: "高いド", label: "ド", sub: "高" },
-  { note: "高いレ", label: "レ", sub: "高" },
-  { note: "高いミ", label: "ミ", sub: "高" },
-  { note: "高いファ", label: "ファ", sub: "高" },
-  { note: "高いソ", label: "ソ", sub: "高" },
-] as const
-
-function VirtualTape() {
-  return (
-    <div
-      className="pointer-events-none absolute top-0 h-full"
-      style={{ left: "calc(100% + 5px)", width: "22px" }}
-    >
-      <div
-        className="absolute inset-0 rounded-[2px]"
-        style={{
-          background: "rgba(255,252,230,0.92)",
-          borderLeft: "1px solid rgba(195,170,110,0.45)",
-          borderRight: "1px solid rgba(195,170,110,0.45)",
-        }}
-      />
-      {TAPE_NOTES.map(({ note, label, sub }) => {
-        const topPercent = getOtamatoneTopPercent(note)
-        if (topPercent === null) return null
-        return (
-          <div
-            key={note}
-            className="absolute left-0 right-0 flex items-center"
-            style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
-          >
-            <div
-              className="ml-1 shrink-0"
-              style={{ width: "4px", height: "1px", background: "rgba(165,140,80,0.55)" }}
-            />
-            <div className="ml-0.5 flex flex-col items-start leading-none">
-              {sub && (
-                <span
-                  className="font-bold text-[#a08050]"
-                  style={{ fontSize: "5px", lineHeight: 1 }}
-                >
-                  {sub}
-                </span>
-              )}
-              <span
-                className="font-bold text-[#6b5030]"
-                style={{ fontSize: "8px", lineHeight: 1 }}
-              >
-                {label}
-              </span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 const TEMPO_OPTIONS = [
   { label: "ゆっくり", value: 1 },
   { label: "ふつう", value: 1.25 },
@@ -1536,7 +1468,6 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage6ResultOpen, setStage6ResultOpen] = useState(false)
 
   const [isSfcMode, setIsSfcMode] = useState(false)
-  const [showVirtualTape, setShowVirtualTape] = useState(true)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -2856,21 +2787,6 @@ useEffect(() => {
   useEffect(() => {
     if (typeof window === "undefined") return
     try {
-      const raw = window.localStorage.getItem(VIRTUAL_TAPE_KEY)
-      if (raw === "false") setShowVirtualTape(false)
-    } catch {}
-  }, [])
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    try {
-      window.localStorage.setItem(VIRTUAL_TAPE_KEY, String(showVirtualTape))
-    } catch {}
-  }, [showVirtualTape])
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    try {
       const raw = window.localStorage.getItem(TEMPO_KEY)
       if (raw === null) return
       const val = Number(raw)
@@ -3371,7 +3287,6 @@ useEffect(() => {
                         />
                       )}
 
-                      {showVirtualTape && <VirtualTape />}
                     </div>
 
                     <div className="absolute bottom-0 left-1/2 h-[96px] w-[112px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
@@ -3400,25 +3315,13 @@ useEffect(() => {
                   <p className="mt-2 text-xs leading-relaxed text-slate-600">
                     オタマトーンは音の位置が分かりづらいですよね。
                     <br />
-                    最初は「テープ」を貼って、ドレミを書いてしまうのがおすすめです。
-                    <br />
-                    まずは「ド・レ・ミ」の3つだけでも目印にしてみましょう。
+                    最初は本体にテープを貼って、目印を書いてしまうのもおすすめです。
                   </p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <span className="text-xs text-slate-500">仮想テープ：</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowVirtualTape((v) => !v)}
-                      className="rounded-full border px-4 py-1.5 text-xs font-bold transition"
-                      style={
-                        showVirtualTape
-                          ? { background: "#f5f0e0", borderColor: "#c8a840", color: "#7a6020" }
-                          : { background: "#f0f0f0", borderColor: "#d0d0d0", color: "#888888" }
-                      }
-                    >
-                      {showVirtualTape ? "仮想テープをかくす" : "仮想テープを表示"}
-                    </button>
-                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                    このアプリでは「ファ・ソ・ラ・シ・ド」を中心に使います。
+                    <br />
+                    まずはこのあたりに目印をつけてみましょう。
+                  </p>
                 </div>
 
                 <div className="mother-settings-card p-4">
@@ -3565,7 +3468,6 @@ if (selectedStage === 2) {
                     />
                   )}
 
-                  {showVirtualTape && <VirtualTape />}
                 </div>
 
                 <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
@@ -3610,24 +3512,6 @@ if (selectedStage === 2) {
                   </button>
                 </div>
 
-                <div className="mt-2 flex items-center justify-end gap-2">
-                  <span className="text-[11px] font-bold text-slate-400">テープ：</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowVirtualTape((v) => !v)}
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${showVirtualTape ? "bg-[#eef7e8] text-[#3a7a30]" : "bg-slate-100 text-slate-400"}`}
-                  >
-                    ON
-                  </button>
-                  <span className="text-[10px] text-slate-300">/</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowVirtualTape((v) => !v)}
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${!showVirtualTape ? "bg-[#f5e8e8] text-[#7a3030]" : "bg-slate-100 text-slate-400"}`}
-                  >
-                    OFF
-                  </button>
-                </div>
               </div>
 
               <div className="mother-display-blue flex min-h-[190px] flex-col items-center justify-center px-5 py-5 text-center">
@@ -3716,7 +3600,6 @@ if (selectedStage === 2) {
                       />
                     )}
 
-                    {showVirtualTape && <VirtualTape />}
                   </div>
 
                   <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
@@ -3736,29 +3619,9 @@ if (selectedStage === 2) {
                 />
 
                 <div className="mother-subpanel flex min-h-[148px] flex-col gap-4 px-5 py-5">
-                  <div className="flex items-center justify-between">
-                    <p className="mother-text-soft text-center text-sm font-bold">
-                      メロディー1 をれんしゅう中
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-slate-400">テープ：</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowVirtualTape((v) => !v)}
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${showVirtualTape ? "bg-[#eef7e8] text-[#3a7a30]" : "bg-slate-100 text-slate-400"}`}
-                      >
-                        ON
-                      </button>
-                      <span className="text-[10px] text-slate-300">/</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowVirtualTape((v) => !v)}
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${!showVirtualTape ? "bg-[#f5e8e8] text-[#7a3030]" : "bg-slate-100 text-slate-400"}`}
-                      >
-                        OFF
-                      </button>
-                    </div>
-                  </div>
+                  <p className="mother-text-soft text-center text-sm font-bold">
+                    メロディー1 をれんしゅう中
+                  </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center gap-3">
@@ -3918,7 +3781,6 @@ if (selectedStage === 2) {
                       />
                     )}
 
-                    {showVirtualTape && <VirtualTape />}
                   </div>
 
                   <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
@@ -3938,29 +3800,9 @@ if (selectedStage === 2) {
                 />
 
                 <div className="mother-subpanel flex min-h-[126px] flex-col gap-3 px-4 py-4">
-                  <div className="flex items-center justify-between">
-                    <p className="mother-text-soft text-center text-sm font-bold">
-                      メロディー{phraseIndex + 1} をれんしゅう中
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-slate-400">テープ：</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowVirtualTape((v) => !v)}
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${showVirtualTape ? "bg-[#eef7e8] text-[#3a7a30]" : "bg-slate-100 text-slate-400"}`}
-                      >
-                        ON
-                      </button>
-                      <span className="text-[10px] text-slate-300">/</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowVirtualTape((v) => !v)}
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${!showVirtualTape ? "bg-[#f5e8e8] text-[#7a3030]" : "bg-slate-100 text-slate-400"}`}
-                      >
-                        OFF
-                      </button>
-                    </div>
-                  </div>
+                  <p className="mother-text-soft text-center text-sm font-bold">
+                    メロディー{phraseIndex + 1} をれんしゅう中
+                  </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center gap-3">
@@ -4051,27 +3893,7 @@ if (selectedStage === 5) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">テープ：</span>
-                <button
-                  type="button"
-                  onClick={() => setShowVirtualTape((v) => !v)}
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${showVirtualTape ? "bg-[#eef7e8] text-[#3a7a30]" : "bg-slate-100 text-slate-400"}`}
-                >
-                  ON
-                </button>
-                <span className="text-[10px] text-slate-300">/</span>
-                <button
-                  type="button"
-                  onClick={() => setShowVirtualTape((v) => !v)}
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${!showVirtualTape ? "bg-[#f5e8e8] text-[#7a3030]" : "bg-slate-100 text-slate-400"}`}
-                >
-                  OFF
-                </button>
-              </div>
-              <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="blue" />
-            </div>
+            <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="blue" />
           </div>
 
           <div className="mother-subpanel px-3 py-2">
@@ -4144,7 +3966,6 @@ if (selectedStage === 5) {
                     />
                   )}
 
-                  {showVirtualTape && <VirtualTape />}
                 </div>
 
                 <div className="absolute bottom-0 left-1/2 h-[74px] w-[88px] -translate-x-1/2 translate-y-5 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
@@ -4277,27 +4098,7 @@ if (selectedStage === 6) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-400">テープ：</span>
-                <button
-                  type="button"
-                  onClick={() => setShowVirtualTape((v) => !v)}
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${showVirtualTape ? "bg-[#2a3a2a] text-[#7aba70]" : "bg-[#2A2F3A] text-slate-500"}`}
-                >
-                  ON
-                </button>
-                <span className="text-[10px] text-slate-600">/</span>
-                <button
-                  type="button"
-                  onClick={() => setShowVirtualTape((v) => !v)}
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold transition ${!showVirtualTape ? "bg-[#3a2a2a] text-[#ba7070]" : "bg-[#2A2F3A] text-slate-500"}`}
-                >
-                  OFF
-                </button>
-              </div>
-              <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
-            </div>
+            <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
           </div>
 
           <div className="rounded-[24px] bg-[#2A2F3A] px-3 py-2">
@@ -4368,7 +4169,6 @@ if (selectedStage === 6) {
                       />
                     )}
 
-                    {showVirtualTape && <VirtualTape />}
                   </div>
 
                   <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
