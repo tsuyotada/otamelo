@@ -86,7 +86,6 @@ type TuningSample = {
 }
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
-const SFC_MODE_KEY = "otamelo_sfc_mode"
 const TEMPO_KEY = "otamelo-tempo"
 const TUNING_AVERAGE_WINDOW_MS = 800
 const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
@@ -1356,39 +1355,6 @@ function getTuningGuardErrorMessage(
   return ""
 }
 
-function SfcModeToggle({
-  isOn,
-  onToggle,
-  variant = "dark",
-}: {
-  isOn: boolean
-  onToggle: () => void
-  variant?: "dark" | "light"
-}) {
-  const toggleClass = isOn
-    ? variant === "dark"
-      ? "sfc-toggle dark-on"
-      : "sfc-toggle light-on"
-    : variant === "dark"
-    ? "sfc-toggle dark-off"
-    : "sfc-toggle light-off"
-
-  const ledClass = isOn
-    ? variant === "dark"
-      ? "sfc-toggle-led on-dark"
-      : "sfc-toggle-led on-light"
-    : variant === "dark"
-    ? "sfc-toggle-led off-dark"
-    : "sfc-toggle-led off-light"
-
-  return (
-    <button type="button" onClick={onToggle} className={toggleClass}>
-      <span className={ledClass} />
-      SFCモード
-      <span style={{ opacity: 0.65 }}>{isOn ? "ON" : "OFF"}</span>
-    </button>
-  )
-}
 
 const TEMPO_OPTIONS = [
   { label: "ゆっくり", value: 1 },
@@ -1467,7 +1433,6 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage6JudgedCount, setStage6JudgedCount] = useState(0)
   const [stage6ResultOpen, setStage6ResultOpen] = useState(false)
 
-  const [isSfcMode, setIsSfcMode] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [aboutName, setAboutName] = useState("")
   const [aboutEmail, setAboutEmail] = useState("")
@@ -2777,20 +2742,6 @@ useEffect(() => {
   }, [])
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(SFC_MODE_KEY)
-    if (stored === "true") setIsSfcMode(true)
-  }, [])
-
-  useEffect(() => {
-    window.localStorage.setItem(SFC_MODE_KEY, String(isSfcMode))
-    if (isSfcMode) {
-      document.documentElement.classList.add("sfc-mode")
-    } else {
-      document.documentElement.classList.remove("sfc-mode")
-    }
-  }, [isSfcMode])
-
-  useEffect(() => {
     if (typeof window === "undefined") return
     try {
       const raw = window.localStorage.getItem(TEMPO_KEY)
@@ -2876,14 +2827,6 @@ useEffect(() => {
               UNOFFICIAL PRACTICE APP
             </p>
 
-            <div className="mt-5">
-              <SfcModeToggle
-                isOn={isSfcMode}
-                onToggle={() => setIsSfcMode((v) => !v)}
-                variant="dark"
-              />
-            </div>
-
             <button
               type="button"
               onClick={() => setShowAbout(true)}
@@ -2941,8 +2884,7 @@ useEffect(() => {
                   それで練習してみるか、というところからこのアプリを作ってみました。
                 </p>
                 <p>
-                  しかも8つのメロディーを分解するというのがいい。<br />
-                  アプリをジェフが作ったような雰囲気にする、というのも楽しいポイントでした。
+                  しかも8つのメロディーを分解するというのがいい、アプリをジェフが作ったような雰囲気にするのもいいな、と夜な夜な手を入れてきました。
                 </p>
                 <p className="text-white/60">
                   また、本アプリはオタマトーンおよび「MOTHER2」に着想を得て制作した非公式のファンコンテンツです。<br />
@@ -3136,11 +3078,6 @@ useEffect(() => {
                 >
                   調整してみる
                 </button>
-                <SfcModeToggle
-                  isOn={isSfcMode}
-                  onToggle={() => setIsSfcMode((v) => !v)}
-                  variant="light"
-                />
               </div>
             </div>
           </section>
