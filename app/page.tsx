@@ -137,13 +137,15 @@ const defaultTuningAnchors: TuningAnchor[] = [
 ]
 
 const stages: StageItem[] = [
-  { id: 1, title: "まずは　オタマトーンをならしてみて" },
+  { id: 1, title: "4つの音を　見つけてみよう" },
   { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
   { id: 3, title: "ひとつめのメロディーを　ひいてみて" },
   { id: 4, title: "ほかのメロディーも　ひいてみて" },
   { id: 5, title: "エイトメロディーズを　とおしで　ひいてみて" },
   { id: 6, title: "本番だ　全体とおして　自分だけでひいてみて" },
 ]
+
+const STAGE1_TARGET_NOTES = ["ファ", "ソ", "ラ", "高いド"] as const
 
 const noteNamesSharp = [
   "ド",
@@ -1440,6 +1442,9 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [contactStatus, setContactStatus] = useState<"idle" | "success" | "error">("idle")
 
+  const [stage1FoundNotes, setStage1FoundNotes] = useState<string[]>([])
+  const [stage1ShowHint, setStage1ShowHint] = useState(false)
+
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
   const countdownTimerRef = useRef<number | null>(null)
@@ -1454,6 +1459,10 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const stableHitCountRef = useRef(0)
   const noteSolvedRef = useRef(false)
   const stage1AutoMicTriedRef = useRef(false)
+  const stage1CandidateNoteRef = useRef("")
+  const stage1CandidateCountRef = useRef(0)
+  const stage1FoundNotesRef = useRef(new Set<string>())
+  const stage1HintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const metronomeBeatRef = useRef<number | null>(null)
   const playbackStartRef = useRef<number>(0)
   const elapsedBeatsRef = useRef<number>(0)
@@ -1513,6 +1522,8 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const current = safeNotes[noteIndex] ?? safeNotes[0]
   const stageLabel =
     stages.find((stage) => stage.id === selectedStage)?.title ?? ""
+
+  const stage1Completed = stage1FoundNotes.length === STAGE1_TARGET_NOTES.length
 
   const hasCustomTuning = tuningAnchors.some(
     (item) => item.capturedFreq !== null
@@ -2535,6 +2546,31 @@ const handleResetTuning = () => {
   }, [screen, selectedStage, isMicEnabled, isMicPreparing])
 
   useEffect(() => {
+    if (screen !== "practice" || selectedStage !== 1) return
+    stage1FoundNotesRef.current.clear()
+    stage1CandidateNoteRef.current = ""
+    stage1CandidateCountRef.current = 0
+    setStage1FoundNotes([])
+    setStage1ShowHint(false)
+  }, [screen, selectedStage])
+
+  useEffect(() => {
+    if (screen !== "practice" || selectedStage !== 1 || stage1Completed) {
+      if (stage1HintTimerRef.current !== null) {
+        clearTimeout(stage1HintTimerRef.current)
+        stage1HintTimerRef.current = null
+      }
+      return
+    }
+    setStage1ShowHint(false)
+    if (stage1HintTimerRef.current !== null) clearTimeout(stage1HintTimerRef.current)
+    stage1HintTimerRef.current = setTimeout(() => setStage1ShowHint(true), 15000)
+    return () => {
+      if (stage1HintTimerRef.current !== null) clearTimeout(stage1HintTimerRef.current)
+    }
+  }, [screen, selectedStage, stage1FoundNotes, stage1Completed])
+
+  useEffect(() => {
     if (screen !== "tune") return
     if (isMicEnabled || isMicPreparing) return
 
@@ -2668,6 +2704,30 @@ useEffect(() => {
         } else {
           setTuningAverageFreq(0)
           setTuningAverageNote("")
+        }
+      }
+
+      if (selectedStage === 1) {
+        const isTarget = (STAGE1_TARGET_NOTES as readonly string[]).includes(note)
+        if (note && isTarget) {
+          if (note === stage1CandidateNoteRef.current) {
+            stage1CandidateCountRef.current += 1
+            if (
+              stage1CandidateCountRef.current >= 3 &&
+              !stage1FoundNotesRef.current.has(note)
+            ) {
+              stage1FoundNotesRef.current.add(note)
+              setStage1FoundNotes(
+                STAGE1_TARGET_NOTES.filter((n) => stage1FoundNotesRef.current.has(n))
+              )
+            }
+          } else {
+            stage1CandidateNoteRef.current = note
+            stage1CandidateCountRef.current = 1
+          }
+        } else if (note && !isTarget) {
+          stage1CandidateNoteRef.current = ""
+          stage1CandidateCountRef.current = 0
         }
       }
 
@@ -3380,9 +3440,9 @@ useEffect(() => {
   if (selectedStage === 1) {
     return (
       <main className="min-h-screen bg-[#10234d] px-4 py-4 text-white">
-        <div className="mx-auto flex max-w-[980px] flex-col gap-3">
+        <div className="mx-auto flex max-w-[600px] flex-col gap-3">
           <section className="mother-panel flex flex-col p-4 text-slate-900">
-            <div className="mb-3 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <PixelInventorFace />
               <div>
                 <p className="mother-text-soft text-[11px] font-black tracking-wide">
@@ -3394,106 +3454,154 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="flex items-center justify-center py-4">
-                  <div className="relative flex h-[min(62vh,620px)] w-[200px] items-end justify-center rounded-full bg-[#f3ead1] px-5 py-6">
-                    <div className="mother-neck relative h-full w-12 rounded-full">
-                      <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
-                        {Array.from({ length: 11 }).map((_, i) => (
-                          <div key={i} className="h-px w-full bg-white/10" />
-                        ))}
-                      </div>
-
-                      {stage1IndicatorTop !== null && (
-                        <div
-                          className="mother-indicator-current absolute left-1/2 h-3.5 w-16 -translate-x-1/2 rounded-full"
-                          style={{
-                            top: `clamp(8px, calc(${stage1IndicatorTop}% - 7px), calc(100% - 22px))`,
-                          }}
-                        />
-                      )}
-
-                    </div>
-
-                    <div className="absolute bottom-0 left-1/2 h-[96px] w-[112px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
-                      <div className="absolute left-[31px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                      <div className="absolute right-[31px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
-                      <div className="absolute left-0 top-[48px] h-[2px] w-full bg-slate-700" />
-                    </div>
-                  </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
-                  <p className="text-sm font-bold text-slate-600">いまの音</p>
-                  <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
-                    {detectedNote || "-"}
-                  </p>
-                  <p className="mt-3 text-sm font-bold text-slate-600">
-                    {detectedFreq > 0 ? `${detectedFreq.toFixed(2)} Hz` : ""}
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fffdf0] px-4 py-4">
-                  <p className="text-xs font-black tracking-wide text-[#b09050]">
-                    Tips：音が分からなくても大丈夫
-                  </p>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                    オタマトーンは音の位置が分かりづらいですよね。
-                    <br />
-                    最初は本体にテープを貼って、目印を書いてしまうのもおすすめです。
-                  </p>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                    このアプリでは「ファ・ソ・ラ・シ・ド」を中心に使います。
-                    <br />
-                    まずはこのあたりに目印をつけてみましょう。
-                  </p>
-                </div>
-
-                <div className="mother-settings-card p-4">
-                  <p className="mother-text-main mb-3 text-base font-bold">
-                    ひょうじ
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isMicEnabled) {
-                        stopMic()
-                      } else {
-                        void startMic()
-                      }
-                    }}
-                    className="mother-button-blue w-full px-4 py-3 text-base font-bold"
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      {isMicPreparing && <Spinner />}
-                      {isMicPreparing
-                        ? "準備中…"
-                        : isMicEnabled
-                        ? "マイクをとめる"
-                        : "マイクをつかう"}
-                    </span>
-                  </button>
-
-                  <div className="mt-3 rounded-[18px] bg-white/70 px-4 py-3 text-center">
-                    <p className="text-xs font-bold text-slate-500">
-                      {isMicEnabled
-                        ? "音が鳴ると、音名と位置が見えます。"
-                        : "マイクをONにすると、音名が見えます。"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="mb-4 text-center">
+              <p className="text-sm leading-relaxed text-slate-600">
+                最初のメロディに出てくる音を、オタマトーンで鳴らしてみよう
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                音が見つかるとカードが光ります
+              </p>
             </div>
 
-            <div className="mother-subpanel mt-4 flex flex-col items-center gap-3 px-5 py-5 text-center">
-              <div className="flex items-center gap-3">
-                <PixelInventorFace />
-                <p className="mother-text-main text-sm font-bold">
-                  ひととおりならしたら　ステージ選択にもどってよ
+            <div className="mb-5 text-center">
+              <p
+                className={`text-lg font-black transition-colors ${
+                  stage1Completed ? "text-[#3F8CFF]" : "text-slate-400"
+                }`}
+              >
+                {stage1FoundNotes.length} / 4 音 見つかった
+              </p>
+              {!stage1Completed && (
+                <div className="mt-2 flex justify-center gap-1.5">
+                  {STAGE1_TARGET_NOTES.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 w-8 rounded-full transition-all ${
+                        i < stage1FoundNotes.length
+                          ? "bg-[#3F8CFF]"
+                          : "bg-slate-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {STAGE1_TARGET_NOTES.map((noteName) => {
+                const isFound = stage1FoundNotes.includes(noteName)
+                const isCurrent = detectedNote === noteName && isMicEnabled
+                return (
+                  <div
+                    key={noteName}
+                    className={`flex flex-col items-center justify-center rounded-[20px] px-3 py-5 text-center transition-all duration-300 ${
+                      isFound
+                        ? "border-2 border-[#3F8CFF] bg-[#eaf4ff] shadow-[0_0_16px_rgba(63,140,255,0.3)]"
+                        : isCurrent
+                        ? "border-2 border-[#FFD54A] bg-[#fffbe6]"
+                        : "border-2 border-[#e8e0c8] bg-[#fafaf8]"
+                    }`}
+                  >
+                    <p
+                      className={`text-2xl font-black leading-none ${
+                        isFound
+                          ? "text-[#3F8CFF]"
+                          : isCurrent
+                          ? "text-[#c8960a]"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {noteName}
+                    </p>
+                    <div className="mt-2 h-5">
+                      {isFound ? (
+                        <p className="text-xs font-bold text-[#3F8CFF]">みつかった</p>
+                      ) : isCurrent ? (
+                        <p className="text-xs font-bold text-[#c8960a]">鳴ってる！</p>
+                      ) : (
+                        <p className="text-xs text-slate-300">—</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {!stage1Completed && (
+              <div className="mb-4 flex flex-col items-center rounded-[18px] bg-[#f5f5f0] px-4 py-4 text-center">
+                <p className="text-xs font-bold text-slate-500">いまの音</p>
+                <p className="mt-1 min-h-[44px] text-4xl font-black leading-none text-slate-800">
+                  {detectedNote || "—"}
+                </p>
+                {!isMicEnabled && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    マイクをONにすると音が検出されます
+                  </p>
+                )}
+              </div>
+            )}
+
+            {stage1ShowHint && !stage1Completed && (
+              <div className="mb-4 rounded-[16px] border border-[#e8e0c8] bg-[#fffdf0] px-4 py-3 text-center">
+                <p className="text-xs font-black tracking-wide text-[#b09050]">
+                  ヒント
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                  スマホをオタマトーンに近づけてみよう
+                  <br />
+                  少し長めに音を鳴らしてみよう
+                  <br />
+                  まわりの音が大きいと聞き取りにくいことがあります
                 </p>
               </div>
+            )}
+
+            {stage1Completed && (
+              <div className="mb-4 flex flex-col items-center gap-3 rounded-[20px] bg-[#eaf4ff] px-5 py-6 text-center">
+                <p className="text-2xl font-black text-[#3F8CFF]">できた！</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  最初のメロディに出てくる
+                  <br />
+                  4つの音を見つけられました
+                </p>
+                <p className="text-xs text-slate-500">
+                  アプリがオタマトーンの音を聞き取れています
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopMic()
+                    stage1AutoMicTriedRef.current = false
+                    handleSelectStage(2)
+                  }}
+                  className="mother-button-blue mt-1 px-8 py-3 text-base font-bold"
+                >
+                  メロディを聞いてみる
+                </button>
+              </div>
+            )}
+
+            <div className="flex flex-col items-center gap-3 border-t border-[#e8e0c8] pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isMicEnabled) {
+                    stopMic()
+                  } else {
+                    void startMic()
+                  }
+                }}
+                className="mother-button-blue w-full px-4 py-3 text-base font-bold"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {isMicPreparing && <Spinner />}
+                  {isMicPreparing
+                    ? "準備中…"
+                    : isMicEnabled
+                    ? "マイクをとめる"
+                    : "マイクをつかう"}
+                </span>
+              </button>
 
               <button
                 type="button"
@@ -3506,9 +3614,9 @@ useEffect(() => {
                   stopMic()
                   setScreen("stageSelect")
                 }}
-                className="mother-button-light px-5 py-3 text-sm font-bold"
+                className="text-xs font-bold text-slate-400 underline underline-offset-2"
               >
-                ステージ選択へ
+                ステージ選択へもどる
               </button>
             </div>
           </section>
