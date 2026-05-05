@@ -1445,6 +1445,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
 
   const [stage1FoundNotes, setStage1FoundNotes] = useState<string[]>([])
   const [stage1ShowHint, setStage1ShowHint] = useState(false)
+  const [stage1PhaseB, setStage1PhaseB] = useState(false)
   const [stage1EverDone, setStage1EverDone] = useState(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -1465,6 +1466,10 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const stage1CandidateCountRef = useRef(0)
   const stage1FoundNotesRef = useRef(new Set<string>())
   const stage1HintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stage1PhaseBRef = useRef(false)
+  const stage1StepACandRef = useRef("")
+  const stage1StepACandCountRef = useRef(0)
+  const stage1StepAEventsRef = useRef(0)
   const metronomeBeatRef = useRef<number | null>(null)
   const playbackStartRef = useRef<number>(0)
   const elapsedBeatsRef = useRef<number>(0)
@@ -2554,10 +2559,15 @@ const handleResetTuning = () => {
     stage1CandidateCountRef.current = 0
     setStage1FoundNotes([])
     setStage1ShowHint(false)
+    setStage1PhaseB(false)
+    stage1PhaseBRef.current = false
+    stage1StepACandRef.current = ""
+    stage1StepACandCountRef.current = 0
+    stage1StepAEventsRef.current = 0
   }, [screen, selectedStage])
 
   useEffect(() => {
-    if (screen !== "practice" || selectedStage !== 1 || stage1Completed) {
+    if (screen !== "practice" || selectedStage !== 1 || !stage1PhaseB || stage1Completed) {
       if (stage1HintTimerRef.current !== null) {
         clearTimeout(stage1HintTimerRef.current)
         stage1HintTimerRef.current = null
@@ -2570,7 +2580,7 @@ const handleResetTuning = () => {
     return () => {
       if (stage1HintTimerRef.current !== null) clearTimeout(stage1HintTimerRef.current)
     }
-  }, [screen, selectedStage, stage1FoundNotes, stage1Completed])
+  }, [screen, selectedStage, stage1PhaseB, stage1FoundNotes, stage1Completed])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -2725,6 +2735,26 @@ useEffect(() => {
       }
 
       if (selectedStage === 1) {
+        // Step A → Step B: count stable note events (any note, 3 events = unlock)
+        if (!stage1PhaseBRef.current) {
+          if (note) {
+            if (note === stage1StepACandRef.current) {
+              stage1StepACandCountRef.current += 1
+              if (stage1StepACandCountRef.current === 3) {
+                stage1StepAEventsRef.current += 1
+                if (stage1StepAEventsRef.current >= 3) {
+                  stage1PhaseBRef.current = true
+                  setStage1PhaseB(true)
+                }
+              }
+            } else {
+              stage1StepACandRef.current = note
+              stage1StepACandCountRef.current = 1
+            }
+          }
+        }
+
+        // Step B: detect the 4 target notes
         const isTarget = (STAGE1_TARGET_NOTES as readonly string[]).includes(note)
         if (note && isTarget) {
           if (note === stage1CandidateNoteRef.current) {
@@ -3115,7 +3145,7 @@ useEffect(() => {
                 <p className="mother-text-main text-sm font-bold">
                   {stage1EverDone
                     ? "じゅんばんにすすむのが　おすすめだよ"
-                    : "まずは1から　いってみようか"}
+                    : "はじめてなら　まずは最初のステージからが　おすすめ"}
                 </p>
               </div>
             </div>
@@ -3480,6 +3510,7 @@ useEffect(() => {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+              {/* オタマトーンビジュアル（常時表示） */}
               <div className="flex items-center justify-center py-4">
                 <div className="relative flex h-[min(62vh,620px)] w-[200px] items-end justify-center rounded-full bg-[#f3ead1] px-5 py-6">
                   <div className="mother-neck relative h-full w-12 rounded-full">
@@ -3488,7 +3519,6 @@ useEffect(() => {
                         <div key={i} className="h-px w-full bg-white/10" />
                       ))}
                     </div>
-
                     {stage1IndicatorTop !== null && (
                       <div
                         className="mother-indicator-current absolute left-1/2 h-3.5 w-16 -translate-x-1/2 rounded-full"
@@ -3498,7 +3528,6 @@ useEffect(() => {
                       />
                     )}
                   </div>
-
                   <div className="absolute bottom-0 left-1/2 h-[96px] w-[112px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
                     <div className="absolute left-[31px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
                     <div className="absolute right-[31px] top-[28px] h-[8px] w-[8px] rounded-full bg-slate-700" />
@@ -3508,17 +3537,18 @@ useEffect(() => {
               </div>
 
               <div className="flex flex-col gap-4">
+                {/* いまの音 / 完了メッセージ */}
                 {stage1Completed ? (
-                  <div className="mother-display-blue flex min-h-[140px] flex-col items-center justify-center px-5 py-6 text-center">
+                  <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                     <p className="text-2xl font-black text-[#3F8CFF]">いいね！</p>
                     <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                      4つの音、見つかったよ
+                      4つの音　見つかったね
                     </p>
                   </div>
                 ) : (
-                  <div className="mother-display-blue flex min-h-[140px] flex-col items-center justify-center px-5 py-6 text-center">
+                  <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                     <p className="text-sm font-bold text-slate-600">いまの音</p>
-                    <p className="mt-3 min-h-[60px] text-5xl font-black leading-none text-slate-900">
+                    <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
                       {detectedNote || "—"}
                     </p>
                     <p className="mt-3 text-sm font-bold text-slate-600">
@@ -3527,63 +3557,69 @@ useEffect(() => {
                   </div>
                 )}
 
-                <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fafaf8] px-4 py-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-bold text-slate-500">
-                      いくつ見つかるかな？
-                    </p>
-                    <p
-                      className={`text-sm font-black transition-colors ${
-                        stage1Completed ? "text-[#3F8CFF]" : "text-slate-400"
-                      }`}
-                    >
-                      {stage1FoundNotes.length} / 4
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {STAGE1_TARGET_NOTES.map((noteName) => {
-                      const isFound = stage1FoundNotes.includes(noteName)
-                      const isCurrent = detectedNote === noteName && isMicEnabled
-                      return (
-                        <div
-                          key={noteName}
-                          className={`flex flex-col items-center justify-center rounded-[14px] px-1 py-3 text-center transition-all duration-300 ${
-                            isFound
-                              ? "border-2 border-[#3F8CFF] bg-[#eaf4ff] shadow-[0_0_10px_rgba(63,140,255,0.25)]"
-                              : isCurrent
-                              ? "border-2 border-[#FFD54A] bg-[#fffbe6]"
-                              : "border border-[#e8e0c8] bg-white"
-                          }`}
-                        >
-                          <p
-                            className={`text-base font-black leading-none ${
+                {/* Step B: 音カード（自由に鳴らした後に表示） */}
+                {stage1PhaseB && (
+                  <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fafaf8] px-4 py-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-500">
+                        {stage1FoundNotes.length === 0
+                          ? "こんどは　音を見つけてみる？"
+                          : "いくつ見つかるかな？"}
+                      </p>
+                      <p
+                        className={`text-sm font-black transition-colors ${
+                          stage1Completed ? "text-[#3F8CFF]" : "text-slate-400"
+                        }`}
+                      >
+                        {stage1FoundNotes.length} / 4
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {STAGE1_TARGET_NOTES.map((noteName) => {
+                        const isFound = stage1FoundNotes.includes(noteName)
+                        const isCurrent = detectedNote === noteName && isMicEnabled
+                        return (
+                          <div
+                            key={noteName}
+                            className={`flex flex-col items-center justify-center rounded-[14px] px-1 py-3 text-center transition-all duration-300 ${
                               isFound
-                                ? "text-[#3F8CFF]"
+                                ? "border-2 border-[#3F8CFF] bg-[#eaf4ff] shadow-[0_0_10px_rgba(63,140,255,0.25)]"
                                 : isCurrent
-                                ? "text-[#c8960a]"
-                                : "text-slate-400"
+                                ? "border-2 border-[#FFD54A] bg-[#fffbe6]"
+                                : "border border-[#e8e0c8] bg-white"
                             }`}
                           >
-                            {noteName}
-                          </p>
-                          <p
-                            className={`mt-1 text-[10px] font-bold ${
-                              isFound
-                                ? "text-[#3F8CFF]"
-                                : isCurrent
-                                ? "text-[#c8960a]"
-                                : "text-slate-200"
-                            }`}
-                          >
-                            {isFound ? "✓" : isCurrent ? "♪" : "—"}
-                          </p>
-                        </div>
-                      )
-                    })}
+                            <p
+                              className={`text-base font-black leading-none ${
+                                isFound
+                                  ? "text-[#3F8CFF]"
+                                  : isCurrent
+                                  ? "text-[#c8960a]"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              {noteName}
+                            </p>
+                            <p
+                              className={`mt-1 text-[10px] font-bold ${
+                                isFound
+                                  ? "text-[#3F8CFF]"
+                                  : isCurrent
+                                  ? "text-[#c8960a]"
+                                  : "text-slate-200"
+                              }`}
+                            >
+                              {isFound ? "✓" : isCurrent ? "♪" : "—"}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {stage1ShowHint && !stage1Completed ? (
+                {/* Tips / Hint */}
+                {stage1ShowHint && stage1PhaseB && !stage1Completed ? (
                   <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fffdf0] px-4 py-4">
                     <p className="text-xs font-black tracking-wide text-[#b09050]">
                       ヒント
@@ -3602,13 +3638,16 @@ useEffect(() => {
                       じゆうにならしてみて
                     </p>
                     <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                      音が見つかるとカードが光るよ。
+                      {stage1PhaseB
+                        ? "音が見つかるとカードが光るよ。"
+                        : "音がきこえたら　ここに出るよ。"}
                       <br />
                       好きな音を出してみてよ。
                     </p>
                   </div>
                 )}
 
+                {/* マイクボタン */}
                 <div className="mother-settings-card p-4">
                   <button
                     type="button"
@@ -3630,7 +3669,6 @@ useEffect(() => {
                         : "マイクをつかう"}
                     </span>
                   </button>
-
                   <div className="mt-3 rounded-[18px] bg-white/70 px-4 py-3 text-center">
                     <p className="text-xs font-bold text-slate-500">
                       {isMicEnabled
@@ -3651,7 +3689,6 @@ useEffect(() => {
                     : "ひととおりならしたら　ステージ選択にもどってよ"}
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={() => {
