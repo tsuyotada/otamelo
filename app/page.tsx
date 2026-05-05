@@ -3632,15 +3632,19 @@ useEffect(() => {
                       まわりの音が大きいと聞き取りにくいことがあります
                     </p>
                   </div>
+                ) : stage1PhaseB ? (
+                  <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fffdf0] px-4 py-4">
+                    <p className="text-xs font-black leading-relaxed text-[#b09050]">
+                      なれてきたら　音を見つけてカードを　ひからせて
+                    </p>
+                  </div>
                 ) : (
                   <div className="rounded-[20px] border border-[#e8e0c8] bg-[#fffdf0] px-4 py-4">
                     <p className="text-xs font-black tracking-wide text-[#b09050]">
                       じゆうにならしてみて
                     </p>
                     <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                      {stage1PhaseB
-                        ? "音が見つかるとカードが光るよ。"
-                        : "音がきこえたら　ここに出るよ。"}
+                      音がきこえたら　ここに出るよ。
                       <br />
                       好きな音を出してみてよ。
                     </p>
