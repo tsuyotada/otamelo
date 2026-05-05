@@ -4515,12 +4515,19 @@ if (selectedStage === 6) {
 {/* スコアエリア */}
 <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
   
-  {/* MIC ON バッジ */}
+  {/* MIC ON / MIC OFF バッジ */}
   <div className="mb-2 flex items-center justify-end gap-2">
-    <div className="flex items-center gap-2 rounded-full border border-red-500 bg-red-500/25 px-3 py-1 text-xs font-bold text-[#FFD0D0]">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-      MIC ON
-    </div>
+    {isMicEnabled ? (
+      <div className="flex items-center gap-2 rounded-full border border-red-500 bg-red-500/25 px-3 py-1 text-xs font-bold text-[#FFD0D0]">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+        MIC ON
+      </div>
+    ) : (
+      <div className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-700/50 px-3 py-1 text-xs font-bold text-slate-500">
+        <span className="h-2 w-2 rounded-full bg-slate-600" />
+        MIC OFF
+      </div>
+    )}
   </div>
 
   {/* スコア表示 */}
