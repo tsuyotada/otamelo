@@ -87,6 +87,7 @@ type TuningSample = {
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
 const TEMPO_KEY = "otamelo-tempo"
+const STAGE1_DONE_KEY = "otamelo-stage1-done"
 const TUNING_AVERAGE_WINDOW_MS = 800
 const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
 const TUNING_MIN_RMS = 0.02
@@ -137,7 +138,7 @@ const defaultTuningAnchors: TuningAnchor[] = [
 ]
 
 const stages: StageItem[] = [
-  { id: 1, title: "オタマトーンを　ならしてみてよ" },
+  { id: 1, title: "オタマトーンを　ならしてみて" },
   { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
   { id: 3, title: "ひとつめのメロディーを　ひいてみて" },
   { id: 4, title: "ほかのメロディーも　ひいてみて" },
@@ -1444,6 +1445,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
 
   const [stage1FoundNotes, setStage1FoundNotes] = useState<string[]>([])
   const [stage1ShowHint, setStage1ShowHint] = useState(false)
+  const [stage1EverDone, setStage1EverDone] = useState(false)
 
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
@@ -2571,6 +2573,21 @@ const handleResetTuning = () => {
   }, [screen, selectedStage, stage1FoundNotes, stage1Completed])
 
   useEffect(() => {
+    if (typeof window === "undefined") return
+    if (window.localStorage.getItem(STAGE1_DONE_KEY) === "1") {
+      setStage1EverDone(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!stage1Completed || stage1EverDone) return
+    setStage1EverDone(true)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STAGE1_DONE_KEY, "1")
+    }
+  }, [stage1Completed, stage1EverDone])
+
+  useEffect(() => {
     if (screen !== "tune") return
     if (isMicEnabled || isMicPreparing) return
 
@@ -3093,6 +3110,14 @@ useEffect(() => {
               <h1 className="mother-text-main text-2xl font-black md:text-3xl">
                 どこからやってみる？
               </h1>
+              <div className="mt-3 flex items-center gap-2">
+                <PixelInventorFace />
+                <p className="mother-text-main text-sm font-bold">
+                  {stage1EverDone
+                    ? "じゅんばんにすすむのが　おすすめだよ"
+                    : "まずは1から　いってみようか"}
+                </p>
+              </div>
             </div>
 
             <div className="mt-8 flex flex-col gap-4">
