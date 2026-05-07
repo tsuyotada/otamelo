@@ -185,16 +185,16 @@ const noteNamesSharp = [
 ]
 
 const BADGE_LIST: BadgeInfo[] = [
-  { id: "stage1_first_sound", name: "はじめての音バッジ", description: "4つのターゲット音をすべて見つけた", stage: 1, scoreThreshold: null },
-  { id: "stage2_listened", name: "メロディーをおぼえたバッジ", description: "エイトメロディーズを最後まできいた", stage: 2, scoreThreshold: null },
-  { id: "stage3_first_phrase", name: "ひとふし弾けたバッジ", description: "ひとつめのメロディーを最後まで進んだ", stage: 3, scoreThreshold: null },
-  { id: "stage4_practice_done", name: "こつこつ練習バッジ", description: "メロディーを最後まで練習した", stage: 4, scoreThreshold: null },
-  { id: "stage5_tempo_done", name: "テンポになれたバッジ", description: "エイトメロディーズを最後まで通した", stage: 5, scoreThreshold: null },
-  { id: "stage6_played", name: "ステージに立ったバッジ", description: "本番演奏を完走した", stage: 6, scoreThreshold: null },
-  { id: "stage6_score_40", name: "メロディーのかけらバッジ", description: "正答率40%以上で演奏した", stage: 6, scoreThreshold: 40 },
-  { id: "stage6_score_60", name: "ちゃんと届いたバッジ", description: "正答率60%以上で演奏した", stage: 6, scoreThreshold: 60 },
-  { id: "stage6_score_80", name: "エイトメロディーズバッジ", description: "正答率80%以上で演奏した", stage: 6, scoreThreshold: 80 },
-  { id: "stage6_score_95", name: "はねかえしバッジ", description: "正答率95%以上で演奏した", stage: 6, scoreThreshold: 95 },
+  { id: "stage1_first_sound", name: "はじめての音バッジ", description: "はじめて音を出せたしるし", stage: 1, scoreThreshold: null },
+  { id: "stage2_listened", name: "メロディー全体をきいたバッジ", description: "メロディー全体を最後まできいたしるし", stage: 2, scoreThreshold: null },
+  { id: "stage3_first_phrase", name: "さいしょのメロディーを弾けたバッジ", description: "さいしょのメロディーを最後まで弾いたしるし", stage: 3, scoreThreshold: null },
+  { id: "stage4_practice_done", name: "こつこつ練習バッジ", description: "こつこつ練習したしるし", stage: 4, scoreThreshold: null },
+  { id: "stage5_tempo_done", name: "慣れてきたバッジ", description: "テンポに慣れてきたしるし", stage: 5, scoreThreshold: null },
+  { id: "stage6_played", name: "ステージに立ったバッジ", description: "ステージで最後まで演奏したしるし", stage: 6, scoreThreshold: null },
+  { id: "stage6_score_40", name: "かけだしバッジ", description: "正答率40%以上のしるし", stage: 6, scoreThreshold: 40 },
+  { id: "stage6_score_60", name: "半人前バッジ", description: "正答率60%以上のしるし", stage: 6, scoreThreshold: 60 },
+  { id: "stage6_score_80", name: "エイトメロディーズバッジ", description: "正答率80%以上のしるし", stage: 6, scoreThreshold: 80 },
+  { id: "stage6_score_95", name: "フランクリンなバッジ", description: "正答率95%以上のしるし", stage: 6, scoreThreshold: 95 },
 ]
 
 function getEarnedBadges(): BadgeId[] {
@@ -481,6 +481,62 @@ function PixelInventorFace() {
       <div className="absolute left-1/2 top-[17px] h-[2px] w-[4px] -translate-x-1/2 bg-slate-800" />
       <div className="absolute left-1/2 top-[21px] h-[2px] w-[2px] -translate-x-1/2 bg-[#d6907e]" />
       <div className="absolute left-1/2 top-[25px] h-[2px] w-[9px] -translate-x-1/2 bg-slate-800" />
+    </div>
+  )
+}
+
+// ピクセルアート風バッジメダルの設定
+type BadgeMedalCfg = { bg: string; ring: string; color: string; symbol: string }
+const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
+  stage1_first_sound:   { bg: "#FFF6CC", ring: "#CCA000", color: "#7A5000", symbol: "♪" },
+  stage2_listened:      { bg: "#D8F2E4", ring: "#28965A", color: "#125030", symbol: "♫" },
+  stage3_first_phrase:  { bg: "#D8EEFF", ring: "#2272CC", color: "#0E4280", symbol: "▶" },
+  stage4_practice_done: { bg: "#FFEDD0", ring: "#CC7200", color: "#7A3600", symbol: "✏" },
+  stage5_tempo_done:    { bg: "#EDE0FF", ring: "#7C3CCC", color: "#460C8A", symbol: "⇒" },
+  stage6_played:        { bg: "#FFE4E4", ring: "#CC2424", color: "#780808", symbol: "★" },
+  stage6_score_40:      { bg: "#FFF4CC", ring: "#B89400", color: "#7A5000", symbol: "◎" },
+  stage6_score_60:      { bg: "#FFEACC", ring: "#CC6200", color: "#7A3000", symbol: "⚡" },
+  stage6_score_80:      { bg: "#D8F8DC", ring: "#229448", color: "#0C5020", symbol: "♬" },
+  stage6_score_95:      { bg: "#FFFACC", ring: "#BCA400", color: "#665400", symbol: "✦" },
+}
+
+function BadgeSlot() {
+  return (
+    <div
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: "50%",
+        border: "2px dashed #C0B8AC",
+        opacity: 0.5,
+      }}
+    />
+  )
+}
+
+function BadgeMedal({ id }: { id: BadgeId }) {
+  const cfg = BADGE_MEDAL_CONFIGS[id]
+  const name = BADGE_LIST.find((b) => b.id === id)?.name ?? ""
+  return (
+    <div
+      title={name}
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: "50%",
+        background: cfg.bg,
+        border: `2px solid ${cfg.ring}`,
+        boxShadow: `0 2px 0 ${cfg.ring}AA`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 13,
+        color: cfg.color,
+        userSelect: "none",
+        flexShrink: 0,
+      }}
+    >
+      {cfg.symbol}
     </div>
   )
 }
@@ -2995,14 +3051,25 @@ useEffect(() => {
   const getBadgesForStage = (stageId: StageId) =>
     BADGE_LIST.filter((b) => b.stage === stageId && earnedBadges.includes(b.id))
 
-  // Stage 6 最高バッジラベル
-  const getStage6TopBadgeLabel = () => {
-    if (earnedBadges.includes("stage6_score_95")) return "95+"
-    if (earnedBadges.includes("stage6_score_80")) return "80+"
-    if (earnedBadges.includes("stage6_score_60")) return "60+"
-    if (earnedBadges.includes("stage6_score_40")) return "40+"
-    if (earnedBadges.includes("stage6_played")) return "★"
+  // Stage 6 最高バッジの BadgeId を返す
+  const getStage6TopBadgeId = (): BadgeId | null => {
+    if (earnedBadges.includes("stage6_score_95")) return "stage6_score_95"
+    if (earnedBadges.includes("stage6_score_80")) return "stage6_score_80"
+    if (earnedBadges.includes("stage6_score_60")) return "stage6_score_60"
+    if (earnedBadges.includes("stage6_score_40")) return "stage6_score_40"
+    if (earnedBadges.includes("stage6_played")) return "stage6_played"
     return null
+  }
+
+  // Stage 6 スコアバッジ用の正答率ラベル
+  const getStage6AccuracyLabel = (id: BadgeId): string | null => {
+    const map: Partial<Record<BadgeId, string>> = {
+      stage6_score_40: "40%",
+      stage6_score_60: "60%",
+      stage6_score_80: "80%",
+      stage6_score_95: "95%",
+    }
+    return map[id] ?? null
   }
 
   // トースト通知 JSX
@@ -3011,10 +3078,10 @@ useEffect(() => {
     if (!badge) return null
     return (
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-fadeIn">
-        <div className="rounded-[20px] border border-[#FFD54A]/40 bg-[#1B2A5A] px-6 py-4 text-center shadow-[0_8px_32px_rgba(0,0,0,0.48)]">
-          <p className="text-xs font-bold text-[#FFD54A]">やったね！</p>
-          <p className="mt-1 text-sm font-black leading-relaxed text-white">
-            『{badge.name}』を<br />てにいれたよ。
+        <div className="flex items-center gap-3 rounded-[20px] border border-[#FFD54A]/40 bg-[#1B2A5A] px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.48)]">
+          <BadgeMedal id={toastBadgeId} />
+          <p className="text-sm font-black text-white">
+            「{badge.name}」を　てにいれたよ。
           </p>
         </div>
       </div>
@@ -3310,7 +3377,8 @@ useEffect(() => {
                 const stageBadges = getBadgesForStage(stage.id)
                 const earned = stageBadges.length > 0
                 const isStage6 = stage.id === 6
-                const s6Label = isStage6 ? getStage6TopBadgeLabel() : null
+                const s6TopId = isStage6 ? getStage6TopBadgeId() : null
+                const s6AccLabel = s6TopId ? getStage6AccuracyLabel(s6TopId) : null
 
                 return (
                   <button
@@ -3326,19 +3394,22 @@ useEffect(() => {
                       <p className="mother-text-main flex-1 text-lg font-black leading-tight">
                         {stage.title}
                       </p>
-                      <div className="shrink-0 flex items-center gap-1">
+                      <div className="shrink-0 flex flex-col items-center gap-0.5">
                         {isStage6 ? (
-                          s6Label ? (
-                            <span className="inline-flex items-center rounded-full bg-[#FFD54A] px-2 py-0.5 text-[11px] font-black text-[#1F325C]">
-                              ◆ {s6Label}
-                            </span>
+                          s6TopId ? (
+                            <>
+                              <BadgeMedal id={s6TopId} />
+                              {s6AccLabel && (
+                                <span className="text-[9px] font-black text-slate-400">{s6AccLabel}</span>
+                              )}
+                            </>
                           ) : (
-                            <span className="text-sm text-[#d8d0bc]">◇</span>
+                            <BadgeSlot />
                           )
                         ) : earned ? (
-                          <span className="text-base text-[#FFD54A]" title={stageBadges[0].name}>◆</span>
+                          <BadgeMedal id={stageBadges[0].id} />
                         ) : (
-                          <span className="text-sm text-[#d8d0bc]">◇</span>
+                          <BadgeSlot />
                         )}
                       </div>
                     </div>
@@ -4033,7 +4104,7 @@ if (selectedStage === 2) {
               <div className="flex items-center gap-3 mb-1">
                 <PixelInventorFace />
                 <p className="mother-text-main text-sm font-bold">
-                  きけた？<br />じゃあ　つぎは<br />じぶんで　やってみようか。
+                  きけた？　じゃあ　つぎは　じぶんで　やってみようか。
                 </p>
               </div>
             )}
@@ -4750,9 +4821,9 @@ if (selectedStage === 6) {
     </div>
 
     <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
-      <p className="mb-1 text-xs font-bold text-slate-300">スコア</p>
-      <p className="min-h-[32px] text-3xl font-black text-white">
-        {stage6Score}
+      <p className="mb-1 text-xs font-bold text-slate-300">ACCURACY</p>
+      <p className="min-h-[32px] text-2xl font-black text-white">
+        {stage6JudgedCount > 0 ? `${Math.round((stage6Hits / stage6JudgedCount) * 100)}%` : "-%"}
       </p>
     </div>
 
@@ -4821,25 +4892,18 @@ if (selectedStage === 6) {
             <div className="mt-2 rounded-[24px] bg-[#2A2F3A] px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <p className="text-base font-black text-white">けっか</p>
 
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
-                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
-                  <p className="text-xs font-bold text-slate-400">スコア</p>
-                  <p className="mt-2 text-3xl font-black text-white">
-                    {stage6Score}
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <div className="rounded-[20px] bg-[#FFD54A]/10 px-4 py-4 text-center text-white ring-1 ring-[#FFD54A]/30">
+                  <p className="text-xs font-bold text-[#FFD54A]">ACCURACY</p>
+                  <p className="mt-2 text-4xl font-black text-[#FFD54A]">
+                    {stage6Accuracy}%
                   </p>
                 </div>
 
-                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
+                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-center text-white">
                   <p className="text-xs font-bold text-slate-400">成功数</p>
                   <p className="mt-2 text-3xl font-black text-white">
                     {stage6Hits} / {totalPlayableNotes}
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-white">
-                  <p className="text-xs font-bold text-slate-400">正答率</p>
-                  <p className="mt-2 text-3xl font-black text-white">
-                    {stage6Accuracy}%
                   </p>
                 </div>
               </div>
