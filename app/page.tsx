@@ -2887,12 +2887,15 @@ const handleResetTuning = () => {
   }, [])
 
   useEffect(() => {
-    if (!stage1Completed || stage1EverDone) return
-    setStage1EverDone(true)
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STAGE1_DONE_KEY, "1")
-    }
+    if (!stage1Completed) return
+    // awardBadge は内部で重複チェックをするので常に呼んでよい
     awardBadge("stage1_first_sound")
+    if (!stage1EverDone) {
+      setStage1EverDone(true)
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STAGE1_DONE_KEY, "1")
+      }
+    }
   }, [stage1Completed, stage1EverDone])
 
   useEffect(() => {
