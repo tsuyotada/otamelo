@@ -1,6 +1,6 @@
 "use client"
 import { Cinzel, Nunito } from "next/font/google"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { phrases } from "@/src/data/eightMelodies"
 
 const noteToFreq: Record<string, number> = {
@@ -486,59 +486,176 @@ function PixelInventorFace() {
 }
 
 // ピクセルアート風バッジメダルの設定
-// bg: 背景(淡色), ring: 縁取り色, color: シンボル文字色
-type BadgeMedalCfg = { bg: string; ring: string; color: string; symbol: string }
+type BadgeMedalCfg = { bg: string; ring: string; color: string; icon: ReactNode }
+
 const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
-  stage1_first_sound:   { bg: "#FFF6CC", ring: "#D9A441", color: "#7A5200", symbol: "♪" }, // 黄金
-  stage2_listened:      { bg: "#D8F2E4", ring: "#4FA35B", color: "#1A5C28", symbol: "♫" }, // 緑
-  stage3_first_phrase:  { bg: "#D8EEFF", ring: "#4B7FD8", color: "#1A3A80", symbol: "♬" }, // 青
-  stage4_practice_done: { bg: "#FFEDD0", ring: "#E58A3A", color: "#7A3C00", symbol: "♯" }, // オレンジ
-  stage5_tempo_done:    { bg: "#EDE0FF", ring: "#8A5CCF", color: "#46148A", symbol: "♮" }, // 紫
-  stage6_played:        { bg: "#FFE4E4", ring: "#D94A3A", color: "#780808", symbol: "★" }, // 赤
-  stage6_score_40:      { bg: "#FFF4CC", ring: "#A8842A", color: "#5C4000", symbol: "◎" }, // 暗黄
-  stage6_score_60:      { bg: "#FFEACC", ring: "#C96A2A", color: "#6A2800", symbol: "✦" }, // 濃オレンジ
-  stage6_score_80:      { bg: "#D8F8E4", ring: "#2F6F4E", color: "#0A3C26", symbol: "8"  }, // 深緑
-  stage6_score_95:      { bg: "#FFFACC", ring: "#F2C84B", color: "#6B5000", symbol: "⚡" }, // 金
+  stage1_first_sound: {
+    bg: "#FFF6CC", ring: "#D9A441", color: "#7A5200",
+    icon: <g>
+      {/* eighth note: stem + flag + head */}
+      <rect x="16" y="10" width="1" height="9" fill="#7A5200" />
+      <rect x="16" y="10" width="4" height="1" fill="#7A5200" />
+      <rect x="17" y="11" width="3" height="1" fill="#7A5200" />
+      <rect x="17" y="12" width="2" height="1" fill="#7A5200" />
+      <rect x="12" y="18" width="5" height="1" fill="#7A5200" />
+      <rect x="11" y="19" width="6" height="2" fill="#7A5200" />
+      <rect x="12" y="21" width="5" height="1" fill="#7A5200" />
+    </g>,
+  },
+  stage2_listened: {
+    bg: "#D8F2E4", ring: "#4FA35B", color: "#1A5C28",
+    icon: <g>
+      {/* headphones: headband + two ear cups */}
+      <rect x="13" y="10" width="6" height="1" fill="#1A5C28" />
+      <rect x="12" y="11" width="1" height="3" fill="#1A5C28" />
+      <rect x="19" y="11" width="1" height="3" fill="#1A5C28" />
+      <rect x="10" y="14" width="3" height="4" fill="#1A5C28" />
+      <rect x="19" y="14" width="3" height="4" fill="#1A5C28" />
+    </g>,
+  },
+  stage3_first_phrase: {
+    bg: "#D8EEFF", ring: "#4B7FD8", color: "#1A3A80",
+    icon: <g>
+      {/* beamed eighth notes: beam + two stems + two heads */}
+      <rect x="11" y="10" width="9" height="2" fill="#1A3A80" />
+      <rect x="11" y="10" width="1" height="8" fill="#1A3A80" />
+      <rect x="19" y="10" width="1" height="6" fill="#1A3A80" />
+      <rect x="10" y="17" width="4" height="2" fill="#1A3A80" />
+      <rect x="18" y="15" width="4" height="2" fill="#1A3A80" />
+    </g>,
+  },
+  stage4_practice_done: {
+    bg: "#FFEDD0", ring: "#E58A3A", color: "#7A3C00",
+    icon: <g>
+      {/* sharp symbol: two verticals + two horizontals */}
+      <rect x="13" y="10" width="1" height="12" fill="#7A3C00" />
+      <rect x="18" y="10" width="1" height="12" fill="#7A3C00" />
+      <rect x="11" y="14" width="10" height="1" fill="#7A3C00" />
+      <rect x="11" y="17" width="10" height="1" fill="#7A3C00" />
+    </g>,
+  },
+  stage5_tempo_done: {
+    bg: "#EDE0FF", ring: "#8A5CCF", color: "#46148A",
+    icon: <g>
+      {/* metronome: pendulum bob + arm + triangular body */}
+      <rect x="13" y="11" width="3" height="1" fill="#46148A" />
+      <rect x="15" y="11" width="1" height="7" fill="#46148A" />
+      <rect x="14" y="17" width="4" height="1" fill="#46148A" />
+      <rect x="13" y="18" width="6" height="1" fill="#46148A" />
+      <rect x="12" y="19" width="8" height="1" fill="#46148A" />
+      <rect x="11" y="20" width="10" height="2" fill="#46148A" />
+    </g>,
+  },
+  stage6_played: {
+    bg: "#FFE4E4", ring: "#D94A3A", color: "#780808",
+    icon: <g>
+      {/* 8-pointed star: center + 4 cardinal spikes + 4 diagonal corners */}
+      <rect x="14" y="14" width="4" height="4" fill="#780808" />
+      <rect x="15" y="10" width="2" height="3" fill="#780808" />
+      <rect x="15" y="19" width="2" height="3" fill="#780808" />
+      <rect x="10" y="15" width="3" height="2" fill="#780808" />
+      <rect x="19" y="15" width="3" height="2" fill="#780808" />
+      <rect x="13" y="13" width="2" height="2" fill="#780808" />
+      <rect x="17" y="13" width="2" height="2" fill="#780808" />
+      <rect x="13" y="17" width="2" height="2" fill="#780808" />
+      <rect x="17" y="17" width="2" height="2" fill="#780808" />
+    </g>,
+  },
+  stage6_score_40: {
+    bg: "#FFF4CC", ring: "#A8842A", color: "#5C4000",
+    icon: <g>
+      {/* bullseye: outer square ring + inner square ring + center dot */}
+      <rect x="10" y="10" width="12" height="1" fill="#5C4000" />
+      <rect x="10" y="21" width="12" height="1" fill="#5C4000" />
+      <rect x="10" y="10" width="1" height="12" fill="#5C4000" />
+      <rect x="21" y="10" width="1" height="12" fill="#5C4000" />
+      <rect x="13" y="13" width="6" height="1" fill="#5C4000" />
+      <rect x="13" y="18" width="6" height="1" fill="#5C4000" />
+      <rect x="13" y="13" width="1" height="6" fill="#5C4000" />
+      <rect x="18" y="13" width="1" height="6" fill="#5C4000" />
+      <rect x="15" y="15" width="2" height="2" fill="#5C4000" />
+    </g>,
+  },
+  stage6_score_60: {
+    bg: "#FFEACC", ring: "#C96A2A", color: "#6A2800",
+    icon: <g>
+      {/* diamond / gem shape */}
+      <rect x="15" y="10" width="2" height="1" fill="#6A2800" />
+      <rect x="14" y="11" width="4" height="1" fill="#6A2800" />
+      <rect x="13" y="12" width="6" height="1" fill="#6A2800" />
+      <rect x="12" y="13" width="8" height="1" fill="#6A2800" />
+      <rect x="11" y="14" width="10" height="1" fill="#6A2800" />
+      <rect x="10" y="15" width="12" height="2" fill="#6A2800" />
+      <rect x="11" y="17" width="10" height="1" fill="#6A2800" />
+      <rect x="12" y="18" width="8" height="1" fill="#6A2800" />
+      <rect x="13" y="19" width="6" height="1" fill="#6A2800" />
+      <rect x="14" y="20" width="4" height="1" fill="#6A2800" />
+      <rect x="15" y="21" width="2" height="1" fill="#6A2800" />
+    </g>,
+  },
+  stage6_score_80: {
+    bg: "#D8F8E4", ring: "#2F6F4E", color: "#0A3C26",
+    icon: <g>
+      {/* 8 dots arranged 3-2-3 */}
+      <rect x="11" y="11" width="2" height="2" fill="#0A3C26" />
+      <rect x="15" y="11" width="2" height="2" fill="#0A3C26" />
+      <rect x="19" y="11" width="2" height="2" fill="#0A3C26" />
+      <rect x="12" y="15" width="2" height="2" fill="#0A3C26" />
+      <rect x="18" y="15" width="2" height="2" fill="#0A3C26" />
+      <rect x="11" y="19" width="2" height="2" fill="#0A3C26" />
+      <rect x="15" y="19" width="2" height="2" fill="#0A3C26" />
+      <rect x="19" y="19" width="2" height="2" fill="#0A3C26" />
+    </g>,
+  },
+  stage6_score_95: {
+    bg: "#FFFACC", ring: "#F2C84B", color: "#6B5000",
+    icon: <g>
+      {/* lightning bolt: top-right → step down-left → crossbar → step down-right → bottom-left */}
+      <rect x="15" y="10" width="5" height="2" fill="#6B5000" />
+      <rect x="13" y="12" width="4" height="2" fill="#6B5000" />
+      <rect x="11" y="14" width="9" height="2" fill="#6B5000" />
+      <rect x="14" y="16" width="4" height="2" fill="#6B5000" />
+      <rect x="12" y="18" width="5" height="2" fill="#6B5000" />
+    </g>,
+  },
 }
 
 function BadgeSlot() {
   return (
-    <div
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: "50%",
-        border: "2px dashed #C0B8AC",
-        opacity: 0.5,
-      }}
-    />
+    <svg
+      width={32}
+      height={32}
+      viewBox="0 0 32 32"
+      shapeRendering="crispEdges"
+      style={{ display: "block", opacity: 0.45 }}
+    >
+      <polygon points="4,0 28,0 32,4 32,28 28,32 4,32 0,28 0,4" fill="#C0B8AC" />
+      <polygon points="6,2 26,2 30,6 30,26 26,30 6,30 2,26 2,6" fill="#E8E4DC" />
+      <rect x="14" y="15" width="4" height="1" fill="#C0B8AC" />
+      <rect x="15" y="14" width="2" height="3" fill="#C0B8AC" />
+    </svg>
   )
 }
 
-function BadgeMedal({ id }: { id: BadgeId }) {
+function BadgeMedal({ id, size = 32 }: { id: BadgeId; size?: number }) {
   const cfg = BADGE_MEDAL_CONFIGS[id]
   const name = BADGE_LIST.find((b) => b.id === id)?.name ?? ""
   return (
-    <div
-      title={name}
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: "50%",
-        background: cfg.bg,
-        border: `2px solid ${cfg.ring}`,
-        boxShadow: `0 2px 0 ${cfg.ring}AA`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 13,
-        color: cfg.color,
-        userSelect: "none",
-        flexShrink: 0,
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      shapeRendering="crispEdges"
+      style={{ flexShrink: 0, display: "block" }}
     >
-      {cfg.symbol}
-    </div>
+      <title>{name}</title>
+      <polygon points="4,0 28,0 32,4 32,28 28,32 4,32 0,28 0,4" fill={cfg.ring} />
+      <polygon points="6,2 26,2 30,6 30,26 26,30 6,30 2,26 2,6" fill={cfg.bg} />
+      <rect x="8" y="3" width="14" height="1" fill="rgba(255,255,255,0.6)" />
+      <rect x="8" y="4" width="12" height="1" fill="rgba(255,255,255,0.3)" />
+      <rect x="8" y="27" width="14" height="1" fill="rgba(0,0,0,0.2)" />
+      {cfg.icon}
+    </svg>
   )
 }
 
@@ -3080,7 +3197,7 @@ useEffect(() => {
     return (
       <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-fadeIn">
         <div className="flex items-center gap-3 rounded-[20px] border border-[#FFD54A]/40 bg-[#1B2A5A] px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.48)]">
-          <BadgeMedal id={toastBadgeId} />
+          <BadgeMedal id={toastBadgeId} size={40} />
           <p className="text-sm font-black text-white">
             「{badge.name}」を　てにいれたよ。
           </p>
