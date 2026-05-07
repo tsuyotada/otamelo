@@ -2293,14 +2293,18 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
       if (noteIndex < safeNotes.length - 1) {
         setNoteIndex((prev) => prev + 1)
       } else {
-        setIsPlaying(false)
-        // Stage 3: フレーズ0を最後まで再生したらバッジ付与
+        // バッジ付与（awardBadge / setStage4ListenedMask は重複チェック済み）
         if (selectedStage === 3 && phraseIndex === 0) {
           awardBadge("stage3_first_phrase")
         }
-        // Stage 4: 各フレーズ完聴をビットに記録（メロディー2〜8 = phraseIndex 1〜7）
         if (selectedStage === 4 && phraseIndex >= 1 && phraseIndex <= 7) {
           setStage4ListenedMask((prev) => prev | (1 << phraseIndex))
+        }
+        // Stage 3/4 のみフレーズ先頭に戻ってリピート、それ以外は停止
+        if (selectedStage === 3 || selectedStage === 4) {
+          setNoteIndex(0)
+        } else {
+          setIsPlaying(false)
         }
       }
       return
