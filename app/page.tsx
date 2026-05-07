@@ -486,18 +486,19 @@ function PixelInventorFace() {
 }
 
 // ピクセルアート風バッジメダルの設定
+// bg: 背景(淡色), ring: 縁取り色, color: シンボル文字色
 type BadgeMedalCfg = { bg: string; ring: string; color: string; symbol: string }
 const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
-  stage1_first_sound:   { bg: "#FFF6CC", ring: "#CCA000", color: "#7A5000", symbol: "♪" },
-  stage2_listened:      { bg: "#D8F2E4", ring: "#28965A", color: "#125030", symbol: "♫" },
-  stage3_first_phrase:  { bg: "#D8EEFF", ring: "#2272CC", color: "#0E4280", symbol: "▶" },
-  stage4_practice_done: { bg: "#FFEDD0", ring: "#CC7200", color: "#7A3600", symbol: "✏" },
-  stage5_tempo_done:    { bg: "#EDE0FF", ring: "#7C3CCC", color: "#460C8A", symbol: "⇒" },
-  stage6_played:        { bg: "#FFE4E4", ring: "#CC2424", color: "#780808", symbol: "★" },
-  stage6_score_40:      { bg: "#FFF4CC", ring: "#B89400", color: "#7A5000", symbol: "◎" },
-  stage6_score_60:      { bg: "#FFEACC", ring: "#CC6200", color: "#7A3000", symbol: "⚡" },
-  stage6_score_80:      { bg: "#D8F8DC", ring: "#229448", color: "#0C5020", symbol: "♬" },
-  stage6_score_95:      { bg: "#FFFACC", ring: "#BCA400", color: "#665400", symbol: "✦" },
+  stage1_first_sound:   { bg: "#FFF6CC", ring: "#D9A441", color: "#7A5200", symbol: "♪" }, // 黄金
+  stage2_listened:      { bg: "#D8F2E4", ring: "#4FA35B", color: "#1A5C28", symbol: "♫" }, // 緑
+  stage3_first_phrase:  { bg: "#D8EEFF", ring: "#4B7FD8", color: "#1A3A80", symbol: "♬" }, // 青
+  stage4_practice_done: { bg: "#FFEDD0", ring: "#E58A3A", color: "#7A3C00", symbol: "♯" }, // オレンジ
+  stage5_tempo_done:    { bg: "#EDE0FF", ring: "#8A5CCF", color: "#46148A", symbol: "♮" }, // 紫
+  stage6_played:        { bg: "#FFE4E4", ring: "#D94A3A", color: "#780808", symbol: "★" }, // 赤
+  stage6_score_40:      { bg: "#FFF4CC", ring: "#A8842A", color: "#5C4000", symbol: "◎" }, // 暗黄
+  stage6_score_60:      { bg: "#FFEACC", ring: "#C96A2A", color: "#6A2800", symbol: "✦" }, // 濃オレンジ
+  stage6_score_80:      { bg: "#D8F8E4", ring: "#2F6F4E", color: "#0A3C26", symbol: "8"  }, // 深緑
+  stage6_score_95:      { bg: "#FFFACC", ring: "#F2C84B", color: "#6B5000", symbol: "⚡" }, // 金
 }
 
 function BadgeSlot() {
