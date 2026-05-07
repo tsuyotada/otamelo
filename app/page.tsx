@@ -109,6 +109,7 @@ type BadgeInfo = {
 
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
 const TEMPO_KEY = "otamelo-tempo"
+const PERF_TEMPO_KEY = "otamelo-tempo-perf"
 const STAGE1_DONE_KEY = "otamelo-stage1-done"
 const BADGE_STORAGE_KEY = "otamelo.badges.v1"
 const TUNING_AVERAGE_WINDOW_MS = 800
@@ -1651,6 +1652,15 @@ const TEMPO_OPTIONS = [
 ] as const
 type TempoMultiplier = (typeof TEMPO_OPTIONS)[number]["value"]
 
+const PERF_TEMPO_OPTIONS = [
+  { label: "とてもゆっくり", value: 0.6 },
+  { label: "ゆっくり", value: 0.8 },
+  { label: "ふつう", value: 1 },
+  { label: "はやい", value: 1.25 },
+  { label: "とてもはやい", value: 1.5 },
+] as const
+type PerfTempoMultiplier = (typeof PERF_TEMPO_OPTIONS)[number]["value"]
+
 function TempoSelector({
   value,
   onChange,
@@ -1685,6 +1695,36 @@ function TempoSelector({
   )
 }
 
+function PerfTempoSelector({
+  value,
+  onChange,
+}: {
+  value: PerfTempoMultiplier
+  onChange: (v: PerfTempoMultiplier) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {PERF_TEMPO_OPTIONS.map((opt) => {
+        const isActive = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`rounded-full px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+              isActive
+                ? "bg-white text-[#11141B] shadow-[0_2px_8px_rgba(255,255,255,0.2)]"
+                : "bg-white/10 text-slate-300"
+            }`}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("home")
   const [selectedStage, setSelectedStage] = useState<StageId>(1)
@@ -1694,6 +1734,7 @@ export default function Page() {
   const [noteIndex, setNoteIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [tempoMultiplier, setTempoMultiplier] = useState<TempoMultiplier>(1)
+  const [perfTempoMultiplier, setPerfTempoMultiplier] = useState<PerfTempoMultiplier>(1)
   const [tempo, setTempo] = useState(40)
   const [playMode, setPlayMode] = useState<PlayMode>("full")
   const [isPreparingAudio, setIsPreparingAudio] = useState(false)
@@ -2243,7 +2284,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
         : selectedStage === 5
         ? STAGE5_TEMPO * tempoMultiplier
         : selectedStage === 7 || selectedStage === 8
-        ? STAGE7_TEMPO * tempoMultiplier
+        ? STAGE7_TEMPO * perfTempoMultiplier
         : tempo
 
     const base = Math.round(60000 / effectiveTempo)
@@ -2788,7 +2829,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
     await ensureAudioReady()
     setStage8HasStarted(true)
-    runCountdownWithTempo(tempoMultiplier)
+    runCountdownWithTempo(perfTempoMultiplier)
   }
 
   const handleStage7PhraseStart = async () => {
@@ -2810,7 +2851,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
     await ensureAudioReady()
     setStage7HasStarted(true)
-    runCountdownWithTempo(tempoMultiplier)
+    runCountdownWithTempo(perfTempoMultiplier)
   }
 
   const handlePreviewSelect = (item: PreviewItem) => {
@@ -3009,7 +3050,7 @@ const handleResetTuning = () => {
       return
     }
 
-    const beatMs = 60000 / (STAGE7_TEMPO * tempoMultiplier)
+    const beatMs = 60000 / (STAGE7_TEMPO * perfTempoMultiplier)
     const startTime = playbackStartRef.current
     let beatCount = 0
 
@@ -3028,7 +3069,7 @@ const handleResetTuning = () => {
 
     return () => stopMetronome()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, selectedStage, isPlaying, tempoMultiplier, stage7MetronomeEnabled, stage8MetronomeEnabled])
+  }, [screen, selectedStage, isPlaying, perfTempoMultiplier, stage7MetronomeEnabled, stage8MetronomeEnabled])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
@@ -3113,7 +3154,7 @@ useEffect(() => {
 
     let delay: number
     if (selectedStage === 7 || selectedStage === 8) {
-      const base = 60000 / (STAGE7_TEMPO * tempoMultiplier)
+      const base = 60000 / (STAGE7_TEMPO * perfTempoMultiplier)
       const targetTime = playbackStartRef.current + (elapsedBeatsRef.current + current.length) * base
       delay = Math.max(0, targetTime - performance.now())
     } else {
@@ -3140,6 +3181,7 @@ useEffect(() => {
     noteIndex,
     tempo,
     tempoMultiplier,
+    perfTempoMultiplier,
     current.length,
   ])
 
@@ -3404,6 +3446,24 @@ useEffect(() => {
       window.localStorage.setItem(TEMPO_KEY, String(tempoMultiplier))
     } catch {}
   }, [tempoMultiplier])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const raw = window.localStorage.getItem(PERF_TEMPO_KEY)
+      if (raw === null) return
+      const val = Number(raw)
+      const match = PERF_TEMPO_OPTIONS.find((opt) => opt.value === val)
+      if (match) setPerfTempoMultiplier(match.value as PerfTempoMultiplier)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      window.localStorage.setItem(PERF_TEMPO_KEY, String(perfTempoMultiplier))
+    } catch {}
+  }, [perfTempoMultiplier])
 
   // バッジ初期化: localStorage から読み込む
   useEffect(() => {
@@ -5277,7 +5337,7 @@ if (selectedStage === 7) {
               >
                 {stage7MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
               </button>
-              <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
+              <PerfTempoSelector value={perfTempoMultiplier} onChange={setPerfTempoMultiplier} />
             </div>
           </div>
 
@@ -5574,7 +5634,7 @@ if (selectedStage === 8) {
               >
                 {stage8MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
               </button>
-              <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
+              <PerfTempoSelector value={perfTempoMultiplier} onChange={setPerfTempoMultiplier} />
             </div>
           </div>
 
