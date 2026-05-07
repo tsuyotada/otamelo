@@ -85,9 +85,30 @@ type TuningSample = {
   at: number
 }
 
+type BadgeId =
+  | "stage1_first_sound"
+  | "stage2_listened"
+  | "stage3_first_phrase"
+  | "stage4_practice_done"
+  | "stage5_tempo_done"
+  | "stage6_played"
+  | "stage6_score_40"
+  | "stage6_score_60"
+  | "stage6_score_80"
+  | "stage6_score_95"
+
+type BadgeInfo = {
+  id: BadgeId
+  name: string
+  description: string
+  stage: StageId
+  scoreThreshold: number | null
+}
+
 const TUNING_STORAGE_KEY = "otamelo_tuning_v1"
 const TEMPO_KEY = "otamelo-tempo"
 const STAGE1_DONE_KEY = "otamelo-stage1-done"
+const BADGE_STORAGE_KEY = "otamelo.badges.v1"
 const TUNING_AVERAGE_WINDOW_MS = 800
 const TUNING_LOCK_MIN_SAMPLE_COUNT = 6
 const TUNING_MIN_RMS = 0.02
@@ -162,6 +183,43 @@ const noteNamesSharp = [
   "ラ#",
   "シ",
 ]
+
+const BADGE_LIST: BadgeInfo[] = [
+  { id: "stage1_first_sound", name: "はじめての音バッジ", description: "4つのターゲット音をすべて見つけた", stage: 1, scoreThreshold: null },
+  { id: "stage2_listened", name: "メロディーをおぼえたバッジ", description: "エイトメロディーズを最後まできいた", stage: 2, scoreThreshold: null },
+  { id: "stage3_first_phrase", name: "ひとふし弾けたバッジ", description: "ひとつめのメロディーを最後まで進んだ", stage: 3, scoreThreshold: null },
+  { id: "stage4_practice_done", name: "こつこつ練習バッジ", description: "メロディーを最後まで練習した", stage: 4, scoreThreshold: null },
+  { id: "stage5_tempo_done", name: "テンポになれたバッジ", description: "エイトメロディーズを最後まで通した", stage: 5, scoreThreshold: null },
+  { id: "stage6_played", name: "ステージに立ったバッジ", description: "本番演奏を完走した", stage: 6, scoreThreshold: null },
+  { id: "stage6_score_40", name: "メロディーのかけらバッジ", description: "正答率40%以上で演奏した", stage: 6, scoreThreshold: 40 },
+  { id: "stage6_score_60", name: "ちゃんと届いたバッジ", description: "正答率60%以上で演奏した", stage: 6, scoreThreshold: 60 },
+  { id: "stage6_score_80", name: "エイトメロディーズバッジ", description: "正答率80%以上で演奏した", stage: 6, scoreThreshold: 80 },
+  { id: "stage6_score_95", name: "はねかえしバッジ", description: "正答率95%以上で演奏した", stage: 6, scoreThreshold: 95 },
+]
+
+function getEarnedBadges(): BadgeId[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = window.localStorage.getItem(BADGE_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed as BadgeId[]
+  } catch {
+    return []
+  }
+}
+
+function hasBadge(id: BadgeId): boolean {
+  return getEarnedBadges().includes(id)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function clearBadgesForDebug(): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(BADGE_STORAGE_KEY)
+  }
+}
 
 const cinzel = Cinzel({ subsets: ["latin"], weight: ["700", "900"] })
 const nunito = Nunito({ subsets: ["latin"], weight: ["400", "700"] })
@@ -1448,6 +1506,10 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage1PhaseB, setStage1PhaseB] = useState(false)
   const [stage1EverDone, setStage1EverDone] = useState(false)
 
+  const [earnedBadges, setEarnedBadges] = useState<BadgeId[]>([])
+  const [toastBadgeId, setToastBadgeId] = useState<BadgeId | null>(null)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const audioContextRef = useRef<AudioContext | null>(null)
   const timerRef = useRef<number | null>(null)
   const countdownTimerRef = useRef<number | null>(null)
@@ -1868,6 +1930,19 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     }
   }
 
+  const awardBadge = (id: BadgeId) => {
+    if (typeof window === "undefined") return
+    try {
+      const raw = window.localStorage.getItem(BADGE_STORAGE_KEY)
+      const earned: BadgeId[] = raw ? (JSON.parse(raw) as BadgeId[]) : []
+      if (earned.includes(id)) return
+      const updated = [...earned, id]
+      window.localStorage.setItem(BADGE_STORAGE_KEY, JSON.stringify(updated))
+      setEarnedBadges(updated)
+      setToastBadgeId(id)
+    } catch {}
+  }
+
   const resetStage6Result = () => {
     setStage6Score(0)
     setStage6Hits(0)
@@ -2007,6 +2082,8 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
       setIsPlaying(false)
       if (selectedStage === 6) {
         setStage6ResultOpen(true)
+      } else if (selectedStage === 5) {
+        awardBadge("stage5_tempo_done")
       }
       return
     }
@@ -2035,6 +2112,9 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     }
 
     setIsPlaying(false)
+    if (selectedStage === 2) {
+      awardBadge("stage2_listened")
+    }
   }
 
   const handleOpenStage = async () => {
@@ -2595,6 +2675,7 @@ const handleResetTuning = () => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STAGE1_DONE_KEY, "1")
     }
+    awardBadge("stage1_first_sound")
   }, [stage1Completed, stage1EverDone])
 
   useEffect(() => {
@@ -2865,6 +2946,80 @@ useEffect(() => {
       window.localStorage.setItem(TEMPO_KEY, String(tempoMultiplier))
     } catch {}
   }, [tempoMultiplier])
+
+  // バッジ初期化: localStorage から読み込む
+  useEffect(() => {
+    setEarnedBadges(getEarnedBadges())
+  }, [])
+
+  // トースト自動消去
+  useEffect(() => {
+    if (!toastBadgeId) return
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToastBadgeId(null), 3500)
+    return () => {
+      if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current)
+    }
+  }, [toastBadgeId])
+
+  // Stage 3: ひとつめのメロディーの後半まで到達したらバッジ付与
+  useEffect(() => {
+    if (selectedStage !== 3) return
+    const lastIndex = safePhrases[0].notes.length - 1
+    if (noteIndex >= lastIndex - 1) {
+      awardBadge("stage3_first_phrase")
+    }
+  }, [selectedStage, noteIndex])
+
+  // Stage 4: どのメロディーでも最後の音符付近まで到達したらバッジ付与
+  useEffect(() => {
+    if (selectedStage !== 4) return
+    const lastIndex = safePhrases[phraseIndex].notes.length - 1
+    if (noteIndex >= lastIndex - 1) {
+      awardBadge("stage4_practice_done")
+    }
+  }, [selectedStage, phraseIndex, noteIndex])
+
+  // Stage 6: 演奏完了時にスコアに応じてバッジ付与
+  useEffect(() => {
+    if (!stage6ResultOpen) return
+    awardBadge("stage6_played")
+    const accuracy = stage6JudgedCount > 0 ? Math.round((stage6Hits / stage6JudgedCount) * 100) : 0
+    if (accuracy >= 40) awardBadge("stage6_score_40")
+    if (accuracy >= 60) awardBadge("stage6_score_60")
+    if (accuracy >= 80) awardBadge("stage6_score_80")
+    if (accuracy >= 95) awardBadge("stage6_score_95")
+  }, [stage6ResultOpen])
+
+  // ステージ選択画面用: ステージごとの取得済みバッジを返す
+  const getBadgesForStage = (stageId: StageId) =>
+    BADGE_LIST.filter((b) => b.stage === stageId && earnedBadges.includes(b.id))
+
+  // Stage 6 最高バッジラベル
+  const getStage6TopBadgeLabel = () => {
+    if (earnedBadges.includes("stage6_score_95")) return "95+"
+    if (earnedBadges.includes("stage6_score_80")) return "80+"
+    if (earnedBadges.includes("stage6_score_60")) return "60+"
+    if (earnedBadges.includes("stage6_score_40")) return "40+"
+    if (earnedBadges.includes("stage6_played")) return "★"
+    return null
+  }
+
+  // トースト通知 JSX
+  const badgeToast = toastBadgeId ? (() => {
+    const badge = BADGE_LIST.find((b) => b.id === toastBadgeId)
+    if (!badge) return null
+    return (
+      <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-fadeIn">
+        <div className="rounded-[20px] border border-[#FFD54A]/40 bg-[#1B2A5A] px-6 py-4 text-center shadow-[0_8px_32px_rgba(0,0,0,0.48)]">
+          <p className="text-xs font-bold text-[#FFD54A]">やったね！</p>
+          <p className="mt-1 text-sm font-black leading-relaxed text-white">
+            『{badge.name}』を<br />てにいれたよ。
+          </p>
+        </div>
+      </div>
+    )
+  })() : null
 
   if (screen === "home") {
     return (
@@ -3151,23 +3306,45 @@ useEffect(() => {
             </div>
 
             <div className="mt-8 flex flex-col gap-4">
-              {stages.map((stage) => (
-                <button
-                  key={stage.id}
-                  type="button"
-                  onClick={() => handleSelectStage(stage.id)}
-                  className="relative w-full rounded-[20px] bg-[#fffdf8] px-7 py-5 text-left border-2 border-[#d8d0bc] shadow-[0_4px_0_#c4bbab,0_2px_12px_rgba(0,0,0,0.08)] transition hover:-translate-y-[2px] hover:border-[#3F8CFF] hover:shadow-[0_8px_20px_rgba(63,140,255,0.18)]"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="shrink-0 inline-flex items-center rounded-full bg-[#3F8CFF] px-2.5 py-0.5">
-                      <span className="text-xs font-black tracking-widest text-white">STAGE {stage.id}</span>
+              {stages.map((stage) => {
+                const stageBadges = getBadgesForStage(stage.id)
+                const earned = stageBadges.length > 0
+                const isStage6 = stage.id === 6
+                const s6Label = isStage6 ? getStage6TopBadgeLabel() : null
+
+                return (
+                  <button
+                    key={stage.id}
+                    type="button"
+                    onClick={() => handleSelectStage(stage.id)}
+                    className="relative w-full rounded-[20px] bg-[#fffdf8] px-7 py-5 text-left border-2 border-[#d8d0bc] shadow-[0_4px_0_#c4bbab,0_2px_12px_rgba(0,0,0,0.08)] transition hover:-translate-y-[2px] hover:border-[#3F8CFF] hover:shadow-[0_8px_20px_rgba(63,140,255,0.18)]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="shrink-0 inline-flex items-center rounded-full bg-[#3F8CFF] px-2.5 py-0.5">
+                        <span className="text-xs font-black tracking-widest text-white">STAGE {stage.id}</span>
+                      </div>
+                      <p className="mother-text-main flex-1 text-lg font-black leading-tight">
+                        {stage.title}
+                      </p>
+                      <div className="shrink-0 flex items-center gap-1">
+                        {isStage6 ? (
+                          s6Label ? (
+                            <span className="inline-flex items-center rounded-full bg-[#FFD54A] px-2 py-0.5 text-[11px] font-black text-[#1F325C]">
+                              ◆ {s6Label}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-[#d8d0bc]">◇</span>
+                          )
+                        ) : earned ? (
+                          <span className="text-base text-[#FFD54A]" title={stageBadges[0].name}>◆</span>
+                        ) : (
+                          <span className="text-sm text-[#d8d0bc]">◇</span>
+                        )}
+                      </div>
                     </div>
-                    <p className="mother-text-main text-lg font-black leading-tight">
-                      {stage.title}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                )
+              })}
             </div>
           </section>
 
@@ -3711,6 +3888,7 @@ useEffect(() => {
             </div>
           </section>
         </div>
+        {badgeToast}
       </main>
     )
   }
@@ -3851,6 +4029,14 @@ if (selectedStage === 2) {
           </div>
 
           <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
+            {earnedBadges.includes("stage2_listened") && (
+              <div className="flex items-center gap-3 mb-1">
+                <PixelInventorFace />
+                <p className="mother-text-main text-sm font-bold">
+                  きけた？<br />じゃあ　つぎは<br />じぶんで　やってみようか。
+                </p>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <PixelInventorFace />
               <p className="mother-text-main text-sm font-bold">
@@ -3874,6 +4060,7 @@ if (selectedStage === 2) {
           </div>
         </section>
       </div>
+      {badgeToast}
     </main>
   )
 }
@@ -4015,6 +4202,7 @@ if (selectedStage === 2) {
             </div>
           </section>
         </div>
+        {badgeToast}
       </main>
     )
   }
@@ -4196,6 +4384,7 @@ if (selectedStage === 2) {
             </div>
           </section>
         </div>
+        {badgeToast}
       </main>
     )
   }
@@ -4401,6 +4590,7 @@ if (selectedStage === 5) {
           </div>
         </section>
       </div>
+      {badgeToast}
     </main>
   )
 }
@@ -4683,6 +4873,7 @@ if (selectedStage === 6) {
           </div>
         </section>
       </div>
+      {badgeToast}
     </main>
   )
 }
