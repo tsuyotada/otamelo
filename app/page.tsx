@@ -1710,6 +1710,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage7JudgedCount, setStage7JudgedCount] = useState(0)
   const [stage7ResultOpen, setStage7ResultOpen] = useState(false)
   const [stage7MetronomeEnabled, setStage7MetronomeEnabled] = useState(true)
+  const [stage7HasStarted, setStage7HasStarted] = useState(false)
 
   const [showAbout, setShowAbout] = useState(false)
   const [aboutName, setAboutName] = useState("")
@@ -2393,6 +2394,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setShowNotation(false)
     resetStage6State()
     resetStage7Result()
+    setStage7HasStarted(false)
     if (stageId !== 7) {
       setTempoMultiplier(1)
     }
@@ -2619,28 +2621,34 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setCountdown(null)
   }
 
-  const runCountdownThenStart = async () => {
+  const runStage7CountdownThenStart = (capturedTempoMultiplier: number) => {
     clearPlaybackTimer()
     clearCountdownTimer()
     setIsPlaying(false)
 
-    const run = (value: number) => {
-      setCountdown(value)
+    const beatMs = 60000 / (STAGE7_TEMPO * capturedTempoMultiplier)
+    const countStart = performance.now()
 
-      if (value === 0) {
-        setCountdown(null)
-        playbackStartRef.current = performance.now()
-        elapsedBeatsRef.current = 0
-        setIsPlaying(true)
+    const runBeat = (beat: number) => {
+      setCountdown(beat)
+      void playClick()
+
+      if (beat === 1) {
+        countdownTimerRef.current = window.setTimeout(() => {
+          setCountdown(null)
+          playbackStartRef.current = countStart + 4 * beatMs
+          elapsedBeatsRef.current = 0
+          setIsPlaying(true)
+        }, beatMs)
         return
       }
 
       countdownTimerRef.current = window.setTimeout(() => {
-        run(value - 1)
-      }, 700)
+        runBeat(beat - 1)
+      }, beatMs)
     }
 
-    run(3)
+    runBeat(4)
   }
 
   const handleStage6Start = async () => {
@@ -2684,7 +2692,8 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     if (!micOk) return
 
     await ensureAudioReady()
-    await runCountdownThenStart()
+    setStage7HasStarted(true)
+    runStage7CountdownThenStart(tempoMultiplier)
   }
 
   const handlePreviewSelect = (item: PreviewItem) => {
@@ -5334,26 +5343,28 @@ if (selectedStage === 7) {
         : "本番スタート"}
     </button>
 
-    {/* リトライ */}
-    <button
-      type="button"
-      onClick={() => {
-        clearPlaybackTimer()
-        clearCountdownTimer()
-        setCountdown(null)
-        setIsPlaying(false)
-        resetStage7Result()
-        setPhraseIndex(0)
-        setNoteIndex(0)
-        setJudgeState("idle")
-        setDetectedNote("")
-        setDetectedFreq(0)
-      }}
-      className="px-5 py-2.5 text-sm font-bold rounded-full
-      bg-[#3A1F24] text-[#FFB4B4] border border-[#FF6B6B]"
-    >
-      もういちど挑戦
-    </button>
+    {/* リトライ — 一度でも本番開始した後にのみ表示 */}
+    {stage7HasStarted && (
+      <button
+        type="button"
+        onClick={() => {
+          clearPlaybackTimer()
+          clearCountdownTimer()
+          setCountdown(null)
+          setIsPlaying(false)
+          resetStage7Result()
+          setPhraseIndex(0)
+          setNoteIndex(0)
+          setJudgeState("idle")
+          setDetectedNote("")
+          setDetectedFreq(0)
+        }}
+        className="px-5 py-2.5 text-sm font-bold rounded-full
+        bg-[#3A1F24] text-[#FFB4B4] border border-[#FF6B6B]"
+      >
+        もういちど挑戦
+      </button>
+    )}
   </div>
 </div>
             </div>
