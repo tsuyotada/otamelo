@@ -187,8 +187,8 @@ const noteNamesSharp = [
 const BADGE_LIST: BadgeInfo[] = [
   { id: "stage1_first_sound", name: "はじめての音バッジ", description: "はじめて音を出せたしるし", stage: 1, scoreThreshold: null },
   { id: "stage2_listened", name: "メロディー全体をきいたバッジ", description: "メロディー全体を最後まできいたしるし", stage: 2, scoreThreshold: null },
-  { id: "stage3_first_phrase", name: "さいしょのメロディーを弾けたバッジ", description: "さいしょのメロディーを最後まで弾いたしるし", stage: 3, scoreThreshold: null },
-  { id: "stage4_practice_done", name: "こつこつ練習バッジ", description: "こつこつ練習したしるし", stage: 4, scoreThreshold: null },
+  { id: "stage3_first_phrase", name: "さいしょのメロディーを　てにいれたバッジ", description: "さいしょのメロディーを　最後まできいたしるし", stage: 3, scoreThreshold: null },
+  { id: "stage4_practice_done", name: "すべてのメロディーを　てにいれたバッジ", description: "メロディー2から8までを　最後まできいたしるし", stage: 4, scoreThreshold: null },
   { id: "stage5_tempo_done", name: "慣れてきたバッジ", description: "テンポに慣れてきたしるし", stage: 5, scoreThreshold: null },
   { id: "stage6_played", name: "ステージに立ったバッジ", description: "ステージで最後まで演奏したしるし", stage: 6, scoreThreshold: null },
   { id: "stage6_score_40", name: "かけだしバッジ", description: "正答率40%以上のしるし", stage: 6, scoreThreshold: 40 },
@@ -247,6 +247,27 @@ function closestNoteFromFrequency(freq: number): string {
   if (!Number.isFinite(freq) || freq <= 0) return ""
   const midi = frequencyToMidi(freq)
   return midiToJapaneseNote(midi)
+}
+
+/**
+ * オートコリレーションがオクターブ上を誤検出する場合に備え、
+ * 検出音名がターゲット音のオクターブ違いなら対応するターゲット音名を返す。
+ * 一致しない場合は null。
+ */
+function matchStage1TargetNote(detected: string): string | null {
+  if ((STAGE1_TARGET_NOTES as readonly string[]).includes(detected)) return detected
+  let octaveDown: string | null = null
+  if (detected.startsWith("超高い")) {
+    octaveDown = "高い" + detected.slice(3)
+  } else if (detected.startsWith("高い")) {
+    octaveDown = detected.slice(2)
+  } else if (detected.startsWith("低い")) {
+    octaveDown = detected.slice(2)
+  }
+  if (octaveDown && (STAGE1_TARGET_NOTES as readonly string[]).includes(octaveDown)) {
+    return octaveDown
+  }
+  return null
 }
 
 function japaneseNoteToMidi(note: string): number | null {
@@ -1579,12 +1600,13 @@ function getTuningGuardErrorMessage(
 ): string {
   const { lower, higher } = getNeighborCapturedAnchors(anchors, target.id)
 
-  if (lower?.capturedFreq && freq <= lower.capturedFreq) {
-    return `この位置の音は「${lower.label}」より高くしてください`
+  // 約15%（2〜3半音相当）の余裕を持たせて誤検出ブレを吸収する
+  if (lower?.capturedFreq && freq < lower.capturedFreq * 0.87) {
+    return `この位置の音は「${lower.label}」より高くしてください（いまの音: ${Math.round(freq)} Hz・基準: ${Math.round(lower.capturedFreq)} Hz）`
   }
 
-  if (higher?.capturedFreq && freq >= higher.capturedFreq) {
-    return `この位置の音は「${higher.label}」より低くしてください`
+  if (higher?.capturedFreq && freq > higher.capturedFreq * 1.13) {
+    return `この位置の音は「${higher.label}」より低くしてください（いまの音: ${Math.round(freq)} Hz・基準: ${Math.round(higher.capturedFreq)} Hz）`
   }
 
   return ""
@@ -1679,6 +1701,8 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage1ShowHint, setStage1ShowHint] = useState(false)
   const [stage1PhaseB, setStage1PhaseB] = useState(false)
   const [stage1EverDone, setStage1EverDone] = useState(false)
+  // Stage 4: メロディー2〜8(phraseIndex 1〜7)の完聴をビットで管理
+  const [stage4ListenedMask, setStage4ListenedMask] = useState(0)
 
   const [earnedBadges, setEarnedBadges] = useState<BadgeId[]>([])
   const [toastBadgeId, setToastBadgeId] = useState<BadgeId | null>(null)
@@ -2270,6 +2294,14 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
         setNoteIndex((prev) => prev + 1)
       } else {
         setIsPlaying(false)
+        // Stage 3: フレーズ0を最後まで再生したらバッジ付与
+        if (selectedStage === 3 && phraseIndex === 0) {
+          awardBadge("stage3_first_phrase")
+        }
+        // Stage 4: 各フレーズ完聴をビットに記録（メロディー2〜8 = phraseIndex 1〜7）
+        if (selectedStage === 4 && phraseIndex >= 1 && phraseIndex <= 7) {
+          setStage4ListenedMask((prev) => prev | (1 << phraseIndex))
+        }
       }
       return
     }
@@ -2280,6 +2312,13 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     }
 
     if (phraseIndex < safePhrases.length - 1) {
+      // フルモードでのフレーズ完了（次フレーズへ進む前に記録）
+      if (selectedStage === 3 && phraseIndex === 0) {
+        awardBadge("stage3_first_phrase")
+      }
+      if (selectedStage === 4 && phraseIndex >= 1 && phraseIndex <= 7) {
+        setStage4ListenedMask((prev) => prev | (1 << phraseIndex))
+      }
       setPhraseIndex((prev) => prev + 1)
       setNoteIndex(0)
       return
@@ -2288,6 +2327,10 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(false)
     if (selectedStage === 2) {
       awardBadge("stage2_listened")
+    }
+    // フルモードで最終フレーズまで完了した場合も記録
+    if (selectedStage === 4 && phraseIndex >= 1 && phraseIndex <= 7) {
+      setStage4ListenedMask((prev) => prev | (1 << phraseIndex))
     }
   }
 
@@ -3009,16 +3052,16 @@ useEffect(() => {
           }
         }
 
-        // Step B: detect the 4 target notes
-        const isTarget = (STAGE1_TARGET_NOTES as readonly string[]).includes(note)
-        if (note && isTarget) {
+        // Step B: detect the 4 target notes (オクターブ違いも許容)
+        const matchedTarget = note ? matchStage1TargetNote(note) : null
+        if (note && matchedTarget) {
           if (note === stage1CandidateNoteRef.current) {
             stage1CandidateCountRef.current += 1
             if (
               stage1CandidateCountRef.current >= 3 &&
-              !stage1FoundNotesRef.current.has(note)
+              !stage1FoundNotesRef.current.has(matchedTarget)
             ) {
-              stage1FoundNotesRef.current.add(note)
+              stage1FoundNotesRef.current.add(matchedTarget)
               setStage1FoundNotes(
                 STAGE1_TARGET_NOTES.filter((n) => stage1FoundNotesRef.current.has(n))
               )
@@ -3027,7 +3070,7 @@ useEffect(() => {
             stage1CandidateNoteRef.current = note
             stage1CandidateCountRef.current = 1
           }
-        } else if (note && !isTarget) {
+        } else if (note && !matchedTarget) {
           stage1CandidateNoteRef.current = ""
           stage1CandidateCountRef.current = 0
         }
@@ -3136,23 +3179,14 @@ useEffect(() => {
     }
   }, [toastBadgeId])
 
-  // Stage 3: ひとつめのメロディーの後半まで到達したらバッジ付与
-  useEffect(() => {
-    if (selectedStage !== 3) return
-    const lastIndex = safePhrases[0].notes.length - 1
-    if (noteIndex >= lastIndex - 1) {
-      awardBadge("stage3_first_phrase")
-    }
-  }, [selectedStage, noteIndex])
-
-  // Stage 4: どのメロディーでも最後の音符付近まで到達したらバッジ付与
+  // Stage 4: メロディー2〜8をすべて最後まで聞いたらバッジ付与
   useEffect(() => {
     if (selectedStage !== 4) return
-    const lastIndex = safePhrases[phraseIndex].notes.length - 1
-    if (noteIndex >= lastIndex - 1) {
+    const allMask = 0b11111110 // bits 1〜7 = phraseIndex 1〜7
+    if ((stage4ListenedMask & allMask) === allMask) {
       awardBadge("stage4_practice_done")
     }
-  }, [selectedStage, phraseIndex, noteIndex])
+  }, [stage4ListenedMask, selectedStage])
 
   // Stage 6: 演奏完了時にスコアに応じてバッジ付与
   useEffect(() => {
@@ -3199,7 +3233,7 @@ useEffect(() => {
         <div className="flex items-center gap-3 rounded-[20px] border border-[#FFD54A]/40 bg-[#1B2A5A] px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.48)]">
           <BadgeMedal id={toastBadgeId} size={40} />
           <p className="text-sm font-black text-white">
-            「{badge.name}」を　てにいれたよ。
+            「{badge.name}」を　もらったよ。
           </p>
         </div>
       </div>
@@ -3915,7 +3949,7 @@ useEffect(() => {
                   <div className="mother-display-blue flex min-h-[220px] flex-col items-center justify-center px-5 py-6 text-center">
                     <p className="text-sm font-bold text-slate-600">いまの音</p>
                     <p className="mt-3 min-h-[72px] text-5xl font-black leading-none text-slate-900">
-                      {detectedNote || "—"}
+                      {(matchStage1TargetNote(detectedNote) ?? detectedNote) || "—"}
                     </p>
                     <p className="mt-3 text-sm font-bold text-slate-600">
                       {detectedFreq > 0 ? `${detectedFreq.toFixed(2)} Hz` : ""}
@@ -3943,7 +3977,7 @@ useEffect(() => {
                     <div className="grid grid-cols-4 gap-2">
                       {STAGE1_TARGET_NOTES.map((noteName) => {
                         const isFound = stage1FoundNotes.includes(noteName)
-                        const isCurrent = detectedNote === noteName && isMicEnabled
+                        const isCurrent = matchStage1TargetNote(detectedNote) === noteName && isMicEnabled
                         return (
                           <div
                             key={noteName}
