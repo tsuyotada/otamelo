@@ -42,7 +42,7 @@ const noteToFreq: Record<string, number> = {
 type Screen = "home" | "stageSelect" | "practice" | "tune"
 type PlayMode = "phrase" | "full"
 type JudgeState = "idle" | "ok" | "near" | "miss"
-type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7
+type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 
 type StageItem = {
   id: StageId
@@ -92,11 +92,12 @@ type BadgeId =
   | "stage4_practice_done"
   | "stage5_tempo_done"
   | "stage6_pitch_done"
-  | "stage7_played"
-  | "stage7_score_40"
-  | "stage7_score_60"
-  | "stage7_score_80"
-  | "stage7_score_95"
+  | "stage7_phrase_done"
+  | "stage8_played"
+  | "stage8_score_40"
+  | "stage8_score_60"
+  | "stage8_score_80"
+  | "stage8_score_95"
 
 type BadgeInfo = {
   id: BadgeId
@@ -164,9 +165,10 @@ const stages: StageItem[] = [
   { id: 2, title: "エイトメロディーズの全体を　きいてみて" },
   { id: 3, title: "ひとつめのメロディーを　ひいてみて" },
   { id: 4, title: "ほかのメロディーも　ひいてみて" },
-  { id: 5, title: "エイトメロディーズを　とおしで　ひいてみて" },
+  { id: 5, title: "エイトメロディーズを　とおして　ひいてみて" },
   { id: 6, title: "さいごまで　自分で音をひろってみて" },
-  { id: 7, title: "本番だ　リズムにのって　ひいてみて" },
+  { id: 7, title: "くぎって　リズムにのって　ひいてみて" },
+  { id: 8, title: "本番だ　リズムにのって　ひいてみて" },
 ]
 
 const STAGE1_TARGET_NOTES = ["ファ", "ソ", "ラ", "高いド"] as const
@@ -193,11 +195,12 @@ const BADGE_LIST: BadgeInfo[] = [
   { id: "stage4_practice_done", name: "すべてのメロディーを　てにいれたバッジ", description: "メロディー2から8までを　最後まできいたしるし", stage: 4, scoreThreshold: null },
   { id: "stage5_tempo_done", name: "慣れてきたバッジ", description: "テンポに慣れてきたしるし", stage: 5, scoreThreshold: null },
   { id: "stage6_pitch_done", name: "さいごまで音をひろったバッジ", description: "自分で最後まで音程をたどれたしるし", stage: 6, scoreThreshold: null },
-  { id: "stage7_played", name: "ステージに立ったバッジ", description: "ステージで最後まで演奏したしるし", stage: 7, scoreThreshold: null },
-  { id: "stage7_score_40", name: "かけだしバッジ", description: "正答率40%以上のしるし", stage: 7, scoreThreshold: 40 },
-  { id: "stage7_score_60", name: "半人前バッジ", description: "正答率60%以上のしるし", stage: 7, scoreThreshold: 60 },
-  { id: "stage7_score_80", name: "エイトメロディーズバッジ", description: "正答率80%以上のしるし", stage: 7, scoreThreshold: 80 },
-  { id: "stage7_score_95", name: "フランクリンなバッジ", description: "正答率95%以上のしるし", stage: 7, scoreThreshold: 95 },
+  { id: "stage7_phrase_done", name: "くぎって弾けたバッジ", description: "フレーズごとに最後まで弾けたしるし", stage: 7, scoreThreshold: null },
+  { id: "stage8_played", name: "ステージに立ったバッジ", description: "ステージで最後まで演奏したしるし", stage: 8, scoreThreshold: null },
+  { id: "stage8_score_40", name: "かけだしバッジ", description: "正答率40%以上のしるし", stage: 8, scoreThreshold: 40 },
+  { id: "stage8_score_60", name: "半人前バッジ", description: "正答率60%以上のしるし", stage: 8, scoreThreshold: 60 },
+  { id: "stage8_score_80", name: "エイトメロディーズバッジ", description: "正答率80%以上のしるし", stage: 8, scoreThreshold: 80 },
+  { id: "stage8_score_95", name: "フランクリンなバッジ", description: "正答率95%以上のしるし", stage: 8, scoreThreshold: 95 },
 ]
 
 function getEarnedBadges(): BadgeId[] {
@@ -586,7 +589,16 @@ const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
       <rect x="18" y="11" width="4" height="11" fill="#0A2A6E" />
     </g>,
   },
-  stage7_played: {
+  stage7_phrase_done: {
+    bg: "#E8D8FF", ring: "#7A3FC8", color: "#3A0080",
+    icon: <g>
+      {/* horizontal lines suggesting a musical phrase / rhythm */}
+      <rect x="10" y="12" width="12" height="2" fill="#3A0080" />
+      <rect x="10" y="16" width="9" height="2" fill="#3A0080" />
+      <rect x="10" y="20" width="6" height="2" fill="#3A0080" />
+    </g>,
+  },
+  stage8_played: {
     bg: "#FFE4E4", ring: "#D94A3A", color: "#780808",
     icon: <g>
       {/* 8-pointed star: center + 4 cardinal spikes + 4 diagonal corners */}
@@ -601,7 +613,7 @@ const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
       <rect x="17" y="17" width="2" height="2" fill="#780808" />
     </g>,
   },
-  stage7_score_40: {
+  stage8_score_40: {
     bg: "#FFF4CC", ring: "#A8842A", color: "#5C4000",
     icon: <g>
       {/* bullseye: outer square ring + inner square ring + center dot */}
@@ -616,7 +628,7 @@ const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
       <rect x="15" y="15" width="2" height="2" fill="#5C4000" />
     </g>,
   },
-  stage7_score_60: {
+  stage8_score_60: {
     bg: "#FFEACC", ring: "#C96A2A", color: "#6A2800",
     icon: <g>
       {/* diamond / gem shape */}
@@ -633,7 +645,7 @@ const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
       <rect x="15" y="21" width="2" height="1" fill="#6A2800" />
     </g>,
   },
-  stage7_score_80: {
+  stage8_score_80: {
     bg: "#D8F8E4", ring: "#2F6F4E", color: "#0A3C26",
     icon: <g>
       {/* 8 dots arranged 3-2-3 */}
@@ -647,7 +659,7 @@ const BADGE_MEDAL_CONFIGS: Record<BadgeId, BadgeMedalCfg> = {
       <rect x="19" y="19" width="2" height="2" fill="#0A3C26" />
     </g>,
   },
-  stage7_score_95: {
+  stage8_score_95: {
     bg: "#FFFACC", ring: "#F2C84B", color: "#6B5000",
     icon: <g>
       {/* lightning bolt: top-right → step down-left → crossbar → step down-right → bottom-left */}
@@ -1705,12 +1717,16 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [tuningLockedNote, setTuningLockedNote] = useState("")
 
   const [stage6PitchComplete, setStage6PitchComplete] = useState(false)
-  const [stage7Score, setStage7Score] = useState(0)
-  const [stage7Hits, setStage7Hits] = useState(0)
-  const [stage7JudgedCount, setStage7JudgedCount] = useState(0)
-  const [stage7ResultOpen, setStage7ResultOpen] = useState(false)
-  const [stage7MetronomeEnabled, setStage7MetronomeEnabled] = useState(true)
+  const [stage8Score, setStage8Score] = useState(0)
+  const [stage8Hits, setStage8Hits] = useState(0)
+  const [stage8JudgedCount, setStage8JudgedCount] = useState(0)
+  const [stage8ResultOpen, setStage8ResultOpen] = useState(false)
+  const [stage8MetronomeEnabled, setStage8MetronomeEnabled] = useState(true)
+  const [stage8HasStarted, setStage8HasStarted] = useState(false)
   const [stage7HasStarted, setStage7HasStarted] = useState(false)
+  const [stage7PhraseDone, setStage7PhraseDone] = useState(false)
+  const [stage7AllDone, setStage7AllDone] = useState(false)
+  const [stage7MetronomeEnabled, setStage7MetronomeEnabled] = useState(true)
 
   const [showAbout, setShowAbout] = useState(false)
   const [aboutName, setAboutName] = useState("")
@@ -1827,7 +1843,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
       : null
 
   const nextVisibleNote = useMemo(() => {
-    if (selectedStage === 5 || selectedStage === 6 || selectedStage === 7) {
+    if (selectedStage === 5 || selectedStage === 6 || selectedStage === 8) {
       const flatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
       if (flatIndex >= 0 && flatIndex < flatPlayableNotes.length - 1) {
         return {
@@ -1949,7 +1965,45 @@ const previewItems = useMemo<PreviewItem[]>(() => {
     ]
   }
 
-  if (selectedStage === 5 || selectedStage === 6 || selectedStage === 7) {
+  if (selectedStage === 7) {
+    const usableNotes = safePhrases[phraseIndex]?.notes.filter(
+      (item) => item.note !== "休符"
+    ) ?? []
+
+    let windowStart = 0
+    if (noteIndex >= 4) {
+      const candidateStart = 4 * Math.floor((noteIndex - 4) / 4) + 4
+      const hasMoreAfterCurrentWindow = usableNotes.length > candidateStart + 1
+      windowStart = hasMoreAfterCurrentWindow
+        ? candidateStart
+        : Math.max(0, usableNotes.length - 5)
+    }
+
+    const visible = usableNotes
+      .slice(windowStart, windowStart + 5)
+      .map((item, index) => {
+        const originalIndex = windowStart + index
+        return {
+          id: `stage7-${phraseIndex}-${originalIndex}-${item.note}`,
+          note: item.note,
+          length: item.length,
+          isCurrent: originalIndex === noteIndex,
+          isNext: originalIndex === noteIndex + 1,
+          isPhraseStart: false,
+          melodyNumber: phraseIndex + 1,
+          phraseIndex: phraseIndex,
+          noteIndex: originalIndex,
+          tieToNext: item.tieToNext,
+        }
+      })
+
+    return [
+      ...visible,
+      ...makePlaceholders(Math.max(0, 5 - visible.length), "stage7"),
+    ]
+  }
+
+  if (selectedStage === 5 || selectedStage === 6 || selectedStage === 8) {
     let safeFlatIndex = getFlatPlayableIndex(phraseIndex, noteIndex)
     if (safeFlatIndex < 0) {
       let last = -1
@@ -1984,7 +2038,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
       .map((item, index) => {
         const originalIndex = windowStart + index
         return {
-          id: `stage56-${originalIndex}-${item.note}`,
+          id: `stage568-${originalIndex}-${item.note}`,
           note: item.note,
           length: item.length,
           isCurrent: !isOnRest && originalIndex === safeFlatIndex,
@@ -1999,7 +2053,7 @@ const previewItems = useMemo<PreviewItem[]>(() => {
 
     return [
       ...visible,
-      ...makePlaceholders(Math.max(0, 6 - visible.length), "stage56"),
+      ...makePlaceholders(Math.max(0, 6 - visible.length), "stage568"),
     ]
   }
 
@@ -2124,9 +2178,9 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
   const progressPercent = totalNotes > 0 ? (passedNotes / totalNotes) * 100 : 0
 
-  const stage7Accuracy =
-    stage7JudgedCount > 0
-      ? Math.round((stage7Hits / stage7JudgedCount) * 100)
+  const stage8Accuracy =
+    stage8JudgedCount > 0
+      ? Math.round((stage8Hits / stage8JudgedCount) * 100)
       : 0
 
   const clearPlaybackTimer = () => {
@@ -2167,11 +2221,17 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setStage6PitchComplete(false)
   }
 
-  const resetStage7Result = () => {
-    setStage7Score(0)
-    setStage7Hits(0)
-    setStage7JudgedCount(0)
-    setStage7ResultOpen(false)
+  const resetStage8Result = () => {
+    setStage8Score(0)
+    setStage8Hits(0)
+    setStage8JudgedCount(0)
+    setStage8ResultOpen(false)
+  }
+
+  const resetStage7State = () => {
+    setStage7HasStarted(false)
+    setStage7PhraseDone(false)
+    setStage7AllDone(false)
   }
 
   const getStepMs = (length = 1) => {
@@ -2182,7 +2242,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
         ? STAGE4_TEMPO
         : selectedStage === 5
         ? STAGE5_TEMPO * tempoMultiplier
-        : selectedStage === 7
+        : selectedStage === 7 || selectedStage === 8
         ? STAGE7_TEMPO * tempoMultiplier
         : tempo
 
@@ -2293,7 +2353,22 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
   }
 
   const moveToNextNote = () => {
-    if (selectedStage === 5 || selectedStage === 6 || selectedStage === 7) {
+    // Stage 8 (full-song performance): flat traversal with timing
+    if (selectedStage === 8) {
+      const flatIndex = getFlatTimingIndex(phraseIndex, noteIndex)
+      if (flatIndex >= 0 && flatIndex < flatTimingNotes.length - 1) {
+        const nextFlat = flatTimingNotes[flatIndex + 1]
+        setPhraseIndex(nextFlat.phraseIndex)
+        setNoteIndex(nextFlat.noteIndex)
+        return
+      }
+      setIsPlaying(false)
+      setStage8ResultOpen(true)
+      return
+    }
+
+    // Stage 5/6: flat traversal
+    if (selectedStage === 5 || selectedStage === 6) {
       const flatIndex = getFlatTimingIndex(phraseIndex, noteIndex)
 
       if (flatIndex >= 0 && flatIndex < flatTimingNotes.length - 1) {
@@ -2304,13 +2379,27 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
       }
 
       setIsPlaying(false)
-      if (selectedStage === 7) {
-        setStage7ResultOpen(true)
-      } else if (selectedStage === 6) {
+      if (selectedStage === 6) {
         awardBadge("stage6_pitch_done")
         setStage6PitchComplete(true)
       } else if (selectedStage === 5) {
         awardBadge("stage5_tempo_done")
+      }
+      return
+    }
+
+    // Stage 7 (new): phrase-scoped traversal
+    if (selectedStage === 7) {
+      if (noteIndex < safeNotes.length - 1) {
+        setNoteIndex((prev) => prev + 1)
+        return
+      }
+      // End of phrase
+      setIsPlaying(false)
+      setStage7PhraseDone(true)
+      if (phraseIndex >= safePhrases.length - 1) {
+        setStage7AllDone(true)
+        awardBadge("stage7_phrase_done")
       }
       return
     }
@@ -2393,9 +2482,10 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setSuccessCount(0)
     setShowNotation(false)
     resetStage6State()
-    resetStage7Result()
-    setStage7HasStarted(false)
-    if (stageId !== 7) {
+    resetStage7State()
+    resetStage8Result()
+    setStage8HasStarted(false)
+    if (stageId !== 7 && stageId !== 8) {
       setTempoMultiplier(1)
     }
 
@@ -2430,6 +2520,11 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
       setNoteIndex(0)
       setIsMicEnabled(false)
     } else if (stageId === 7) {
+      setPlayMode("phrase")
+      setPhraseIndex(0)
+      setNoteIndex(0)
+      setIsMicEnabled(false)
+    } else if (stageId === 8) {
       setPlayMode("full")
       setPhraseIndex(0)
       setNoteIndex(0)
@@ -2453,7 +2548,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setCountdown(null)
     setIsPlaying(false)
 
-    if (selectedStage === 5 || selectedStage === 6 || selectedStage === 7) {
+    if (selectedStage === 5 || selectedStage === 6 || selectedStage === 8) {
       const timingIndex = getFlatTimingIndex(phraseIndex, noteIndex)
       for (let i = timingIndex - 1; i >= 0; i--) {
         if (flatTimingNotes[i].note !== "休符") {
@@ -2621,7 +2716,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setCountdown(null)
   }
 
-  const runStage7CountdownThenStart = (capturedTempoMultiplier: number) => {
+  const runCountdownWithTempo = (capturedTempoMultiplier: number) => {
     clearPlaybackTimer()
     clearCountdownTimer()
     setIsPlaying(false)
@@ -2673,7 +2768,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setIsPlaying(true)
   }
 
-  const handleStage7Start = async () => {
+  const handleStage8Start = async () => {
     clearPlaybackTimer()
     clearCountdownTimer()
     setCountdown(null)
@@ -2684,7 +2779,29 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     setJudgeState("idle")
     setDetectedNote("")
     setDetectedFreq(0)
-    resetStage7Result()
+    resetStage8Result()
+    stableHitCountRef.current = 0
+    noteSolvedRef.current = false
+
+    const micOk = await startMic()
+    if (!micOk) return
+
+    await ensureAudioReady()
+    setStage8HasStarted(true)
+    runCountdownWithTempo(tempoMultiplier)
+  }
+
+  const handleStage7PhraseStart = async () => {
+    clearPlaybackTimer()
+    clearCountdownTimer()
+    setCountdown(null)
+    setIsPlaying(false)
+    setNoteIndex(0)
+    setJudgeState("idle")
+    setDetectedNote("")
+    setDetectedFreq(0)
+    setStage7PhraseDone(false)
+    setStage7AllDone(false)
     stableHitCountRef.current = 0
     noteSolvedRef.current = false
 
@@ -2693,7 +2810,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
 
     await ensureAudioReady()
     setStage7HasStarted(true)
-    runStage7CountdownThenStart(tempoMultiplier)
+    runCountdownWithTempo(tempoMultiplier)
   }
 
   const handlePreviewSelect = (item: PreviewItem) => {
@@ -2855,7 +2972,7 @@ const handleResetTuning = () => {
     if (screen !== "practice" || selectedStage === 1 || !isPlaying) return
     if (current.note === "休符") return
 
-    if (selectedStage !== 6 && selectedStage !== 7) {
+    if (selectedStage !== 6 && selectedStage !== 7 && selectedStage !== 8) {
       // 前の音符がタイでつながっている場合は再アタックしない
       const prevNote = noteIndex > 0 ? safeNotes[noteIndex - 1] : undefined
       const isTiedFrom = prevNote?.tieToNext === true && prevNote?.note === current.note
@@ -2883,9 +3000,11 @@ const handleResetTuning = () => {
     current.tieToNext,
   ])
 
-  // Stage7: 一定テンポでメトロノームを刻む (メトロノームON時のみ)
+  // Stage7/8: 一定テンポでメトロノームを刻む (メトロノームON時のみ)
   useEffect(() => {
-    if (screen !== "practice" || selectedStage !== 7 || !isPlaying || !stage7MetronomeEnabled) {
+    const isStage7or8 = selectedStage === 7 || selectedStage === 8
+    const metronomeOn = selectedStage === 7 ? stage7MetronomeEnabled : stage8MetronomeEnabled
+    if (screen !== "practice" || !isStage7or8 || !isPlaying || !metronomeOn) {
       stopMetronome()
       return
     }
@@ -2909,7 +3028,7 @@ const handleResetTuning = () => {
 
     return () => stopMetronome()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, selectedStage, isPlaying, tempoMultiplier, stage7MetronomeEnabled])
+  }, [screen, selectedStage, isPlaying, tempoMultiplier, stage7MetronomeEnabled, stage8MetronomeEnabled])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
@@ -2993,7 +3112,7 @@ useEffect(() => {
     if (screen !== "practice" || selectedStage === 1 || selectedStage === 6 || !isPlaying) return
 
     let delay: number
-    if (selectedStage === 7) {
+    if (selectedStage === 7 || selectedStage === 8) {
       const base = 60000 / (STAGE7_TEMPO * tempoMultiplier)
       const targetTime = playbackStartRef.current + (elapsedBeatsRef.current + current.length) * base
       delay = Math.max(0, targetTime - performance.now())
@@ -3003,7 +3122,7 @@ useEffect(() => {
 
     const capturedLength = current.length
     timerRef.current = window.setTimeout(() => {
-      if (selectedStage === 7) {
+      if (selectedStage === 7 || selectedStage === 8) {
         elapsedBeatsRef.current += capturedLength
       }
       moveToNextNote()
@@ -3163,10 +3282,10 @@ useEffect(() => {
             noteSolvedRef.current = true
             setJudgeState("ok")
 
-            if (selectedStage === 7) {
-              setStage7Score((prev) => prev + 100)
-              setStage7Hits((prev) => prev + 1)
-              setStage7JudgedCount((prev) => prev + 1)
+            if (selectedStage === 8) {
+              setStage8Score((prev) => prev + 100)
+              setStage8Hits((prev) => prev + 1)
+              setStage8JudgedCount((prev) => prev + 1)
             } else if (selectedStage === 6) {
               // stage 6: 前進のみ、スコア不要
             } else {
@@ -3191,8 +3310,8 @@ useEffect(() => {
               stableHitCountRef.current = 0
               setJudgeState("miss")
             }
-          } else if (selectedStage === 7) {
-            // Stage 7: ±2半音以内は「おしい！」で MISS 扱いしない（stableHit はリセットしない）
+          } else if (selectedStage === 7 || selectedStage === 8) {
+            // Stage 7/8: ±2半音以内は「おしい！」で MISS 扱いしない（stableHit はリセットしない）
             if (semitones <= 2) {
               setJudgeState("near")
             } else {
@@ -3207,7 +3326,7 @@ useEffect(() => {
           setJudgeState("idle")
         }
       } else {
-        if (selectedStage !== 7 && selectedStage !== 6) {
+        if (selectedStage !== 8 && selectedStage !== 7 && selectedStage !== 6) {
           setJudgeState("ok")
         }
       }
@@ -3226,14 +3345,14 @@ useEffect(() => {
   }, [isMicEnabled, isPlaying, current.note, selectedStage, screen])
 
   useEffect(() => {
-    if (selectedStage !== 7) return
+    if (selectedStage !== 8) return
     if (!isPlaying) return
     if (noteSolvedRef.current) return
     if (current.note === "休符") return
 
     const stepMs = getStepMs(current.length)
     const missTimer = window.setTimeout(() => {
-      setStage7JudgedCount((prev) => prev + 1)
+      setStage8JudgedCount((prev) => prev + 1)
     }, Math.max(100, stepMs - 60))
 
     return () => window.clearTimeout(missTimer)
@@ -3310,38 +3429,38 @@ useEffect(() => {
     }
   }, [stage4ListenedMask, selectedStage])
 
-  // Stage 7: 演奏完了時にスコアに応じてバッジ付与
+  // Stage 8: 演奏完了時にスコアに応じてバッジ付与
   useEffect(() => {
-    if (!stage7ResultOpen) return
-    awardBadge("stage7_played")
-    const accuracy = stage7JudgedCount > 0 ? Math.round((stage7Hits / stage7JudgedCount) * 100) : 0
-    if (accuracy >= 40) awardBadge("stage7_score_40")
-    if (accuracy >= 60) awardBadge("stage7_score_60")
-    if (accuracy >= 80) awardBadge("stage7_score_80")
-    if (accuracy >= 95) awardBadge("stage7_score_95")
-  }, [stage7ResultOpen])
+    if (!stage8ResultOpen) return
+    awardBadge("stage8_played")
+    const accuracy = stage8JudgedCount > 0 ? Math.round((stage8Hits / stage8JudgedCount) * 100) : 0
+    if (accuracy >= 40) awardBadge("stage8_score_40")
+    if (accuracy >= 60) awardBadge("stage8_score_60")
+    if (accuracy >= 80) awardBadge("stage8_score_80")
+    if (accuracy >= 95) awardBadge("stage8_score_95")
+  }, [stage8ResultOpen])
 
   // ステージ選択画面用: ステージごとの取得済みバッジを返す
   const getBadgesForStage = (stageId: StageId) =>
     BADGE_LIST.filter((b) => b.stage === stageId && earnedBadges.includes(b.id))
 
-  // Stage 7 最高バッジの BadgeId を返す
-  const getStage7TopBadgeId = (): BadgeId | null => {
-    if (earnedBadges.includes("stage7_score_95")) return "stage7_score_95"
-    if (earnedBadges.includes("stage7_score_80")) return "stage7_score_80"
-    if (earnedBadges.includes("stage7_score_60")) return "stage7_score_60"
-    if (earnedBadges.includes("stage7_score_40")) return "stage7_score_40"
-    if (earnedBadges.includes("stage7_played")) return "stage7_played"
+  // Stage 8 最高バッジの BadgeId を返す
+  const getStage8TopBadgeId = (): BadgeId | null => {
+    if (earnedBadges.includes("stage8_score_95")) return "stage8_score_95"
+    if (earnedBadges.includes("stage8_score_80")) return "stage8_score_80"
+    if (earnedBadges.includes("stage8_score_60")) return "stage8_score_60"
+    if (earnedBadges.includes("stage8_score_40")) return "stage8_score_40"
+    if (earnedBadges.includes("stage8_played")) return "stage8_played"
     return null
   }
 
-  // Stage 7 スコアバッジ用の正答率ラベル
-  const getStage7AccuracyLabel = (id: BadgeId): string | null => {
+  // Stage 8 スコアバッジ用の正答率ラベル
+  const getStage8AccuracyLabel = (id: BadgeId): string | null => {
     const map: Partial<Record<BadgeId, string>> = {
-      stage7_score_40: "40%",
-      stage7_score_60: "60%",
-      stage7_score_80: "80%",
-      stage7_score_95: "95%",
+      stage8_score_40: "40%",
+      stage8_score_60: "60%",
+      stage8_score_80: "80%",
+      stage8_score_95: "95%",
     }
     return map[id] ?? null
   }
@@ -3650,9 +3769,9 @@ useEffect(() => {
               {stages.map((stage) => {
                 const stageBadges = getBadgesForStage(stage.id)
                 const earned = stageBadges.length > 0
-                const isStage7 = stage.id === 7
-                const s7TopId = isStage7 ? getStage7TopBadgeId() : null
-                const s7AccLabel = s7TopId ? getStage7AccuracyLabel(s7TopId) : null
+                const isStage8 = stage.id === 8
+                const s8TopId = isStage8 ? getStage8TopBadgeId() : null
+                const s8AccLabel = s8TopId ? getStage8AccuracyLabel(s8TopId) : null
 
                 return (
                   <button
@@ -3669,12 +3788,12 @@ useEffect(() => {
                         {stage.title}
                       </p>
                       <div className="shrink-0 flex flex-col items-center gap-0.5">
-                        {isStage7 ? (
-                          s7TopId ? (
+                        {isStage8 ? (
+                          s8TopId ? (
                             <>
-                              <BadgeMedal id={s7TopId} />
-                              {s7AccLabel && (
-                                <span className="text-[9px] font-black text-slate-400">{s7AccLabel}</span>
+                              <BadgeMedal id={s8TopId} />
+                              {s8AccLabel && (
+                                <span className="text-[9px] font-black text-slate-400">{s8AccLabel}</span>
                               )}
                             </>
                           ) : (
@@ -5142,7 +5261,7 @@ if (selectedStage === 7) {
                   STAGE {selectedStage}
                 </p>
                 <p className="text-base font-bold text-white">
-                  本番だ　リズムにのって　ひいてみて
+                  くぎって　リズムにのって　ひいてみて
                 </p>
               </div>
             </div>
@@ -5157,6 +5276,303 @@ if (selectedStage === 7) {
                 }`}
               >
                 {stage7MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
+              </button>
+              <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
+            </div>
+          </div>
+
+          <div className="rounded-[24px] bg-[#2A2F3A] px-3 py-2">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-bold text-white">フレーズの進行</p>
+              <p className="text-xs font-bold text-slate-300">
+                {phraseIndex + 1} / {safePhrases.length}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-8 gap-2">
+              {safePhrases.map((_, index) => {
+                const isCurrent = index === phraseIndex
+                const isDone = index < phraseIndex || (index === phraseIndex && (stage7PhraseDone || stage7AllDone))
+
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-[16px] px-2 py-2 text-center font-black ${
+                      isCurrent && !isDone
+                        ? "bg-[#7A3FC8] text-white"
+                        : isDone
+                        ? "bg-[#EAF4FF] text-slate-900"
+                        : "bg-[#3A4050] text-slate-300"
+                    }`}
+                  >
+                    <p className="hidden text-[9px] font-bold md:block">MELODY</p>
+                    <p className="mt-1 text-lg font-black">{index + 1}</p>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-[#3A4050]">
+              <div
+                className="h-full rounded-full bg-[#7A3FC8] transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="mt-2 grid gap-2 md:grid-cols-[0.34fr_0.66fr]">
+            <div className="flex items-center justify-center py-3">
+              <div className="relative flex h-[360px] w-[180px] items-end justify-center rounded-full bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.26),rgba(255,255,255,0.10)_34%,rgba(255,255,255,0.03)_56%,transparent_74%)] px-4 py-4">
+                <div className="mother-neck relative h-full w-10 rounded-full">
+                  <div className="absolute inset-x-0 bottom-0 top-0 flex flex-col justify-between py-4">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <div key={i} className="h-px w-full bg-white/10" />
+                    ))}
+                  </div>
+
+                  {nextVisibleNote?.note !== "休符" && nextIndicatorTop !== null && (
+                    <div
+                      className="absolute left-1/2 h-2.5 w-11 -translate-x-1/2 rounded-full bg-[#9CA3AF] shadow-[0_0_0_2px_rgba(156,163,175,0.25)]"
+                      style={{
+                        top: `clamp(8px, calc(${nextIndicatorTop}% - 5px), calc(100% - 18px))`,
+                        marginLeft: indicatorsAreClose ? "26px" : "0px",
+                      }}
+                    />
+                  )}
+
+                  {current.note !== "休符" && currentIndicatorTop !== null && (
+                    <div
+                      className="absolute left-1/2 h-3 w-14 -translate-x-1/2 rounded-full bg-[#A855F7] shadow-[0_0_0_4px_rgba(168,85,247,0.22)]"
+                      style={{
+                        top: `clamp(8px, calc(${currentIndicatorTop}% - 6px), calc(100% - 20px))`,
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="absolute bottom-0 left-1/2 h-[82px] w-[96px] -translate-x-1/2 translate-y-6 rounded-[46%] border-4 border-slate-700 bg-[#fffaf0]">
+                  <div className="absolute left-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute right-[27px] top-[24px] h-[8px] w-[8px] rounded-full bg-slate-700" />
+                  <div className="absolute left-0 top-[42px] h-[2px] w-full bg-slate-700" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-2">
+              <PreviewLaneSix
+                items={previewItems}
+                staffItems={pairPreviewItems}
+                variant="dark"
+                showNotation={showNotation}
+                onToggleNotation={setShowNotation}
+              />
+
+              <div className="rounded-[28px] bg-[#2A2F3A] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mb-2 flex items-center justify-end gap-2">
+                  {isMicEnabled ? (
+                    <div className="flex items-center gap-2 rounded-full border border-purple-500 bg-purple-500/25 px-3 py-1 text-xs font-bold text-[#D0B0FF]">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-purple-400" />
+                      MIC ON
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-700/50 px-3 py-1 text-xs font-bold text-slate-500">
+                      <span className="h-2 w-2 rounded-full bg-slate-600" />
+                      MIC OFF
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
+                    <p className="mb-1 text-xs font-bold text-slate-300">入力音</p>
+                    <p className="min-h-[32px] text-2xl font-black text-white">
+                      {detectedNote || "-"}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`rounded-[20px] px-3 py-3 text-center ${
+                      judgeState === "ok"
+                        ? "bg-[#DFF7DF] text-[#1B6B2C]"
+                        : judgeState === "near"
+                        ? "bg-[#FFF3CC] text-[#7A5000]"
+                        : judgeState === "miss"
+                        ? "bg-[#FFE2E2] text-[#B33737]"
+                        : "bg-[#3A4050] text-slate-300"
+                    }`}
+                  >
+                    <p className="mb-1 text-xs font-bold">判定</p>
+                    <p className="min-h-[32px] text-2xl font-black">
+                      {judgeState === "ok"
+                        ? "OK!"
+                        : judgeState === "near"
+                        ? "おしい！"
+                        : judgeState === "miss"
+                        ? "MISS"
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  {stage7AllDone ? (
+                    <div className="w-full rounded-[20px] bg-[#7A3FC8]/20 px-4 py-3 text-center ring-1 ring-[#7A3FC8]/40">
+                      <p className="text-sm font-black text-[#D0B0FF]">全部のフレーズをおわらせた！</p>
+                      <p className="mt-1 text-xs text-slate-400">バッジをゲットしたよ</p>
+                    </div>
+                  ) : stage7PhraseDone ? (
+                    <div className="w-full rounded-[20px] bg-[#2A3A50] px-4 py-3 text-center ring-1 ring-[#7A3FC8]/30">
+                      <p className="text-sm font-black text-white">フレーズ {phraseIndex + 1} おわり！</p>
+                    </div>
+                  ) : null}
+
+                  {isPlaying || countdown !== null ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearPlaybackTimer()
+                        clearCountdownTimer()
+                        setCountdown(null)
+                        setIsPlaying(false)
+                      }}
+                      className="px-5 py-2.5 text-sm font-bold rounded-full
+                      bg-gradient-to-b from-[#9B59B6] to-[#6C3483]
+                      text-white shadow-[0_6px_18px_rgba(155,89,182,0.4)]
+                      active:scale-95 transition"
+                    >
+                      {countdown !== null ? `${countdown}` : "中断する"}
+                    </button>
+                  ) : stage7AllDone ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetStage7State()
+                        setPhraseIndex(0)
+                        setNoteIndex(0)
+                        setJudgeState("idle")
+                        setDetectedNote("")
+                        setDetectedFreq(0)
+                      }}
+                      className="px-5 py-2.5 text-sm font-bold rounded-full
+                      bg-[#2A1F3A] text-[#D0B0FF] border border-[#7A3FC8]"
+                    >
+                      もういちどやる
+                    </button>
+                  ) : stage7PhraseDone ? (
+                    <>
+                      {phraseIndex < safePhrases.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhraseIndex((prev) => prev + 1)
+                            setNoteIndex(0)
+                            setStage7PhraseDone(false)
+                            setJudgeState("idle")
+                            stableHitCountRef.current = 0
+                            noteSolvedRef.current = false
+                          }}
+                          className="px-5 py-2.5 text-sm font-bold rounded-full
+                          bg-gradient-to-b from-[#9B59B6] to-[#6C3483]
+                          text-white shadow-[0_6px_18px_rgba(155,89,182,0.4)]
+                          active:scale-95 transition"
+                        >
+                          次のフレーズへ
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNoteIndex(0)
+                          setStage7PhraseDone(false)
+                          setJudgeState("idle")
+                          stableHitCountRef.current = 0
+                          noteSolvedRef.current = false
+                        }}
+                        className="px-5 py-2.5 text-sm font-bold rounded-full
+                        bg-[#2A1F3A] text-[#D0B0FF] border border-[#7A3FC8]"
+                      >
+                        もういちど
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { void handleStage7PhraseStart() }}
+                        className="px-5 py-2.5 text-sm font-bold rounded-full
+                        bg-gradient-to-b from-[#9B59B6] to-[#6C3483]
+                        text-white shadow-[0_6px_18px_rgba(155,89,182,0.4)]
+                        active:scale-95 transition"
+                      >
+                        スタート
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-[24px] bg-[#11141B] px-4 py-3 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-3">
+                <PixelInventorFace />
+                <p className="text-sm font-bold text-white">
+                  短いメロディーごとに、リズムにのって弾いてみよう。
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearPlaybackTimer()
+                  clearCountdownTimer()
+                  setCountdown(null)
+                  setIsPlaying(false)
+                  stopMic()
+                  setScreen("stageSelect")
+                }}
+                className="mother-button-light px-5 py-2.5 text-sm font-bold"
+              >
+                ステージ選択へ
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+      {badgeToast}
+    </main>
+  )
+}
+
+if (selectedStage === 8) {
+  return (
+    <main className="min-h-screen bg-[#05070D] px-3 py-3 text-white">
+      <div className="mx-auto flex max-w-[1240px] flex-col gap-2">
+        <section className="rounded-[36px] border border-white/10 bg-[#171A22] p-3 text-white shadow-[0_22px_60px_rgba(0,0,0,0.48)]">
+          <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <PixelInventorFace />
+              <div className="min-w-0">
+                <p className="text-[11px] font-black tracking-wide text-[#6B7280]">
+                  STAGE {selectedStage}
+                </p>
+                <p className="text-base font-bold text-white">
+                  本番だ　リズムにのって　ひいてみて
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStage8MetronomeEnabled((v) => !v)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                  stage8MetronomeEnabled
+                    ? "bg-[#FFD54A]/20 text-[#FFD54A] ring-1 ring-[#FFD54A]/40"
+                    : "bg-slate-700/50 text-slate-400 ring-1 ring-slate-600"
+                }`}
+              >
+                {stage8MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
               </button>
               <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="red" />
             </div>
@@ -5303,14 +5719,14 @@ if (selectedStage === 7) {
     <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
       <p className="mb-1 text-xs font-bold text-slate-300">ACCURACY</p>
       <p className="min-h-[32px] text-2xl font-black text-white">
-        {stage7JudgedCount > 0 ? `${Math.round((stage7Hits / stage7JudgedCount) * 100)}%` : "-%"}
+        {stage8JudgedCount > 0 ? `${Math.round((stage8Hits / stage8JudgedCount) * 100)}%` : "-%"}
       </p>
     </div>
 
     <div className="rounded-[20px] bg-[#3A4050] px-3 py-3 text-center">
       <p className="mb-1 text-xs font-bold text-slate-300">成功数</p>
       <p className="min-h-[32px] text-2xl font-black text-white">
-        {stage7Hits}
+        {stage8Hits}
       </p>
     </div>
   </div>
@@ -5328,7 +5744,7 @@ if (selectedStage === 7) {
           setCountdown(null)
           setIsPlaying(false)
         } else {
-          void handleStage7Start()
+          void handleStage8Start()
         }
       }}
       className="px-5 py-2.5 text-sm font-bold rounded-full
@@ -5344,7 +5760,7 @@ if (selectedStage === 7) {
     </button>
 
     {/* リトライ — 一度でも本番開始した後にのみ表示 */}
-    {stage7HasStarted && (
+    {stage8HasStarted && (
       <button
         type="button"
         onClick={() => {
@@ -5352,7 +5768,7 @@ if (selectedStage === 7) {
           clearCountdownTimer()
           setCountdown(null)
           setIsPlaying(false)
-          resetStage7Result()
+          resetStage8Result()
           setPhraseIndex(0)
           setNoteIndex(0)
           setJudgeState("idle")
@@ -5370,7 +5786,7 @@ if (selectedStage === 7) {
             </div>
           </div>
 
-          {stage7ResultOpen && (
+          {stage8ResultOpen && (
             <div className="mt-2 rounded-[24px] bg-[#2A2F3A] px-4 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <p className="text-base font-black text-white">けっか</p>
 
@@ -5378,14 +5794,14 @@ if (selectedStage === 7) {
                 <div className="rounded-[20px] bg-[#FFD54A]/10 px-4 py-4 text-center text-white ring-1 ring-[#FFD54A]/30">
                   <p className="text-xs font-bold text-[#FFD54A]">ACCURACY</p>
                   <p className="mt-2 text-4xl font-black text-[#FFD54A]">
-                    {stage7Accuracy}%
+                    {stage8Accuracy}%
                   </p>
                 </div>
 
                 <div className="rounded-[20px] bg-[#3A4050] px-4 py-4 text-center text-white">
                   <p className="text-xs font-bold text-slate-400">成功数</p>
                   <p className="mt-2 text-3xl font-black text-white">
-                    {stage7Hits} / {totalPlayableNotes}
+                    {stage8Hits} / {totalPlayableNotes}
                   </p>
                 </div>
               </div>
