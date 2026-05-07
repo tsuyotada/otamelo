@@ -1768,6 +1768,7 @@ const [tuningGuardMessage, setTuningGuardMessage] = useState("")
   const [stage7PhraseDone, setStage7PhraseDone] = useState(false)
   const [stage7AllDone, setStage7AllDone] = useState(false)
   const [stage7MetronomeEnabled, setStage7MetronomeEnabled] = useState(true)
+  const [stage78GuideEnabled, setStage78GuideEnabled] = useState(false)
 
   const [showAbout, setShowAbout] = useState(false)
   const [aboutName, setAboutName] = useState("")
@@ -2282,7 +2283,7 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
         : selectedStage === 4
         ? STAGE4_TEMPO
         : selectedStage === 5
-        ? STAGE5_TEMPO * tempoMultiplier
+        ? STAGE5_TEMPO * perfTempoMultiplier
         : selectedStage === 7 || selectedStage === 8
         ? STAGE7_TEMPO * perfTempoMultiplier
         : tempo
@@ -2355,6 +2356,35 @@ const pairPreviewItems = useMemo<PreviewItem[]>(() => {
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
 
+    oscillator.start(now)
+    oscillator.stop(now + durationSec)
+  }
+
+  const playGuideThin = async (note: string, durationMs: number) => {
+    if (note === "休符") return
+    const freq = noteToFreq[note]
+    if (!freq) return
+    const ctx = await ensureAudioReady()
+    if (!ctx) return
+
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    const now = ctx.currentTime
+    const durationSec = durationMs / 1000
+    const fadeIn = 0.02
+    const fadeOut = Math.min(0.1, durationSec / 3)
+    const holdUntil = Math.max(fadeIn + 0.01, durationSec - fadeOut)
+
+    oscillator.type = "sine"
+    oscillator.frequency.value = freq
+
+    gainNode.gain.setValueAtTime(0.0001, now)
+    gainNode.gain.exponentialRampToValueAtTime(0.022, now + fadeIn)
+    gainNode.gain.setValueAtTime(0.022, now + holdUntil)
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec)
+
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
     oscillator.start(now)
     oscillator.stop(now + durationSec)
   }
@@ -3036,6 +3066,7 @@ const handleResetTuning = () => {
     noteIndex,
     tempo,
     tempoMultiplier,
+    perfTempoMultiplier,
     current.note,
     current.length,
     current.tieToNext,
@@ -3070,6 +3101,18 @@ const handleResetTuning = () => {
     return () => stopMetronome()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, selectedStage, isPlaying, perfTempoMultiplier, stage7MetronomeEnabled, stage8MetronomeEnabled])
+
+  // Stage 7/8: 薄いガイド音 (ON時のみ、音符ごとに再生)
+  useEffect(() => {
+    if (screen !== "practice") return
+    if (selectedStage !== 7 && selectedStage !== 8) return
+    if (!isPlaying || !stage78GuideEnabled) return
+    if (current.note === "休符") return
+
+    const durationMs = 60000 / (STAGE7_TEMPO * perfTempoMultiplier) * current.length
+    void playGuideThin(current.note, durationMs)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, selectedStage, isPlaying, stage78GuideEnabled, phraseIndex, noteIndex, perfTempoMultiplier])
 
   useEffect(() => {
     if (screen !== "practice" || selectedStage !== 1) return
@@ -4930,7 +4973,7 @@ if (selectedStage === 5) {
                 </p>
               </div>
             </div>
-            <TempoSelector value={tempoMultiplier} onChange={setTempoMultiplier} variant="blue" />
+            <PerfTempoSelector value={perfTempoMultiplier} onChange={setPerfTempoMultiplier} />
           </div>
 
           <div className="mother-subpanel px-3 py-2">
@@ -5337,6 +5380,17 @@ if (selectedStage === 7) {
               >
                 {stage7MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
               </button>
+              <button
+                type="button"
+                onClick={() => setStage78GuideEnabled((v) => !v)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                  stage78GuideEnabled
+                    ? "bg-white/20 text-white ring-1 ring-white/30"
+                    : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
+                }`}
+              >
+                {stage78GuideEnabled ? "ガイド ON" : "ガイド OFF"}
+              </button>
               <PerfTempoSelector value={perfTempoMultiplier} onChange={setPerfTempoMultiplier} />
             </div>
           </div>
@@ -5633,6 +5687,17 @@ if (selectedStage === 8) {
                 }`}
               >
                 {stage8MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStage78GuideEnabled((v) => !v)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                  stage78GuideEnabled
+                    ? "bg-white/20 text-white ring-1 ring-white/30"
+                    : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
+                }`}
+              >
+                {stage78GuideEnabled ? "ガイド ON" : "ガイド OFF"}
               </button>
               <PerfTempoSelector value={perfTempoMultiplier} onChange={setPerfTempoMultiplier} />
             </div>
