@@ -41,7 +41,7 @@ const noteToFreq: Record<string, number> = {
 
 type Screen = "home" | "stageSelect" | "practice" | "tune"
 type PlayMode = "phrase" | "full"
-type JudgeState = "idle" | "ok" | "miss"
+type JudgeState = "idle" | "ok" | "near" | "miss"
 type StageId = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 type StageItem = {
@@ -294,6 +294,13 @@ function japaneseNoteToMidi(note: string): number | null {
   if (semitone === -1) return null
 
   return (octave + 1) * 12 + semitone
+}
+
+function getSemitoneDistance(note1: string, note2: string): number {
+  const midi1 = japaneseNoteToMidi(note1)
+  const midi2 = japaneseNoteToMidi(note2)
+  if (midi1 === null || midi2 === null) return Infinity
+  return Math.abs(midi1 - midi2)
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -3152,7 +3159,7 @@ useEffect(() => {
               setStage7Hits((prev) => prev + 1)
               setStage7JudgedCount((prev) => prev + 1)
             } else if (selectedStage === 6) {
-              // stage 6: ピッチ一致のみカウント、スコアは不要
+              // stage 6: 前進のみ、スコア不要
             } else {
               setSuccessCount((prev) => prev + 1)
             }
@@ -3160,8 +3167,33 @@ useEffect(() => {
             setJudgeState("idle")
           }
         } else if (note && note !== current.note) {
-          stableHitCountRef.current = 0
-          setJudgeState("miss")
+          const semitones = getSemitoneDistance(note, current.note)
+          if (selectedStage === 6) {
+            // Stage 6: ±2半音以内は「ちかい！」で stableHit をリセットせず進める
+            if (semitones <= 2) {
+              stableHitCountRef.current += 1
+              if (stableHitCountRef.current >= 4) {
+                noteSolvedRef.current = true
+                setJudgeState("ok")
+              } else {
+                setJudgeState("near")
+              }
+            } else {
+              stableHitCountRef.current = 0
+              setJudgeState("miss")
+            }
+          } else if (selectedStage === 7) {
+            // Stage 7: ±2半音以内は「おしい！」で MISS 扱いしない（stableHit はリセットしない）
+            if (semitones <= 2) {
+              setJudgeState("near")
+            } else {
+              stableHitCountRef.current = 0
+              setJudgeState("miss")
+            }
+          } else {
+            stableHitCountRef.current = 0
+            setJudgeState("miss")
+          }
         } else {
           setJudgeState("idle")
         }
@@ -3207,6 +3239,16 @@ useEffect(() => {
     return () => window.clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStage, isPlaying, judgeState, phraseIndex, noteIndex])
+
+  // Stage 6: 休符は自動スキップ（ユーザー入力不要）
+  useEffect(() => {
+    if (selectedStage !== 6 || !isPlaying || current.note !== "休符") return
+    const timer = window.setTimeout(() => {
+      moveToNextNote()
+    }, 80)
+    return () => window.clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStage, isPlaying, current.note, phraseIndex, noteIndex])
 
   useEffect(() => {
     return () => {
@@ -5005,6 +5047,8 @@ if (selectedStage === 6) {
                     className={`rounded-[20px] px-3 py-3 text-center ${
                       judgeState === "ok"
                         ? "bg-[#DFF7DF] text-[#1B6B2C]"
+                        : judgeState === "near"
+                        ? "bg-[#FFF3CC] text-[#7A5000]"
                         : judgeState === "miss"
                         ? "bg-[#FFE2E2] text-[#B33737]"
                         : "bg-[#3A4050] text-slate-300"
@@ -5012,7 +5056,7 @@ if (selectedStage === 6) {
                   >
                     <p className="mb-1 text-xs font-bold">判定</p>
                     <p className="min-h-[32px] text-2xl font-black">
-                      {judgeState === "ok" ? "OK!" : judgeState === "miss" ? "MISS" : "-"}
+                      {judgeState === "ok" ? "OK!" : judgeState === "near" ? "ちかい！" : judgeState === "miss" ? "MISS" : "-"}
                     </p>
                   </div>
                 </div>
@@ -5228,6 +5272,8 @@ if (selectedStage === 7) {
       className={`rounded-[20px] px-3 py-3 text-center ${
         judgeState === "ok"
           ? "bg-[#DFF7DF] text-[#1B6B2C]"
+          : judgeState === "near"
+          ? "bg-[#FFF3CC] text-[#7A5000]"
           : judgeState === "miss"
           ? "bg-[#FFE2E2] text-[#B33737]"
           : "bg-[#3A4050] text-slate-300"
@@ -5237,6 +5283,8 @@ if (selectedStage === 7) {
       <p className="min-h-[32px] text-2xl font-black">
         {judgeState === "ok"
           ? "OK!"
+          : judgeState === "near"
+          ? "おしい！"
           : judgeState === "miss"
           ? "MISS"
           : "-"}
