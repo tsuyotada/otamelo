@@ -1483,7 +1483,7 @@ function PreviewLaneSix({
   if (showNotation) {
     return (
       <StaffPreview
-        items={staffItems ?? items}
+        items={(staffItems && staffItems.length > 0) ? staffItems : items}
         onSelect={onSelect}
         compact
         variant={variant}
@@ -2162,7 +2162,24 @@ const previewItems = useMemo<PreviewItem[]>(() => {
 ])
 
 const pairPreviewItems = useMemo<PreviewItem[]>(() => {
-  if (selectedStage !== 5 && selectedStage !== 6) return []
+  if (selectedStage !== 5 && selectedStage !== 6 && selectedStage !== 7) return []
+
+  if (selectedStage === 7) {
+    const phrase = safePhrases[phraseIndex]
+    if (!phrase) return []
+    return phrase.notes.map((item, index) => ({
+      id: `pair7-${phraseIndex}-${index}-${item.note}`,
+      note: item.note,
+      length: item.length,
+      isCurrent: index === noteIndex,
+      isNext: index === noteIndex + 1,
+      isPhraseStart: false,
+      melodyNumber: phraseIndex + 1,
+      phraseIndex: phraseIndex,
+      noteIndex: index,
+      tieToNext: item.tieToNext,
+    }))
+  }
 
   const pairStart = Math.floor(phraseIndex / 2) * 2
   const items: PreviewItem[] = []
