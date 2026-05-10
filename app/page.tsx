@@ -4613,18 +4613,12 @@ if (selectedStage === 2) {
           </div>
 
           <div className="mother-subpanel mt-3 flex flex-col items-center gap-2 px-5 py-4 text-center">
-            {earnedBadges.includes("stage2_listened") && (
-              <div className="flex items-center gap-3 mb-1">
-                <PixelInventorFace />
-                <p className="mother-text-main text-sm font-bold">
-                  きけた？　じゃあ　つぎは　じぶんで　やってみようか。
-                </p>
-              </div>
-            )}
             <div className="flex items-center gap-3">
               <PixelInventorFace />
               <p className="mother-text-main text-sm font-bold">
-                ひととおりきいたら　ステージ選択にもどってよ
+                {earnedBadges.includes("stage2_listened")
+                  ? "きけた？　つぎは　じぶんでやってみて。 ステージ選択にもどってよ"
+                  : "ひととおりきいたら　ステージ選択にもどってよ"}
               </p>
             </div>
 
@@ -5391,8 +5385,8 @@ if (selectedStage === 7) {
                 onClick={() => setStage7MetronomeEnabled((v) => !v)}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   stage7MetronomeEnabled
-                    ? "bg-[#FFD54A]/20 text-[#FFD54A] ring-1 ring-[#FFD54A]/40"
-                    : "bg-slate-700/50 text-slate-400 ring-1 ring-slate-600"
+                    ? "bg-slate-600/60 text-slate-200 ring-1 ring-slate-500"
+                    : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
                 }`}
               >
                 {stage7MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
@@ -5402,7 +5396,7 @@ if (selectedStage === 7) {
                 onClick={() => setStage78GuideEnabled((v) => !v)}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   stage78GuideEnabled
-                    ? "bg-white/20 text-white ring-1 ring-white/30"
+                    ? "bg-slate-600/60 text-slate-200 ring-1 ring-slate-500"
                     : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
                 }`}
               >
@@ -5699,8 +5693,8 @@ if (selectedStage === 8) {
                 onClick={() => setStage8MetronomeEnabled((v) => !v)}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   stage8MetronomeEnabled
-                    ? "bg-[#FFD54A]/20 text-[#FFD54A] ring-1 ring-[#FFD54A]/40"
-                    : "bg-slate-700/50 text-slate-400 ring-1 ring-slate-600"
+                    ? "bg-slate-600/60 text-slate-200 ring-1 ring-slate-500"
+                    : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
                 }`}
               >
                 {stage8MetronomeEnabled ? "メトロノーム ON" : "メトロノーム OFF"}
@@ -5710,7 +5704,7 @@ if (selectedStage === 8) {
                 onClick={() => setStage78GuideEnabled((v) => !v)}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                   stage78GuideEnabled
-                    ? "bg-white/20 text-white ring-1 ring-white/30"
+                    ? "bg-slate-600/60 text-slate-200 ring-1 ring-slate-500"
                     : "bg-slate-700/50 text-slate-500 ring-1 ring-slate-600"
                 }`}
               >
